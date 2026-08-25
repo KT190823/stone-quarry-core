@@ -30,10 +30,25 @@ func main() {
 	paymentH := handlers.NewPaymentHandler()
 	userH := handlers.NewUserHandler()
 	cameraH := handlers.NewCameraHandler()
+	printH := handlers.NewPrintHandler()
 
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		handlers.JSON(w, map[string]string{"status": "ok", "service": "mo-da-backend"})
 	})
+
+	// Print templates (configurable document/report layouts)
+	mux.HandleFunc("GET /api/print/templates", printH.List)
+	mux.HandleFunc("GET /api/print/templates/{id}", printH.Get)
+	mux.HandleFunc("POST /api/print/templates", printH.Create)
+	mux.HandleFunc("PUT /api/print/templates/{id}", printH.Update)
+	mux.HandleFunc("DELETE /api/print/templates/{id}", printH.Delete)
+	mux.HandleFunc("POST /api/print/templates/{id}/default", printH.SetDefault)
+
+	// Auth (login / logout / current user)
+	authH := handlers.NewAuthHandler()
+	mux.HandleFunc("POST /api/auth/login", authH.Login)
+	mux.HandleFunc("POST /api/auth/logout", authH.Logout)
+	mux.HandleFunc("GET /api/auth/me", authH.Me)
 
 	mux.HandleFunc("GET /api/dashboard", handlers.DashboardHandler)
 

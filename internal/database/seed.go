@@ -3,7 +3,50 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 )
+
+// printSeedDir must match the print template directory used by the services.
+const printSeedDir = "./data/print_templates"
+
+func writePrintLayoutFile(id, layout string) {
+	if layout == "" {
+		return
+	}
+	if err := os.MkdirAll(printSeedDir, 0o755); err != nil {
+		return
+	}
+	_ = os.WriteFile(filepath.Join(printSeedDir, fmt.Sprintf("%s.json", id)), []byte(layout), 0o644)
+}
+
+// printBackfillLayoutToDisk writes any legacy DB-stored layout to a disk file,
+// then clears the column so the DB holds metadata only.
+func printBackfillLayoutToDisk(ctx context.Context) {
+	rows, err := Pool.Query(ctx, `SELECT id, COALESCE(layout,'') FROM print_templates WHERE COALESCE(layout,'') <> ''`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	type rowT struct {
+		id, layout string
+	}
+	var toClear []rowT
+	for rows.Next() {
+		var r rowT
+		if rows.Scan(&r.id, &r.layout) == nil && r.layout != "" {
+			// Only write when the disk file does not already exist.
+			if _, statErr := os.Stat(filepath.Join(printSeedDir, fmt.Sprintf("%s.json", r.id))); os.IsNotExist(statErr) {
+				writePrintLayoutFile(r.id, r.layout)
+			}
+			toClear = append(toClear, r)
+		}
+	}
+	for _, r := range toClear {
+		Pool.Exec(ctx, `UPDATE print_templates SET layout = '' WHERE id = $1`, r.id)
+	}
+}
 
 func Seed() {
 	if Pool == nil {
@@ -197,6 +240,14 @@ func Seed() {
 			('Công ty CP Đầu Tư Xây Dựng 319', 'Công ty CP Đầu Tư Xây Dựng 319', '0100109988', '0100109988', 'Nguyễn Đức Hưng', '0913.224.556', '0913.224.556', 'Khách hàng VIP Doanh nghiệp', '4.850.000.000 đ', '320.000.000 đ', '1.000.000.000 đ', 'Hoạt động', '28/10/2026'),
 			('Tổng Công Ty XD Trường Sơn', 'Tổng Công Ty XD Trường Sơn', '0100108877', '0100108877', 'Phạm Văn Thành', '0982.667.889', '0982.667.889', 'Nhà thầu Quốc gia', '8.200.000.000 đ', '540.000.000 đ', '2.000.000.000 đ', 'Hoạt động', '28/10/2026'),
 			('Công ty Bê Tông Việt Trì', 'Công ty Bê Tông Việt Trì', '2600456789', '2600456789', 'Lê Hữu Đạt', '0915.889.001', '0915.889.001', 'Trạm trộn bê tông thương phẩm', '3.100.000.000 đ', '180.000.000 đ', '800.000.000 đ', 'Hoạt động', '28/10/2026')
+			ON CONFLICT DO NOTHING;
+
+			INSERT INTO suppliers (name, ten, tax_code, mst, phone, sdt, items, hang, no, rating, status, date)
+			VALUES
+			('Tổng Công Ty Kinh Tế Kỹ Thuật CNQP (GAET)', 'Tổng Công Ty GAET', '0100109911', '0100109911', '0243.856.789', '0243.856.789', 'Thuốc nổ Anfo, Kíp nổ vi sai & Dịch vụ nổ mìn', 'Thuốc nổ & Kíp nổ', '450.000.000 đ', '5 sao (Đối tác chiến lược)', 'Hoạt động', '28/10/2026'),
+			('Công Ty Xăng Dầu Phú Thọ (Petrolimex)', 'Petrolimex Phú Thọ', '2600108822', '2600108822', '0210.384.666', '0210.384.666', 'Dầu Diesel DO 0.05S-II cho xe máy mỏ', 'Dầu DO 0.05S', '280.000.000 đ', '5 sao', 'Hoạt động', '28/10/2026'),
+			('Công Ty TNHH Thiết Bị Nặng Marubeni (Komatsu)', 'Komatsu Việt Nam', '0101567890', '0101567890', '0243.765.432', '0243.765.432', 'Phụ tùng máy xúc PC450, gầu đào, răng gầu mỏ', 'Phụ tùng máy xúc', '120.000.000 đ', '5 sao', 'Hoạt động', '28/10/2026')
+			ON CONFLICT DO NOTHING;
 		`)
 	}
 
@@ -277,24 +328,24 @@ func Seed() {
 	// 11. Seed Users & System Settings
 	var usrCount int
 	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM users").Scan(&usrCount)
-	if usrCount == 0 {
-		Pool.Exec(ctx, `
-			INSERT INTO users (username, name, ten, role, dept, email, phone, sdt, last_login, status) VALUES
-			('admin', 'Nguyễn Đức Trường', 'Nguyễn Đức Trường', 'Giám Đốc Mỏ', 'Ban Giám Đốc', 'truongnd@ttcgroup.vn', '0912.345.678', '0912.345.678', '28/10/2026 08:30', 'Hoạt động'),
-			('dungnv', 'Nguyễn Văn Dũng', 'Nguyễn Văn Dũng', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'dungnv@ttcgroup.vn', '0984.556.789', '0984.556.789', '28/10/2026 09:15', 'Hoạt động'),
-			('kientv', 'Trần Văn Kiên', 'Trần Văn Kiên', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'kientv@ttcgroup.vn', '0988.341.992', '0988.341.992', '28/10/2026 07:45', 'Hoạt động'),
-			('thuynt', 'Nguyễn Thị Thủy', 'Nguyễn Thị Thủy', 'Kế Toán Trưởng', 'Phòng Kế Toán & Vật Tư', 'thuynt@ttcgroup.vn', '0915.678.901', '0915.678.901', '28/10/2026 08:00', 'Hoạt động')
-			ON CONFLICT (username) DO NOTHING;
+		if usrCount == 0 {
+			Pool.Exec(ctx, `
+				INSERT INTO users (username, name, ten, role, dept, email, phone, sdt, password_hash, last_login, status) VALUES
+				('admin', 'Nguyễn Đức Trường', 'Nguyễn Đức Trường', 'Giám Đốc Mỏ', 'Ban Giám Đốc', 'truongnd@ttcgroup.vn', '0912.345.678', '0912.345.678', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:30', 'Hoạt động'),
+				('dungnv', 'Nguyễn Văn Dũng', 'Nguyễn Văn Dũng', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'dungnv@ttcgroup.vn', '0984.556.789', '0984.556.789', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:15', 'Hoạt động'),
+				('kientv', 'Trần Văn Kiên', 'Trần Văn Kiên', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'kientv@ttcgroup.vn', '0988.341.992', '0988.341.992', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:45', 'Hoạt động'),
+				('thuynt', 'Nguyễn Thị Thủy', 'Nguyễn Thị Thủy', 'Kế Toán Trưởng', 'Phòng Kế Toán & Vật Tư', 'thuynt@ttcgroup.vn', '0915.678.901', '0915.678.901', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:00', 'Hoạt động')
+				ON CONFLICT (username) DO NOTHING;
 
-			INSERT INTO user_roles (role, "desc", description, users, level, permission, status) VALUES
-			('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', '2', 'Cấp 1', 'Toàn quyền hệ thống', 'Hoạt động'),
-			('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI OCR ANPR', 'Vận hành cân', '4', 'Cấp 2', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
-			('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', '3', 'Cấp 2', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
-			('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', '3', 'Cấp 2', 'Quản lý tài chính kế toán', 'Hoạt động');
+				INSERT INTO user_roles (role, "desc", description, users, level, permission, status) VALUES
+				('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', '2', 'Cấp 1', 'Toàn quyền hệ thống', 'Hoạt động'),
+				('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI OCR ANPR', 'Vận hành cân', '4', 'Cấp 2', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
+				('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', '3', 'Cấp 2', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
+				('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', '3', 'Cấp 2', 'Quản lý tài chính kế toán', 'Hoạt động');
 
-			INSERT INTO user_logs (time, "user", username, name, action, target, ip, status) VALUES
-			('28/10/2026 09:42', 'dungnv', 'dungnv', 'Nguyễn Văn Dũng', 'Chốt phiếu cân xuất mỏ Lần 2', 'TK-20261028-001 (88H-042.27)', '192.168.1.100', 'Thành công'),
-			('28/10/2026 09:30', 'kientv', 'kientv', 'Trần Văn Kiên', 'Lập hộ chiếu nổ mìn Moong tầng 3', 'PASSPORT-BLAST-1026-01', '192.168.1.105', 'Thành công'),
+				INSERT INTO user_logs (time, "user", username, name, action, target, ip, status) VALUES
+				('28/10/2026 09:42', 'dungnv', 'dungnv', 'Nguyễn Văn Dũng', 'Chốt phiếu cân xuất mỏ Lần 2', 'TK-20261028-001 (88H-042.27)', '192.168.1.100', 'Thành công'),
+				('28/10/2026 09:30', 'kientv', 'kientv', 'Trần Văn Kiên', 'Lập hộ chiếu nổ mìn Moong tầng 3', 'PASSPORT-BLAST-1026-01', '192.168.1.105', 'Thành công'),
 			('28/10/2026 09:15', 'admin', 'admin', 'Nguyễn Đức Trường', 'Duyệt kế hoạch khai thác tháng 10', 'PLAN-Q4-2026-01', '192.168.1.10', 'Thành công'),
 			('28/10/2026 08:45', 'thuynt', 'thuynt', 'Nguyễn Thị Thủy', 'Xuất hóa đơn điện tử VAT', 'INV-20261028-0082', '192.168.1.50', 'Thành công');
 
@@ -313,6 +364,9 @@ func Seed() {
 			ON CONFLICT (code) DO NOTHING;
 		`)
 	}
+
+	// Backfill a default demo password (admin) for any accounts missing one.
+	Pool.Exec(ctx, `UPDATE users SET password_hash = 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35' WHERE password_hash IS NULL OR password_hash = ''`)
 
 	// 12. Seed Catalogs (Ticket types, Vehicles, Stations, Equipment)
 	var ttCount int
@@ -346,36 +400,117 @@ func Seed() {
 		`)
 	}
 
-	// 13. Seed Mining Operations & Statutory Reports
-	var statCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM statutory_reports").Scan(&statCount)
-	if statCount == 0 {
-		Pool.Exec(ctx, `
-			INSERT INTO statutory_reports (id, code, name, item, period, plan, actual, diff, status) VALUES
-			('STAT-01', 'BC-TK-2026-Q3', 'Báo cáo thống kê hoạt động khai thác khoáng sản Q3/2026 (Mẫu số 01/KTKS)', 'Đá vôi xây dựng', 'Quý 3/2026', '350.000 m3', '362.400 m3', '+3.5%', 'Đã nộp Sở TN&MT'),
-			('STAT-02', 'BC-AT-2026-10', 'Báo cáo công tác an toàn lao động & VLNCN tháng 10/2026', 'An toàn & Thuốc nổ', 'Tháng 10/2026', '100% An toàn', 'Không sự cố', 'Đạt', 'Đã nộp Sở Công Thương'),
-			('STAT-03', 'BC-BVMT-2026-Q3', 'Báo cáo quan trắc môi trường định kỳ mỏ Q3/2026', 'Bụi, Tiếng ồn, Nước thải', 'Quý 3/2026', 'Đạt QCVN', 'QCVN 05/2013/BTNMT', 'Đạt', 'Đã thẩm định')
-			ON CONFLICT (id) DO NOTHING;
+	// 13. Seed Mining Operations, Statutory Reports & Inventory/Payments
+	fmt.Println("🌱 Seeding Mining Operations, Plans, Permits & Inventory/Payments...")
+	miningQueries := []string{
+		`DELETE FROM statutory_reports`,
+		`INSERT INTO statutory_reports (id, code, title, recipient, period, date, mined_volume, tax_amount, env_fee_amount, status, status_label) VALUES
+		('STAT-01', 'BC-TK-2026-Q3', 'Báo cáo thống kê hoạt động khai thác khoáng sản Q3/2026 (Mẫu số 01/KTKS)', 'Sở Tài nguyên & Môi trường tỉnh Phú Thọ', 'Quý 3/2026', '15/10/2026', '362.400 m³', '4.348.800.000 đ', '1.087.200.000 đ', 'approved', 'Đã phê duyệt'),
+		('STAT-02', 'BC-AT-2026-10', 'Báo cáo công tác an toàn lao động & VLNCN tháng 10/2026', 'Sở Công Thương tỉnh Phú Thọ', 'Tháng 10/2026', '25/10/2026', '124.500 m³', '1.494.000.000 đ', '373.500.000 đ', 'approved', 'Đã thẩm định'),
+		('STAT-03', 'BC-BVMT-2026-Q3', 'Báo cáo quan trắc môi trường định kỳ mỏ Q3/2026', 'Cục Địa chất & Khoáng sản Việt Nam', 'Quý 3/2026', '30/10/2026', '362.400 m³', '4.348.800.000 đ', '1.087.200.000 đ', 'pending', 'Chờ tiếp nhận')`,
 
-			INSERT INTO resource_taxes (code, material, tax_rate, environmental_fee, status) VALUES
-			('TAX-01', 'Đá vôi xây dựng nguyên khai (Đá hộc)', '10%', '3.000 đ/m3', 'Hiệu lực'),
-			('TAX-02', 'Đá thành phẩm nghiền sàng (Đá 1x2, 2x4, 4x6)', '10%', '3.000 đ/m3', 'Hiệu lực'),
-			('TAX-03', 'Cát nghiền nhân tạo (Mạt đá)', '10%', '4.000 đ/m3', 'Hiệu lực')
-			ON CONFLICT (code) DO NOTHING;
+		`DELETE FROM resource_taxes`,
+		`INSERT INTO resource_taxes (code, mineral_type, mined_volume, tax_price_per_unit, tax_rate, resource_tax_amount, environmental_fee, total_payable, status) VALUES
+		('TAX-01', 'Đá vôi xây dựng nguyên khai (Đá hộc)', 362400, 120000, '10%', 4348800000, 1087200000, 5436000000, 'Đã nộp NSNN'),
+		('TAX-02', 'Đá thành phẩm nghiền sàng (Đá 1x2, 2x4, 4x6)', 245000, 160000, '10%', 3920000000, 735000000, 4655000000, 'Đã nộp NSNN'),
+		('TAX-03', 'Cát nghiền nhân tạo (Mạt đá mi)', 85000, 110000, '10%', 935000000, 340000000, 1275000000, 'Chờ quyết toán')`,
 
-			INSERT INTO production_stages (code, name, stage, description, status) VALUES
-			('STG-01', 'Khoan & Nổ Mìn Cắt Tầng', 'Công đoạn 1', 'Khoan lỗ D110 nạp thuốc nổ ANFO/Nhũ tương phá vỡ tầng đá', 'Đang vận hành'),
-			('STG-02', 'Bốc Xúc & Vận Chuyển Moong', 'Công đoạn 2', 'Máy xúc PC450 bốc đá hộc lên xe ben vận chuyển về trạm nghiền', 'Đang vận hành'),
-			('STG-03', 'Nghiền Sàng Tuyển Thành Phẩm', 'Công đoạn 3', 'Nghiền thô kẹp hàm + Sàng rung phân loại Đá 1x2, 4x6, cát nghiền', 'Đang vận hành'),
-			('STG-04', 'Cân Điện Tử & Xuất Bán Mỏ', 'Công đoạn 4', 'Cân xe 2 lần chốt tải trọng và phát hành phiếu cân DO/HĐĐT', 'Đang vận hành')
-			ON CONFLICT (code) DO NOTHING;
+		`DELETE FROM production_stages`,
+		`INSERT INTO production_stages (code, stage_number, stage_name, icon, volume_month, volume_ytd, loss_rate, loss_status, measurement_method, description, status) VALUES
+		('STG-01', 1, 'Khoan & Nổ mìn Cắt tầng', 'zap', '125.000 m³', '1.120.000 m³', '0.5% (Định mức)', 'normal', 'Đo đạc 3D Laser Scanner & Hộ chiếu nổ mìn', 'Hộ chiếu nổ mìn điện tử phê duyệt Sở Công Thương', 'Đang vận hành'),
+		('STG-02', 2, 'Bốc xúc & Vận tải Moong', 'truck', '124.300 m³', '1.114.000 m³', '0.6% (Định mức)', 'normal', 'Camera AI đếm chuyến & Cảm biến gầu xúc', 'Giám sát GPS và hành trình xe ben nội bộ', 'Đang vận hành'),
+		('STG-03', 3, 'Nghiền sàng & Phân loại', 'layers', '123.500 m³', '1.107.000 m³', '0.8% (Định mức)', 'normal', 'Cân băng tải động & Ampe kế phụ tải nghiền', 'Tự động bù ẩm và chốt công tơ điện định mức', 'Đang vận hành'),
+		('STG-04', 4, 'Tồn trữ Bãi thành phẩm', 'database', '85.000 m³', '85.000 m³', '0.2%', 'normal', 'Drone RTK quét địa hình tính khối lượng bãi', 'Bay quét Flycam 3D định kỳ 15 ngày/lần', 'Đang vận hành'),
+		('STG-05', 5, 'Cân điện tử & Xuất bán', 'scale', '118.200 m³', '1.058.000 m³', '0.0% (Chuẩn)', 'success', 'Trạm cân 120T Keli + Camera AI chụp 4 góc', 'Phiếu cân điện tử mã hóa QR, ký số HĐĐT tức thì', 'Đang vận hành')`,
 
-			INSERT INTO hr_shifts (code, name, start_time, end_time, hours, status) VALUES
-			('SHIFT-01', 'Ca Sáng (Ca 1)', '06:00', '14:00', 8.0, 'Hoạt động'),
-			('SHIFT-02', 'Ca Chiều (Ca 2)', '14:00', '22:00', 8.0, 'Hoạt động'),
-			('SHIFT-03', 'Ca Hành Chính', '07:30', '16:30', 8.0, 'Hoạt động')
-			ON CONFLICT (code) DO NOTHING;
-		`)
+		`INSERT INTO mining_plans (id, mine, item, annual_target, unit, q1_plan, q1_actual, q2_plan, q2_actual, q3_plan, q3_actual, q4_plan, q4_actual, ytd_actual, completion_rate, status, status_label) VALUES
+		('PLAN-01', 'Mỏ 1 (1.000.000 m³/năm)', 'Đá 1x2 bê tông tiêu chuẩn', 450000, 'm3', 110000, 114500, 115000, 118200, 115000, 116400, 110000, 38200, 387300, 86.1, 'active', 'Đang thực hiện'),
+		('PLAN-02', 'Mỏ 1 (1.000.000 m³/năm)', 'Đá 4x6 móng công trình', 350000, 'm3', 85000, 89200, 90000, 91500, 90000, 90800, 85000, 31200, 302700, 86.5, 'active', 'Đang thực hiện'),
+		('PLAN-03', 'Mỏ 1 (1.000.000 m³/năm)', 'Cát nghiền nhân tạo (Mạt đá)', 200000, 'm3', 50000, 52100, 50000, 51400, 50000, 50900, 50000, 17800, 172200, 86.1, 'active', 'Đang thực hiện'),
+		('PLAN-04', 'Mỏ 2 (800.000 m³/năm)', 'Đá 1x2 bê tông tiêu chuẩn', 360000, 'm3', 90000, 92400, 90000, 91800, 90000, 90200, 90000, 28500, 302900, 84.1, 'active', 'Đang thực hiện'),
+		('PLAN-05', 'Mỏ 2 (800.000 m³/năm)', 'Đá 2x4 móng hạ tầng', 280000, 'm3', 70000, 71500, 70000, 70800, 70000, 69900, 70000, 24100, 236300, 84.4, 'active', 'Đang thực hiện'),
+		('PLAN-06', 'Mỏ 2 (800.000 m³/năm)', 'Đá base cấp phối loại 1', 160000, 'm3', 40000, 41200, 40000, 40500, 40000, 39800, 40000, 13900, 135400, 84.6, 'active', 'Đang thực hiện')
+		ON CONFLICT (id) DO NOTHING`,
+
+		`INSERT INTO blasting_passports (id, code, mine_name, blast_date, blast_time, location, hole_count, hole_depth_meters, anfo_explosive_kg, emulsion_explosive_kg, detonator_count, designed_rock_volume_m3, powder_factor_kg_per_m3, actual_rock_mined_m3, safety_status, blaster_in_charge, certified_number) VALUES
+		('BLAST-01', 'HC-20261028-01', 'Mỏ 1 (Thanh Ba)', '28/10/2026', '11:30', 'Tầng +45m Khai trường Tây', 42, 12.5, 3850, 450, 42, 9800, 0.438, 10250, 'Đã nghiệm thu', 'Nguyễn Văn Hùng', 'CH-VLNCN-2024-089'),
+		('BLAST-02', 'HC-20261027-02', 'Mỏ 1 (Thanh Ba)', '27/10/2026', '11:30', 'Tầng +30m Khai trường Nam', 36, 11.8, 3200, 380, 36, 8200, 0.436, 8560, 'Đã nghiệm thu', 'Trần Đình Trọng', 'CH-VLNCN-2023-112'),
+		('BLAST-03', 'HC-20261029-01', 'Mỏ 2 (Cẩm Khê)', '29/10/2026', '16:30', 'Tầng +60m Vỉa Bắc', 48, 13.0, 4500, 520, 48, 11500, 0.436, 0, 'Chờ kích nổ', 'Hoàng Minh Đức', 'CH-VLNCN-2025-045')
+		ON CONFLICT (id) DO NOTHING`,
+
+		`DELETE FROM crusher_plants`,
+		`INSERT INTO crusher_plants (plant_code, plant_name, capacity_ton_per_hour, input_rock_today_tons, power_consumption_kwh, kwh_per_ton, yield_breakdown) VALUES
+		('PLANT-01', 'Dây Chuyền Nghiền Sàng Số 01 (350T/h)', 350, 2680, 3216, 1.20, '[{"productName":"Đá 1x2 bê tông tiêu chuẩn","producedTons":1340,"yieldPercent":50,"standardRate":48},{"productName":"Đá 4x6 móng công trình","producedTons":804,"yieldPercent":30,"standardRate":32},{"productName":"Cát nghiền nhân tạo (Mạt đá)","producedTons":402,"yieldPercent":15,"standardRate":14},{"productName":"Đá mi bụi sàng tuyển","producedTons":134,"yieldPercent":5,"standardRate":6}]'::jsonb),
+		('PLANT-02', 'Dây Chuyền Nghiền Sàng Số 02 (250T/h)', 250, 1850, 2312, 1.25, '[{"productName":"Đá 1x2 sàng tuyển mác cao","producedTons":925,"yieldPercent":50,"standardRate":48},{"productName":"Đá 2x4 đổ bê tông","producedTons":555,"yieldPercent":30,"standardRate":30},{"productName":"Cát nhân tạo VSI","producedTons":277,"yieldPercent":15,"standardRate":16},{"productName":"Bột đá phụ gia","producedTons":93,"yieldPercent":5,"standardRate":6}]'::jsonb)`,
+
+		`INSERT INTO equipment_fuel_logs (id, equipment_code, equipment_name, category, operator_name, hours_worked_today, total_hours_meter, fuel_quota_liters_per_hour, actual_fuel_issued_liters, actual_fuel_consumed_liters, fuel_variance_liters, variance_status, location, maintenance_status) VALUES
+		('FUEL-01', 'EQ-EXC-01', 'Máy Xúc Bánh Xích Komatsu PC450 #01', 'Máy xúc moong', 'Nguyễn Văn Dũng', 7.5, 4820.5, 32.0, 240, 234.5, -5.5, 'Tiết kiệm (-5.5L)', 'Moong Khai Thác Tầng 3', 'Bảo dưỡng định kỳ A'),
+		('FUEL-02', 'EQ-EXC-02', 'Máy Xúc Bánh Xích Hitachi ZX350 #02', 'Máy xúc moong', 'Trần Văn Kiên', 8.0, 3915.0, 28.0, 224, 221.0, -3.0, 'Tiết kiệm (-3.0L)', 'Moong Khai Thác Tầng 2', 'Hoạt động tốt'),
+		('FUEL-03', 'EQ-TRK-01', 'Xe Ben Howo 371HP 8x4 #01', 'Xe ben nội bộ', 'Lê Hữu Thắng', 8.0, 5210.0, 14.5, 120, 116.0, -4.0, 'Tiết kiệm (-4.0L)', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt'),
+		('FUEL-04', 'EQ-TRK-02', 'Xe Ben Howo 371HP 8x4 #02', 'Xe ben nội bộ', 'Hoàng Minh Đức', 8.0, 4980.0, 14.5, 120, 118.5, -1.5, 'Đạt định mức', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt'),
+		('FUEL-05', 'EQ-DRL-01', 'Dàn Khoan Thủy Lực Furukawa D45', 'Máy khoan tự hành', 'Phạm Văn Nam', 6.5, 2150.0, 22.0, 145, 142.0, -3.0, 'Tiết kiệm (-3.0L)', 'Tầng +45m Khai trường Tây', 'Hoạt động tốt')
+		ON CONFLICT (id) DO NOTHING`,
+
+		`INSERT INTO mining_permits (id, code, title, mine_name, category, category_label, issuer, license_number, issue_date, expiry_date, capacity, approved_reserve, mined_so_far, mined_percent, depth_level, area, coordinates, status, status_label, days_remaining, files, notes) VALUES
+		('PERMIT-01', 'GP-28102018-BTNMT', 'Giấy phép khai thác khoáng sản Mỏ Đá Vôi Thanh Ba', 'Mỏ 1 (Thanh Ba)', 'mining_license', 'Giấy phép khai thác mỏ', 'Bộ Tài nguyên và Môi trường', 'Số 2810/GP-BTNMT', '28/10/2018', '28/10/2038', '1.000.000 m³/năm', '20.000.000 m³', '5.240.000 m³', 26, 'Mức cao +85m đến +15m', '48.5 Hecta', '21.3210°N, 105.3280°E', 'valid', 'Còn hiệu lực', 4380, '[{"name":"Quyet_Dinh_Cap_Phep_2810.pdf","size":"4.2 MB","type":"pdf","url":"#"}]'::jsonb, 'Được phép khai thác đá vôi làm VLXD thông thường'),
+		('PERMIT-02', 'GP-15062020-UBND', 'Giấy phép khai thác đá xây dựng Mỏ Cẩm Khê', 'Mỏ 2 (Cẩm Khê)', 'mining_license', 'Giấy phép khai thác mỏ', 'UBND Tỉnh Phú Thọ', 'Số 1506/GP-UBND', '15/06/2020', '15/06/2035', '800.000 m³/năm', '12.000.000 m³', '3.120.000 m³', 26, 'Mức cao +90m đến +25m', '35.2 Hecta', '21.4120°N, 105.2150°E', 'valid', 'Còn hiệu lực', 3215, '[{"name":"Giay_Phep_Cam_Khe_1506.pdf","size":"3.8 MB","type":"pdf","url":"#"}]'::jsonb, 'Khai thác đá xây dựng và cát nhân tạo'),
+		('PERMIT-03', 'GP-118-SCT', 'Giấy phép sử dụng Vật liệu nổ công nghiệp năm 2026', 'Mỏ 1 (Thanh Ba)', 'legal_profile', 'Hồ sơ pháp lý VLNCN', 'Sở Công Thương tỉnh Phú Thọ', 'Số 118/GP-SCT', '01/01/2026', '31/12/2026', '180 Tấn/năm', '180 Tấn ANFO', '142 Tấn', 78, 'Kho mìn cấp 1', 'Toàn mỏ', '21.3210°N, 105.3280°E', 'valid', 'Còn hiệu lực', 128, '[]'::jsonb, 'Định mức nổ mìn ca ngày'),
+		('PERMIT-04', 'DTM-2018-BTNMT', 'Quyết định phê duyệt Báo cáo Đánh giá tác động môi trường (ĐTM)', 'Mỏ 1 (Thanh Ba)', 'environmental', 'Giấy phép môi trường & ĐTM', 'Bộ Tài nguyên và Môi trường', 'Số 315/QĐ-BTNMT', '15/08/2018', '28/10/2038', 'Hồ lắng 3 cấp 450 m³/ngày', 'Ký quỹ 4.2 Tỷ', 'Đã ký quỹ 100%', 100, 'Khu xử lý nước thải', '48.5 Hecta', '21.3210°N, 105.3280°E', 'valid', 'Còn hiệu lực', 4380, '[]'::jsonb, 'Báo cáo quan trắc định kỳ 4 đợt/năm'),
+		('PERMIT-05', 'TL-2018-HDKS', 'Báo cáo kết quả thăm dò & Phê duyệt trữ lượng khoáng sản', 'Mỏ 1 (Thanh Ba)', 'geological', 'Hồ sơ trữ lượng & Bản đồ', 'Hội đồng Đánh giá Trữ lượng Khoáng sản Quốc gia', 'Số 89/HĐTL-QG', '10/05/2018', '28/10/2038', 'Cấp 121 + 122', '24.800.000 m³', '5.240.000 m³', 21, 'Độ sâu đến +15m', '48.5 Hecta', '21.3210°N, 105.3280°E', 'valid', 'Đã nghiệm thu đo đạc', 4380, '[]'::jsonb, 'Bản đồ hiện trạng mỏ cập nhật định kỳ 6 tháng/lần'),
+		('PERMIT-06', 'HD-THUEDAT-2018', 'Hợp đồng thuê đất mở mỏ khai thác đá', 'Mỏ 1 (Thanh Ba)', 'contract', 'Hợp đồng mỏ & dịch vụ', 'Sở Tài nguyên & Môi trường tỉnh Phú Thọ', 'Số 48/HĐTĐ-STNMT', '15/11/2018', '15/11/2048', '48.5 Hecta', 'Thời hạn 30 năm', 'Thuê 48.5 ha', 100, 'Toàn bộ diện tích mỏ', '48.5 Hecta', '21.3210°N, 105.3280°E', 'valid', 'Đang thực hiện', 8120, '[]'::jsonb, 'Đã nộp tiền thuê đất hàng năm đầy đủ'),
+		('PERMIT-07', 'HD-GAET-2026', 'Hợp đồng dịch vụ Khoan nổ mìn trọn gói 2026', 'Mỏ 1 & Mỏ 2', 'contract', 'Hợp đồng mỏ & dịch vụ', 'Tổng Công Ty Kinh Tế Kỹ Thuật CNQP (GAET)', 'Số 26/HĐ-GAET-TTC', '02/01/2026', '31/12/2026', '1.400.000 m³ đá', '180 Tấn VLNCN', '142 Tấn', 78, 'Toàn bộ khai trường', '83.7 Hecta', '21.3210°N, 105.3280°E', 'valid', 'Đang thực hiện', 128, '[]'::jsonb, 'Dịch vụ nạp nổ mìn trọn gói theo hộ chiếu'),
+		('PERMIT-08', 'HD-CIENCO4-2026', 'Hợp đồng cung cấp đá bê tông dự án Cao tốc', 'Mỏ 1 (Thanh Ba)', 'contract', 'Hợp đồng mỏ & dịch vụ', 'Tập Đoàn CIENCO 4', 'Số 112/HĐ-C4-TTC', '10/02/2026', '30/06/2027', '1.200.000 Tấn Đá 1x2 & 4x6', 'Giá trị 240 Tỷ đ', '620.000 Tấn', 52, 'Gói thầu XL-02 Cao tốc', 'Tuyến cao tốc', '21.3210°N, 105.3280°E', 'valid', 'Đang thực hiện', 310, '[]'::jsonb, 'Cung ứng đá cấp phối và đá bê tông mác cao')
+		ON CONFLICT (id) DO NOTHING`,
+
+		`INSERT INTO inventory_inbound (code, source, loc, item, qty, quantity, date, status) VALUES
+		('NK-281025-01', 'Moong Khai Thác Tầng 3', 'Bãi Đá Hộc & Nguyên Khai', 'Đá hộc khai thác tầng', '450.00 Tấn', '450.00 Tấn', '28/10/2026', 'Đã nhập bãi'),
+		('NK-281025-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá Thành Phẩm 01', 'Đá 1x2 bê tông tiêu chuẩn', '380.00 Tấn', '380.00 Tấn', '28/10/2026', 'Đã nhập bãi'),
+		('NK-281025-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá 4x6 Kè Móng', 'Đá 4x6 móng công trình', '320.00 Tấn', '320.00 Tấn', '27/10/2026', 'Đã nhập bãi'),
+		('NK-281025-04', 'Dây Chuyền Nghiền Sàng 02', 'Kho Cát Nghiền Mái Che', 'Cát nghiền nhân tạo (Mạt đá)', '280.50 Tấn', '280.50 Tấn', '27/10/2026', 'Đã nhập bãi')
+		ON CONFLICT DO NOTHING`,
+
+		`INSERT INTO inventory_outbound (code, customer, dest, item, qty, quantity, date, status) VALUES
+		('XK-281025-01', 'Công ty CP Đầu Tư Xây Dựng 319', 'Dự án KCN Phú Hà', 'Đá 1x2 bê tông tiêu chuẩn', '380.00 Tấn', '380.00 Tấn', '28/10/2026', 'Đã xuất bãi'),
+		('XK-281025-02', 'Tập Đoàn CIENCO 4 (Cao Tốc)', 'Gói thầu XL-02 Cao tốc', 'Đá 4x6 móng công trình', '290.00 Tấn', '290.00 Tấn', '28/10/2026', 'Đã xuất bãi'),
+		('XK-281025-03', 'Công ty Bê Tông Việt Trì', 'Trạm trộn Bê tông Việt Trì', 'Đá 1x2 bê tông mác 350', '180.00 Tấn', '180.00 Tấn', '27/10/2026', 'Đã xuất bãi'),
+		('XK-281025-04', 'Tổng Công Ty XD Trường Sơn', 'Dự án Cầu Phong Châu mới', 'Đá base cấp phối loại 1', '140.00 Tấn', '140.00 Tấn', '27/10/2026', 'Đã xuất bãi')
+		ON CONFLICT DO NOTHING`,
+
+		`INSERT INTO inventory_stocktake (code, zone, item, volume, survey, erp, book, actual, diff, quantity, date, status) VALUES
+		('KK-20261028-01', 'Bãi Đá 1x2 Thành Phẩm Số 1 (Lô A)', 'Đá 1x2 bê tông tiêu chuẩn', '4.850 m³', '7.517 Tấn', '7.520 Tấn', '7.520 Tấn', '7.517 Tấn', '-3 Tấn (-0.04%)', '7.517 Tấn', '28/10/2026', 'Khớp 99.9% (Chiếm 55%)'),
+		('KK-20261028-02', 'Bãi Đá 4x6 Móng Hạ Tầng (Lô B)', 'Đá 4x6 móng công trình', '3.200 m³', '5.056 Tấn', '5.050 Tấn', '5.050 Tấn', '5.056 Tấn', '+6 Tấn (+0.1%)', '5.056 Tấn', '28/10/2026', 'Khớp 100% (Chiếm 32%)'),
+		('KK-20261028-03', 'Kho Phụ Trợ 02 (Lô C)', 'Cát nghiền nhân tạo (Mạt đá)', '421 m³', '611 Tấn', '615 Tấn', '615 Tấn', '611 Tấn', '-4 Tấn (-0.6%)', '611 Tấn', '27/10/2026', 'Khớp 99.4%')
+		ON CONFLICT DO NOTHING`,
+
+		`INSERT INTO inventory_movements (code, from_loc, to_loc, item, qty, quantity, date, status) VALUES
+		('DC-281025-01', 'Bãi Nổ Mìn Tầng 2', 'Phễu Nghiền Thô 01', 'Đá hộc cấp liệu nghiền 1x2 & 4x6', '850 Tấn', '850 Tấn', '28/10/2026', 'Hoàn tất'),
+		('DC-281025-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Chứa Thành Phẩm Đá 1x2', 'Đá 1x2 sàng tuyển tiêu chuẩn', '480 Tấn', '480 Tấn', '28/10/2026', 'Hoàn tất'),
+		('DC-281025-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Chứa Móng Hạ Tầng Đá 4x6', 'Đá 4x6 móng đường cao tốc', '290 Tấn', '290 Tấn', '27/10/2026', 'Hoàn tất')
+		ON CONFLICT DO NOTHING`,
+
+		`INSERT INTO payments_debt (code, partner, customer, limit_amount, limit_val, balance, amount, debt, due, status) VALUES
+		('CN-001', 'Công ty CP Đầu Tư Xây Dựng 319', 'Công ty CP Đầu Tư Xây Dựng 319', '3.0 Tỷ đ', '3.0 Tỷ đ', '320.000.000 đ', '320.000.000 đ', '320.000.000 đ', '28/11/2026', 'Trong hạn'),
+		('CN-002', 'Tổng Công Ty XD Trường Sơn', 'Tổng Công Ty XD Trường Sơn', '2.0 Tỷ đ', '2.0 Tỷ đ', '540.000.000 đ', '540.000.000 đ', '540.000.000 đ', '12/11/2026', 'Trong hạn'),
+		('CN-003', 'Tập Đoàn CIENCO 4 (Cao Tốc Phú Thọ)', 'Tập Đoàn CIENCO 4', '5.0 Tỷ đ', '5.0 Tỷ đ', '1.250.000.000 đ', '1.250.000.000 đ', '1.250.000.000 đ', '02/11/2026', 'Trong hạn'),
+		('CN-004', 'Công ty Bê Tông Việt Trì', 'Công ty Bê Tông Việt Trì', '800 Triệu đ', '800 Triệu đ', '180.000.000 đ', '180.000.000 đ', '180.000.000 đ', '05/11/2026', 'Trong hạn')
+		ON CONFLICT DO NOTHING`,
+
+		`INSERT INTO payments_reconcile (code, period, day, scale_rev, acc_rev, scale_revenue, erp_revenue, diff, status, date) VALUES
+		('DS-281026-01', 'Ca 1 - 28/10/2026', '28/10/2026', '114.800.000 đ', '114.800.000 đ', '114.800.000 đ', '114.800.000 đ', '0 đ (Khớp 100%)', 'Khớp 100%', '28/10/2026'),
+		('DS-271026-02', 'Ca 2 - 27/10/2026', '27/10/2026', '98.500.000 đ', '98.500.000 đ', '98.500.000 đ', '98.500.000 đ', '0 đ (Khớp 100%)', 'Khớp 100%', '27/10/2026'),
+		('DS-261026-03', 'Ca 3 - 26/10/2026', '26/10/2026', '105.200.000 đ', '105.000.000 đ', '105.200.000 đ', '105.000.000 đ', '+200.000 đ (Chênh lệch)', 'Cần kiểm tra', '26/10/2026')
+		ON CONFLICT DO NOTHING`,
+
+		`INSERT INTO hr_shifts (code, name, start_time, end_time, hours, status) VALUES
+		('SHIFT-01', 'Ca Sáng (Ca 1)', '06:00', '14:00', 8.0, 'Hoạt động'),
+		('SHIFT-02', 'Ca Chiều (Ca 2)', '14:00', '22:00', 8.0, 'Hoạt động'),
+		('SHIFT-03', 'Ca Hành Chính', '07:30', '16:30', 8.0, 'Hoạt động')
+		ON CONFLICT (code) DO NOTHING`,
+	}
+	for i, q := range miningQueries {
+		if _, err := Pool.Exec(ctx, q); err != nil {
+			log.Printf("⚠️ Mining seed query %d error: %v", i+1, err)
+		}
 	}
 
 	// 14. Seed HRM extended modules (recruitment, decisions, insurance, training, KPI, workflow, timesheet/payroll)
@@ -581,6 +716,62 @@ func Seed() {
 			ON CONFLICT (id) DO NOTHING;
 		`)
 	}
+
+
+	// Seed Alerts (Cảnh báo gian lận / lệch bì trạm cân)
+	var alertCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM alerts").Scan(&alertCount)
+	if alertCount == 0 {
+		fmt.Println("🌱 Seeding Fraud / Tare-Mismatch Alerts...")
+		alerts := []struct {
+			ID, Title, BS, Note, Time, Date, Status, Severity, Phieu, Cam string
+			BiDangKy, BiThucTe, LechBi                                        float64
+		}{
+			{"ALT-2026-001", "Lệch bì +380 kg (Vượt ngưỡng)", "19H-056.22", "Bùn đất dính dày dưới gầm thùng xe sau mưa moong", "13:59 28/10", "28/10/2026", "Đang xử lý hiện trường", "danger", "TK-20261028-002", "Trạm Cân Cổng 01 - Phú Thọ", 26450, 26830, 380},
+			{"ALT-2026-002", "Lệch bì -140 kg (Trong dung sai nhưng bất thường)", "88H-042.27", "Trừ bì lệch do dư lượng thùng sau bốc hàng", "11:20 28/10", "28/10/2026", "Đã phê duyệt xử lý xong", "warning", "TK-20261028-001", "Trạm Cân Cổng 01 - Phú Thọ", 15420, 15280, 140},
+			{"ALT-2026-003", "Nhận diện biển số Camera AI thấp", "90C-123.45", "Camera ANPR độ tin cậy 82% do mưa lớn", "14:56 28/10", "28/10/2026", "Chuyển Thanh tra mỏ", "warning", "TK-20261028-004", "Trạm Cân Cổng 02 - Phú Thọ", 18500, 18500, 0},
+			{"ALT-2026-004", "Bảng giá đơn giá bất thường so với hợp đồng", "19C-098.76", "Nghi ngờ chỉnh sửa giá trọng tải đơn giá thủ công", "09:45 27/10", "27/10/2026", "Chờ xử lý", "info", "TK-20261027-009", "Trạm Cân Cổng 01 - Phú Thọ", 11200, 11200, 0},
+		}
+
+		for _, a := range alerts {
+			Pool.Exec(ctx, `
+				INSERT INTO alerts (id, title, bs, note, time, date, status, severity, phieu, cam, bi_dang_ky, bi_thuc_te, lech_bi)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+				ON CONFLICT (id) DO NOTHING
+			`, a.ID, a.Title, a.BS, a.Note, a.Time, a.Date, a.Status, a.Severity, a.Phieu, a.Cam, a.BiDangKy, a.BiThucTe, a.LechBi)
+		}
+	}
+
+	// Seed Print Templates (configurable voucher / report layouts)
+	var printCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM print_templates").Scan(&printCount)
+	if printCount == 0 {
+		fmt.Println("🌱 Seeding Configurable Print Templates...")
+		prints := []struct {
+			ID, Code, Name, DocType, Size, Orientation, Description, Layout, Status string
+			IsDefault                                                                 bool
+		}{
+			{"PRT-001", "TPL-TICKET-A5", "Phiếu cân xe A5 - 3 liên", "ticket", "A5", "portrait", "Phiếu in 3 liên (Khách, Kế toán, Bảo vệ) cho trạm cân", `{"page":{"size":"A5","orientation":"portrait","paddingMm":8},"elements":[{"id":"e1","kind":"text","text":"PHIẾU CÂN XE","x":0,"y":0,"w":100,"fontSize":16,"bold":true,"align":"center"},{"id":"e2","kind":"field","field":"bienSo","label":"Biển số","x":0,"y":24,"w":50,"fontSize":12,"bold":true},{"id":"e3","kind":"field","field":"matHang","label":"Mặt hàng","x":0,"y":38,"w":50,"fontSize":11},{"id":"e4","kind":"field","field":"klHang","label":"Khối lượng (kg)","x":0,"y":52,"w":50,"fontSize":12,"bold":true},{"id":"e5","kind":"field","field":"khachHang","label":"Bên mua","x":0,"y":66,"w":100,"fontSize":11},{"id":"e6","kind":"field","field":"laiXe","label":"Tài xế","x":0,"y":80,"w":50,"fontSize":11},{"id":"e7","kind":"field","field":"date","label":"Ngày","x":50,"y":80,"w":50,"fontSize":11}]}`, "active", true},
+			{"PRT-002", "TPL-INVOICE-A4", "Hóa đơn VAT - Mẫu A4", "invoice", "A4", "portrait", "Hóa đơn giá trị gia tăng bán hàng", `{"page":{"size":"A4","orientation":"portrait","paddingMm":12},"elements":[{"id":"e1","kind":"text","text":"HÓA ĐƠN GIÁ TRỊ GIA TĂNG","x":0,"y":0,"w":100,"fontSize":16,"bold":true,"align":"center"},{"id":"e2","kind":"text","text":"Ký hiệu: TT/26E  •  Số: 0002281","x":0,"y":20,"w":100,"fontSize":11,"align":"center"},{"id":"e3","kind":"field","field":"benMua","label":"Người mua","x":0,"y":36,"w":100,"fontSize":11},{"id":"e4","kind":"table","field":"items","label":"Danh mục","x":0,"y":60,"w":100,"fontSize":10}]}`, "active", true},
+			{"PRT-003", "TPL-ALERT-EN", "Biên bản xử lý cảnh báo", "alert", "A4", "portrait", "Biên bản vi phạm / cảnh báo lệch bì", `{"page":{"size":"A4","orientation":"portrait","paddingMm":10},"elements":[{"id":"e1","kind":"text","text":"BIÊN BẢN XỬ LÝ VI PHẠM","x":0,"y":0,"w":100,"fontSize":15,"bold":true,"align":"center"},{"id":"e2","kind":"field","field":"bienSo","label":"Biển số","x":0,"y":24,"w":50,"fontSize":12},{"id":"e3","kind":"field","field":"lechBi","label":"Lệch bì (kg)","x":50,"y":24,"w":50,"fontSize":12,"bold":true},{"id":"e4","kind":"field","field":"cause","label":"Nguyên nhân","x":0,"y":44,"w":100,"fontSize":11}]}`, "active", true},
+			{"PRT-004", "TPL-WH-SLIP", "Phiếu xuất kho đá", "warehouse", "A5", "portrait", "Phiếu xuất bãi / nhập kho đá", `{"page":{"size":"A5","orientation":"portrait","paddingMm":8},"elements":[{"id":"e1","kind":"text","text":"PHIẾU XUẤT KHO","x":0,"y":0,"w":100,"fontSize":15,"bold":true,"align":"center"},{"id":"e2","kind":"field","field":"item","label":"Mặt hàng","x":0,"y":24,"w":60,"fontSize":12},{"id":"e3","kind":"field","field":"quantity","label":"Số lượng (tấn)","x":0,"y":40,"w":40,"fontSize":12,"bold":true},{"id":"e4","kind":"field","field":"customer","label":"Khách hàng","x":0,"y":56,"w":100,"fontSize":11}]}`, "active", false},
+			{"PRT-005", "TPL-REPORT-LTR", "Báo cáo tổng hợp", "report", "A4", "landscape", "Báo cáo sản lượng / tổng hợp", `{"page":{"size":"A4","orientation":"landscape","paddingMm":12},"elements":[{"id":"e1","kind":"text","text":"KẾ HOẠCH & SẢN LƯỢNG","x":0,"y":0,"w":100,"fontSize":15,"bold":true,"align":"center"},{"id":"e2","kind":"field","field":"period","label":"Kỳ báo cáo","x":0,"y":24,"w":40,"fontSize":11},{"id":"e3","kind":"field","field":"actual","label":"Thực tế","x":40,"y":24,"w":30,"fontSize":11},{"id":"e4","kind":"field","field":"diff","label":"Chênh lệch","x":70,"y":24,"w":30,"fontSize":11,"bold":true}]}`, "active", false},
+		}
+
+		for _, p := range prints {
+			// Layout JSON is stored on disk, not in the DB (metadata only).
+			writePrintLayoutFile(p.ID, p.Layout)
+			Pool.Exec(ctx, `
+				INSERT INTO print_templates (id, code, name, doc_type, size, orientation, description, is_default, status)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+				ON CONFLICT (id) DO NOTHING
+			`, p.ID, p.Code, p.Name, p.DocType, p.Size, p.Orientation, p.Description, p.IsDefault, p.Status)
+		}
+	}
+
+	// Backfill: move any legacy layout stored in the DB column out to disk so
+	// templates remain disk-backed regardless of the seeding above.
+	printBackfillLayoutToDisk(ctx)
 
 	fmt.Println("✅ Complete mining domain datasets successfully verified and seeded in PostgreSQL!")
 }

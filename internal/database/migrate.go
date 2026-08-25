@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 )
 
 func Migrate() {
@@ -584,6 +585,21 @@ func Migrate() {
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
 
+		`CREATE TABLE IF NOT EXISTS print_templates (
+			id TEXT PRIMARY KEY,
+			code TEXT UNIQUE,
+			name TEXT,
+			doc_type TEXT,
+			size TEXT DEFAULT 'A5',
+			orientation TEXT DEFAULT 'portrait',
+			description TEXT,
+			layout TEXT,
+			is_default BOOLEAN DEFAULT FALSE,
+			status TEXT DEFAULT 'active',
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
 		`CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
 			username TEXT UNIQUE,
@@ -594,6 +610,7 @@ func Migrate() {
 			email TEXT,
 			phone TEXT,
 			sdt TEXT,
+			password_hash TEXT,
 			last_login TEXT,
 			status TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -1198,7 +1215,9 @@ func Migrate() {
 	}
 
 	for i, schema := range schemas {
-		_, err := Pool.Exec(ctx, schema)
+		stepCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		_, err := Pool.Exec(stepCtx, schema)
+		cancel()
 		if err != nil {
 			log.Printf("Migration step %d error: %v", i+1, err)
 		}
@@ -1211,15 +1230,61 @@ func Migrate() {
 		`CREATE OR REPLACE VIEW yard_check_in_outs AS SELECT * FROM yard_checkinout`,
 	}
 	for _, v := range views {
-		Pool.Exec(ctx, v)
+		stepCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		Pool.Exec(stepCtx, v)
+		cancel()
 	}
 
 	// Add optional columns that may be missing on pre-existing tables
 	alters := []string{
 		`ALTER TABLE hr_attendance_logs ADD COLUMN IF NOT EXISTS overtime_hours DOUBLE PRECISION DEFAULT 0`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`,
+		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS title TEXT`,
+		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS recipient TEXT`,
+		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS date TEXT`,
+		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS mined_volume TEXT`,
+		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS tax_amount TEXT`,
+		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS env_fee_amount TEXT`,
+		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS status_label TEXT`,
+		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS mineral_type TEXT`,
+		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS mined_volume NUMERIC DEFAULT 0`,
+		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS tax_price_per_unit NUMERIC DEFAULT 0`,
+		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS resource_tax_amount NUMERIC DEFAULT 0`,
+		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS total_payable NUMERIC DEFAULT 0`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS stage_number INTEGER DEFAULT 0`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS stage_name TEXT`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS icon TEXT`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS volume_month TEXT`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS volume_ytd TEXT`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS loss_rate TEXT`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS loss_status TEXT`,
+		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS measurement_method TEXT`,
+		`ALTER TABLE payments_debt ADD COLUMN IF NOT EXISTS debt TEXT`,
+		`ALTER TABLE payments_debt ADD COLUMN IF NOT EXISTS partner TEXT`,
+		`ALTER TABLE payments_debt ADD COLUMN IF NOT EXISTS limit_amount TEXT`,
+		`ALTER TABLE payments_debt ADD COLUMN IF NOT EXISTS limit_val TEXT`,
+		`ALTER TABLE payments_debt ADD COLUMN IF NOT EXISTS balance TEXT`,
+		`ALTER TABLE payments_debt ADD COLUMN IF NOT EXISTS due TEXT`,
+		`ALTER TABLE payments_reconcile ADD COLUMN IF NOT EXISTS day TEXT`,
+		`ALTER TABLE payments_reconcile ADD COLUMN IF NOT EXISTS period TEXT`,
+		`ALTER TABLE payments_reconcile ADD COLUMN IF NOT EXISTS scale_rev TEXT`,
+		`ALTER TABLE payments_reconcile ADD COLUMN IF NOT EXISTS acc_rev TEXT`,
+		`ALTER TABLE payments_reconcile ADD COLUMN IF NOT EXISTS scale_revenue TEXT`,
+		`ALTER TABLE payments_reconcile ADD COLUMN IF NOT EXISTS erp_revenue TEXT`,
+		`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS items TEXT`,
+		`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS phone TEXT`,
+		`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS sdt TEXT`,
+		`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS no TEXT`,
+		`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS rating TEXT`,
+		`ALTER TABLE inventory_inbound ADD COLUMN IF NOT EXISTS date TEXT`,
+		`ALTER TABLE inventory_outbound ADD COLUMN IF NOT EXISTS date TEXT`,
+		`ALTER TABLE inventory_stocktake ADD COLUMN IF NOT EXISTS date TEXT`,
+		`ALTER TABLE inventory_movements ADD COLUMN IF NOT EXISTS date TEXT`,
 	}
 	for _, a := range alters {
-		Pool.Exec(ctx, a)
+		stepCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		Pool.Exec(stepCtx, a)
+		cancel()
 	}
 
 	fmt.Println("Database migration completed successfully!")

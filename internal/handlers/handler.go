@@ -36,3 +36,8 @@ func readJSON(r *http.Request) (map[string]interface{}, error) {
 	err := json.NewDecoder(r.Body).Decode(&data)
 	return data, err
 }
+
+// decodeJSON decodes the request body into an arbitrary struct target.
+func decodeJSON(r *http.Request, target interface{}) error {
+	return json.NewDecoder(r.Body).Decode(target)
+}

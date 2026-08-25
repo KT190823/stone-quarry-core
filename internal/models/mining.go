@@ -79,6 +79,8 @@ type StatutoryReport struct {
 }
 
 type NaturalResourceTax struct {
+	ID                string  `json:"id"`
+	Code              string  `json:"code"`
 	MineralType       string  `json:"mineralType"`
 	MinedVolume       float64 `json:"minedVolume"`
 	TaxPricePerUnit   float64 `json:"taxPricePerUnit"`
