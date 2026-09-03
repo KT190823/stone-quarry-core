@@ -31,6 +31,12 @@ func main() {
 	userH := handlers.NewUserHandler()
 	cameraH := handlers.NewCameraHandler()
 	printH := handlers.NewPrintHandler()
+	quarryH := handlers.NewQuarryHandler()
+	integrationH := handlers.NewIntegrationHandler()
+
+	// Register Quarry Core & 3rd-Party Integration Gateway
+	quarryH.Register(mux)
+	integrationH.Register(mux)
 
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		handlers.JSON(w, map[string]string{"status": "ok", "service": "mo-da-backend"})
@@ -206,6 +212,59 @@ func main() {
 	mux.HandleFunc("GET /api/google/gmail", cameraH.ListGoogleGmail)
 	mux.HandleFunc("GET /api/google/maps", cameraH.ListGoogleMaps)
 	mux.HandleFunc("GET /api/google/photos", cameraH.ListGooglePhotos)
+
+	// ===== New modules from meeting requirements =====
+
+	// Vehicle trips (Camera AI)
+	mux.HandleFunc("GET /api/vehicle-trips", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListVehicleTrips(w, r)
+	})
+	mux.HandleFunc("GET /api/vehicle-trips/stats", func(w http.ResponseWriter, r *http.Request) {
+		handlers.VehicleTripStats(w, r)
+	})
+
+	// Cost norms
+	mux.HandleFunc("GET /api/cost-norms", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListCostNorms(w, r)
+	})
+
+	// Production costs
+	mux.HandleFunc("GET /api/production-costs", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListProductionCosts(w, r)
+	})
+	mux.HandleFunc("GET /api/production-costs/summary", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ProductionCostSummary(w, r)
+	})
+
+	// Delivery confirmations
+	mux.HandleFunc("GET /api/deliveries", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListDeliveries(w, r)
+	})
+
+	// Tax records
+	mux.HandleFunc("GET /api/tax", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListTaxRecords(w, r)
+	})
+
+	// Delegations
+	mux.HandleFunc("GET /api/delegations", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListDelegations(w, r)
+	})
+
+	// Risk alerts
+	mux.HandleFunc("GET /api/risk-alerts", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListRiskAlerts(w, r)
+	})
+
+	// Geofences
+	mux.HandleFunc("GET /api/geofences", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListGeofences(w, r)
+	})
+
+	// Authorizations (e-sign)
+	mux.HandleFunc("GET /api/authorizations", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ListAuthorizations(w, r)
+	})
 
 	addr := ":8080"
 	fmt.Printf("Backend API running at http://localhost%s\n", addr)

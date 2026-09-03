@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"net/url"
 
 	"mo-da-backend/internal/database"
 	"mo-da-backend/internal/services"
@@ -118,6 +119,9 @@ func (h *HrHandler) ListContracts(w http.ResponseWriter, r *http.Request) {
 
 func (h *HrHandler) GetContract(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if unescaped, err := url.PathUnescape(id); err == nil {
+		id = unescaped
+	}
 	result, err := h.contractSvc.GetByID(id)
 	if err != nil {
 		http.Error(w, "not found", 404)

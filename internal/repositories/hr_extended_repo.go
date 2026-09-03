@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -43,6 +44,24 @@ type HrEsignDocumentRepo struct {
 
 func NewHrEsignDocumentRepo() *HrEsignDocumentRepo {
 	return &HrEsignDocumentRepo{BaseRepo: newRepo("hr_esign_documents")}
+}
+
+func (r *HrEsignDocumentRepo) GetByID(idOrCode string) (map[string]interface{}, error) {
+	ctx := context.Background()
+	query := "SELECT row_to_json(t) FROM (SELECT * FROM hr_esign_documents WHERE id = $1 OR code = $1 LIMIT 1) t"
+
+	var data []byte
+	err := database.Pool.QueryRow(ctx, query, idOrCode).Scan(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	var item map[string]interface{}
+	if err := json.Unmarshal(data, &item); err != nil {
+		return nil, err
+	}
+
+	return item, nil
 }
 
 type HrEsignSignerRepo struct {

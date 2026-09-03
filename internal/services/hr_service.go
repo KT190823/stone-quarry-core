@@ -15,11 +15,19 @@ func NewHrEmployeeService() *HrEmployeeService {
 
 type HrContractService struct {
 	*BaseService
+	repo *repositories.HrContractRepo
 }
 
 func NewHrContractService() *HrContractService {
 	repo := repositories.NewHrContractRepo()
-	return &HrContractService{BaseService: NewBaseService(repo.BaseRepo)}
+	return &HrContractService{
+		BaseService: NewBaseService(repo.BaseRepo),
+		repo:        repo,
+	}
+}
+
+func (s *HrContractService) GetByID(idOrCode string) (map[string]interface{}, error) {
+	return s.repo.GetByID(idOrCode)
 }
 
 type HrShiftService struct {

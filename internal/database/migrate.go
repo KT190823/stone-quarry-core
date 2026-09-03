@@ -1280,6 +1280,208 @@ func Migrate() {
 		`ALTER TABLE inventory_outbound ADD COLUMN IF NOT EXISTS date TEXT`,
 		`ALTER TABLE inventory_stocktake ADD COLUMN IF NOT EXISTS date TEXT`,
 		`ALTER TABLE inventory_movements ADD COLUMN IF NOT EXISTS date TEXT`,
+
+		// ===== New modules from meeting requirements =====
+
+		// Production costs - Chi phí theo sản lượng
+		`CREATE TABLE IF NOT EXISTS production_costs (
+			id SERIAL PRIMARY KEY,
+			cost_type TEXT NOT NULL,
+			cost_category TEXT,
+			norm_value DOUBLE PRECISION DEFAULT 0,
+			norm_unit TEXT,
+			actual_value DOUBLE PRECISION DEFAULT 0,
+			actual_unit TEXT,
+			period TEXT,
+			mine_area TEXT,
+			description TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Cost norms - Định mức chi phí
+		`CREATE TABLE IF NOT EXISTS cost_norms (
+			id SERIAL PRIMARY KEY,
+			norm_name TEXT NOT NULL,
+			norm_type TEXT,
+			unit_cost DOUBLE PRECISION DEFAULT 0,
+			unit TEXT,
+			material_type TEXT,
+			vehicle_type TEXT,
+			effective_date TEXT,
+			status TEXT DEFAULT 'active',
+			description TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Vehicle trips - Chuyến xe Camera AI
+		`CREATE TABLE IF NOT EXISTS vehicle_trips (
+			id SERIAL PRIMARY KEY,
+			vehicle_id TEXT,
+			license_plate TEXT,
+			driver_name TEXT,
+			camera_id TEXT,
+			direction TEXT,
+			check_in_time TIMESTAMPTZ,
+			check_out_time TIMESTAMPTZ,
+			trip_number INTEGER,
+			estimated_quantity DOUBLE PRECISION DEFAULT 0,
+			actual_quantity DOUBLE PRECISION DEFAULT 0,
+			image_evidence TEXT,
+			ai_confidence DOUBLE PRECISION DEFAULT 0,
+			gps_start_point TEXT,
+			gps_end_point TEXT,
+			status TEXT DEFAULT 'completed',
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Delivery confirmations - Xác nhận giao hàng 3 nguồn
+		`CREATE TABLE IF NOT EXISTS delivery_confirmations (
+			id SERIAL PRIMARY KEY,
+			order_code TEXT,
+			contract_code TEXT,
+			customer_name TEXT,
+			vehicle_plate TEXT,
+			driver_name TEXT,
+			product_type TEXT,
+			quantity_ordered DOUBLE PRECISION DEFAULT 0,
+			quantity_delivered DOUBLE PRECISION DEFAULT 0,
+			quantity_confirmed DOUBLE PRECISION DEFAULT 0,
+			source_order TEXT,
+			source_scale TEXT,
+			source_warehouse TEXT,
+			confirmation_status TEXT DEFAULT 'pending',
+			confirmed_by TEXT,
+			confirmed_at TIMESTAMPTZ,
+			evidence_photo TEXT,
+			evidence_location TEXT,
+			evidence_timestamp TIMESTAMPTZ,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Accounting entries - Bút toán kế toán
+		`CREATE TABLE IF NOT EXISTS accounting_entries (
+			id SERIAL PRIMARY KEY,
+			entry_code TEXT UNIQUE,
+			entry_date TEXT,
+			entry_type TEXT,
+			account_code TEXT,
+			account_name TEXT,
+			description TEXT,
+			debit_amount DOUBLE PRECISION DEFAULT 0,
+			credit_amount DOUBLE PRECISION DEFAULT 0,
+			balance DOUBLE PRECISION DEFAULT 0,
+			reference_type TEXT,
+			reference_code TEXT,
+			tax_rate DOUBLE PRECISION DEFAULT 0,
+			tax_amount DOUBLE PRECISION DEFAULT 0,
+			period TEXT,
+			status TEXT DEFAULT 'posted',
+			created_by TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Tax records - Thuế phải nộp
+		`CREATE TABLE IF NOT EXISTS tax_records (
+			id SERIAL PRIMARY KEY,
+			tax_type TEXT NOT NULL,
+			tax_code TEXT,
+			period TEXT,
+			taxable_amount DOUBLE PRECISION DEFAULT 0,
+			tax_rate DOUBLE PRECISION DEFAULT 0,
+			tax_amount DOUBLE PRECISION DEFAULT 0,
+			paid_amount DOUBLE PRECISION DEFAULT 0,
+			due_date TEXT,
+			paid_date TEXT,
+			status TEXT DEFAULT 'pending',
+			authority TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Delegations - Ủy quyền
+		`CREATE TABLE IF NOT EXISTS delegations (
+			id SERIAL PRIMARY KEY,
+			delegator_name TEXT,
+			delegator_position TEXT,
+			delegate_name TEXT,
+			delegate_position TEXT,
+			permission_type TEXT,
+			scope TEXT,
+			start_date TEXT,
+			end_date TEXT,
+			document_url TEXT,
+			status TEXT DEFAULT 'active',
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Geofences - Vùng giám sát GPS
+		`CREATE TABLE IF NOT EXISTS geofences (
+			id SERIAL PRIMARY KEY,
+			name TEXT NOT NULL,
+			fence_type TEXT,
+			center_lat DOUBLE PRECISION DEFAULT 0,
+			center_lng DOUBLE PRECISION DEFAULT 0,
+			radius DOUBLE PRECISION DEFAULT 0,
+			polygon_points TEXT,
+			allowed_vehicles TEXT,
+			alert_on_exit BOOLEAN DEFAULT true,
+			alert_on_enter BOOLEAN DEFAULT false,
+			status TEXT DEFAULT 'active',
+			description TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Risk alerts - Cảnh báo rủi ro AI
+		`CREATE TABLE IF NOT EXISTS risk_alerts (
+			id SERIAL PRIMARY KEY,
+			alert_type TEXT NOT NULL,
+			severity TEXT DEFAULT 'medium',
+			title TEXT,
+			description TEXT,
+			module_source TEXT,
+			entity_type TEXT,
+			entity_id TEXT,
+			ai_confidence DOUBLE PRECISION DEFAULT 0,
+			suggested_action TEXT,
+			assigned_to TEXT,
+			status TEXT DEFAULT 'open',
+			resolved_at TIMESTAMPTZ,
+			resolved_by TEXT,
+			resolution_notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Authorization & E-signature - Ký số & Ủy quyền
+		`CREATE TABLE IF NOT EXISTS authorizations (
+			id SERIAL PRIMARY KEY,
+			auth_type TEXT,
+			document_type TEXT,
+			document_code TEXT,
+			authorizer_name TEXT,
+			authorizer_position TEXT,
+			signer_name TEXT,
+			signer_position TEXT,
+			signature_method TEXT,
+			signed_at TIMESTAMPTZ,
+			valid_from TEXT,
+			valid_to TEXT,
+			status TEXT DEFAULT 'pending',
+			tx_hash TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
 	}
 	for _, a := range alters {
 		stepCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -1287,5 +1489,8 @@ func Migrate() {
 		cancel()
 	}
 
+	MigrateQuarryModule()
+
 	fmt.Println("Database migration completed successfully!")
 }
+

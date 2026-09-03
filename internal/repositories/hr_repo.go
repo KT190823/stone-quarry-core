@@ -1,5 +1,11 @@
 package repositories
 
+import (
+	"context"
+	"encoding/json"
+	"mo-da-backend/internal/database"
+)
+
 type HrEmployeeRepo struct {
 	*BaseRepo
 }
@@ -14,6 +20,24 @@ type HrContractRepo struct {
 
 func NewHrContractRepo() *HrContractRepo {
 	return &HrContractRepo{BaseRepo: NewBaseRepo("hr_contracts", "id")}
+}
+
+func (r *HrContractRepo) GetByID(idOrCode string) (map[string]interface{}, error) {
+	ctx := context.Background()
+	query := "SELECT row_to_json(t) FROM (SELECT * FROM hr_contracts WHERE id = $1 OR code = $1 LIMIT 1) t"
+
+	var data []byte
+	err := database.Pool.QueryRow(ctx, query, idOrCode).Scan(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	var item map[string]interface{}
+	if err := json.Unmarshal(data, &item); err != nil {
+		return nil, err
+	}
+
+	return item, nil
 }
 
 type HrShiftRepo struct {

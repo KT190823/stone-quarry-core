@@ -773,5 +773,237 @@ func Seed() {
 	// templates remain disk-backed regardless of the seeding above.
 	printBackfillLayoutToDisk(ctx)
 
+	// Seed Quarry Core Module (Quarries, Areas, 3D Survey Cycles, Reconciliations)
+	SeedQuarryModule()
+
+	// Seed Google Maps GPS & Telematics Data
+	var mapCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM google_map_entries").Scan(&mapCount)
+	if mapCount == 0 {
+		fmt.Println("🌱 Seeding Google Maps GPS Telematics & Vehicle Fleet...")
+		mapEntries := []struct {
+			Code string
+			Data string
+		}{
+			{
+				Code: "MAP-DRV-01",
+				Data: `{"id":"DRV-01","plate":"88H-042.27","vehicleType":"Xe ben 4 chân Shacman X3000 (371HP)","driverName":"Trần Đình Trọng","driverPhone":"0913.678.902","lat":21.3280,"lng":105.3020,"speed":0,"maxSpeedLimit":60,"status":"idling_alert","statusLabel":"Dừng nổ máy 28p (Idling Alert)","engineStatus":"ON","engineRpm":780,"fuelLevelPercent":68,"fuelTankLiters":272,"idlingDurationMinutes":28,"idlingFuelWastedLiters":2.10,"idlingCostVnd":46200,"locationName":"Cổng trạm cân số 1 (Km 68 QL2)","destination":"Bãi tuyển đá 1x2 Nam Phương","cargo":"Đá 1x2 bê tông tiêu chuẩn","loadWeight":"36.40 Tấn","todayTrips":6,"todayKm":142,"updatedTime":"09:48:12 (Live GPS)","ticketId":"TK-20261028-001"}`,
+			},
+			{
+				Code: "MAP-DRV-02",
+				Data: `{"id":"DRV-02","plate":"19H-088.19","vehicleType":"Xe ben 3 chân Howo 371","driverName":"Nguyễn Văn Hùng","driverPhone":"0988.123.456","lat":21.3240,"lng":105.3180,"speed":42,"maxSpeedLimit":60,"status":"moving","statusLabel":"Đang di chuyển giao đá","engineStatus":"ON","engineRpm":1450,"fuelLevelPercent":82,"fuelTankLiters":328,"idlingDurationMinutes":0,"idlingFuelWastedLiters":0,"idlingCostVnd":0,"locationName":"QL2 Km 68 hướng Nút giao IC8","destination":"Gói thầu Cao tốc Cienco 4","cargo":"Đá 4x6 móng công trình","loadWeight":"32.10 Tấn","todayTrips":8,"todayKm":198,"updatedTime":"09:48:10 (Live GPS)","ticketId":"TK-20261028-003"}`,
+			},
+			{
+				Code: "MAP-DRV-03",
+				Data: `{"id":"DRV-03","plate":"19C-142.88","vehicleType":"Xe đầu kéo Hyundai HD270","driverName":"Lê Tuấn Anh","driverPhone":"0977.654.321","lat":21.3325,"lng":105.2950,"speed":0,"maxSpeedLimit":40,"status":"loading","statusLabel":"Đang xúc bốc đá tại Moong","engineStatus":"ON","engineRpm":820,"fuelLevelPercent":54,"fuelTankLiters":216,"idlingDurationMinutes":8,"idlingFuelWastedLiters":0.60,"idlingCostVnd":13200,"locationName":"Moong Khai Thác Tầng 2 (+100m)","destination":"Trạm Nghiền Sàng Số 01","cargo":"Đá hộc nổ mìn cỡ lớn","loadWeight":"28.50 Tấn","todayTrips":5,"todayKm":68,"updatedTime":"09:48:08 (Live GPS)","ticketId":"TK-20261028-002"}`,
+			},
+			{
+				Code: "MAP-DRV-04",
+				Data: `{"id":"DRV-04","plate":"29H-921.35","vehicleType":"Xe ben Howo V7X 4 chân","driverName":"Đặng Quốc Việt","driverPhone":"0904.889.900","lat":21.3285,"lng":105.3015,"speed":5,"maxSpeedLimit":20,"status":"weighing","statusLabel":"Đang vào bàn cân điện tử 80T","engineStatus":"ON","engineRpm":900,"fuelLevelPercent":91,"fuelTankLiters":364,"idlingDurationMinutes":3,"idlingFuelWastedLiters":0.22,"idlingCostVnd":4840,"locationName":"Cầu Cân Điện Tử 80 Tấn Số 02","destination":"Kho VLXD Sông Lô","cargo":"Đá mi sàng 0-5mm","loadWeight":"38.20 Tấn","todayTrips":7,"todayKm":165,"updatedTime":"09:48:05 (Live GPS)","ticketId":"TK-20261028-004"}`,
+			},
+			{
+				Code: "MAP-DRV-05",
+				Data: `{"id":"DRV-05","plate":"19H-056.22","vehicleType":"Xe ben 4 chân Dongfeng KC420","driverName":"Bùi Văn Long","driverPhone":"0912.334.455","lat":21.3300,"lng":105.2985,"speed":35,"maxSpeedLimit":50,"status":"moving","statusLabel":"Vận chuyển nội bộ mỏ","engineStatus":"ON","engineRpm":1280,"fuelLevelPercent":62,"fuelTankLiters":248,"idlingDurationMinutes":0,"idlingFuelWastedLiters":0,"idlingCostVnd":0,"locationName":"Đường Hào Vận Chuyển Tây Bắc","destination":"Bãi chứa đá thành phẩm","cargo":"Đá 1x2 sàng tuyển","loadWeight":"35.80 Tấn","todayTrips":9,"todayKm":212,"updatedTime":"09:48:15 (Live GPS)","ticketId":"TK-20261028-002"}`,
+			},
+			{
+				Code: "MAP-DRV-06",
+				Data: `{"id":"DRV-06","plate":"88C-099.14","vehicleType":"Xe bồn tưới đường Isuzu Giga (15m³)","driverName":"Phạm Văn Tuấn","driverPhone":"0966.778.899","lat":21.3260,"lng":105.2960,"speed":0,"maxSpeedLimit":40,"status":"parked","statusLabel":"Dừng tắt máy nghỉ ca","engineStatus":"OFF","engineRpm":0,"fuelLevelPercent":75,"fuelTankLiters":300,"idlingDurationMinutes":0,"idlingFuelWastedLiters":0,"idlingCostVnd":0,"locationName":"Khu Nhà Xưởng Bảo Dưỡng & Gara","destination":"Sẵn sàng tưới dập bụi","cargo":"Nước dập bụi môi trường","loadWeight":"0 Tấn (Xe bồn)","todayTrips":3,"todayKm":45,"updatedTime":"09:40:00","ticketId":"TK-20261028-001"}`,
+			},
+		}
+
+		for _, m := range mapEntries {
+			Pool.Exec(ctx, `
+				INSERT INTO google_map_entries (code, data)
+				VALUES ($1, $2::jsonb)
+			`, m.Code, m.Data)
+		}
+	}
+
+	// Seed Google Drive Files
+	var driveCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM google_drive_files").Scan(&driveCount)
+	if driveCount == 0 {
+		fmt.Println("🌱 Seeding Google Drive Documents & Survey Files...")
+		driveFiles := []struct {
+			Code string
+			Data string
+		}{
+			{Code: "DOC-01", Data: `{"code":"DOC-01","name":"Ho_so_kiem_dinh_tram_can_2025.pdf","fileName":"Ho_so_kiem_dinh_tram_can_2025.pdf","folder":"Trạm Cân / Kiểm Định","size":"2.4 MB","syncedAt":"28/10/2026 14:20","updated":"28/10/2026 14:20","status":"Đã đồng bộ","mimeType":"application/pdf","owner":"Kỹ thuật trạm cân"}`},
+			{Code: "DOC-02", Data: `{"code":"DOC-02","name":"Hop_dong_cung_ung_Nam_Phuong.pdf","fileName":"Hop_dong_cung_ung_Nam_Phuong.pdf","folder":"Đối Tác / Hợp Đồng","size":"1.8 MB","syncedAt":"28/10/2026 10:15","updated":"28/10/2026 10:15","status":"Đã đồng bộ","mimeType":"application/pdf","owner":"Phòng Kinh doanh"}`},
+			{Code: "DOC-03", Data: `{"code":"DOC-03","name":"Bien_ban_ban_giao_mo_da_TTC.pdf","fileName":"Bien_ban_ban_giao_mo_da_TTC.pdf","folder":"Pháp Lý / Bàn Giao","size":"4.1 MB","syncedAt":"27/10/2026 16:45","updated":"27/10/2026 16:45","status":"Đã đồng bộ","mimeType":"application/pdf","owner":"Ban Giám Đốc"}`},
+			{Code: "DOC-04", Data: `{"code":"DOC-04","name":"Bang_ke_xuat_da_ca_chieu_2810.xlsx","fileName":"Bang_ke_xuat_da_ca_chieu_2810.xlsx","folder":"Báo Cáo / Xuất Đá","size":"850 KB","syncedAt":"28/10/2026 17:30","updated":"28/10/2026 17:30","status":"Đã đồng bộ","mimeType":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","owner":"Kế toán kho"}`},
+			{Code: "DOC-05", Data: `{"code":"DOC-05","name":"Anh_camera_xe_19H05622_4goc.zip","fileName":"Anh_camera_xe_19H05622_4goc.zip","folder":"Camera AI / Chụp Bì","size":"15.6 MB","syncedAt":"28/10/2026 14:02","updated":"28/10/2026 14:02","status":"Đã đồng bộ","mimeType":"application/zip","owner":"Hệ thống Camera AI"}`},
+		}
+		for _, f := range driveFiles {
+			Pool.Exec(ctx, `INSERT INTO google_drive_files (code, data) VALUES ($1, $2::jsonb)`, f.Code, f.Data)
+		}
+	}
+
+	// Seed Google Gmail Notification Log
+	var gmailCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM google_emails").Scan(&gmailCount)
+	if gmailCount == 0 {
+		fmt.Println("🌱 Seeding Google Gmail Notifications...")
+		emails := []struct {
+			Code string
+			Data string
+		}{
+			{Code: "MAIL-01", Data: `{"code":"MAIL-01","subject":"[SỞ TN&MT PHÚ THỌ] Thông báo tiếp nhận Báo cáo thống kê sản lượng khai thác Quý 3/2026","sender":"sotnmt.phutho@chinhquyen.vn","recipient":"phaply@ttcquarry.vn","date":"28/10/2026 08:30","status":"Đã gửi","category":"Pháp lý Sở TN&MT"}`},
+			{Code: "MAIL-02", Data: `{"code":"MAIL-02","subject":"[CẢNH BÁO AI] Phát hiện xe 19H-056.22 lệch bì +380kg tại Cầu cân số 01","sender":"system-alerts@smartscale.ai","recipient":"giamdoc.mo@ttcquarry.vn","date":"28/10/2026 13:59","status":"Tự động","category":"Cảnh báo An ninh"}`},
+			{Code: "MAIL-03", Data: `{"code":"MAIL-03","subject":"Biên bản đối soát khối lượng xuất đá Công ty Nam Phương đợt 2 tháng 10","sender":"ketoan.ttc@gmail.com","recipient":"thanhtoan@namphuongcorp.vn","date":"27/10/2026 17:15","status":"Đã gửi","category":"Đối soát Khách hàng"}`},
+		}
+		for _, m := range emails {
+			Pool.Exec(ctx, `INSERT INTO google_emails (code, data) VALUES ($1, $2::jsonb)`, m.Code, m.Data)
+		}
+	}
+
+	// Seed Google Photos AI Imagery
+	var photoCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM google_photo_entries").Scan(&photoCount)
+	if photoCount == 0 {
+		fmt.Println("🌱 Seeding Google Photos AI Media...")
+		photos := []struct {
+			Code string
+			Data string
+		}{
+			{Code: "PHT-01", Data: `{"code":"PHT-01","title":"Ảnh chụp nhận diện biển số 19H-056.22 vào cân","url":"/assets/images/cam-plate-19H05622.jpg","source":"Camera AI LPR-01","capturedAt":"28/10/2026 13:58:45","vehicle":"19H-056.22","confidence":0.998}`},
+			{Code: "PHT-02", Data: `{"code":"PHT-02","title":"Ảnh chụp thùng xe đầy đá 1x2 - Cân xuất","url":"/assets/images/cam-cargo-19H05622.jpg","source":"Camera Góc Trên TOP-02","capturedAt":"28/10/2026 14:02:10","vehicle":"19H-056.22","confidence":0.992}`},
+			{Code: "PHT-03", Data: `{"code":"PHT-03","title":"Ảnh Drone khảo sát 3D Moong tầng khai thác +120m","url":"/assets/images/drone-survey-oct2026.jpg","source":"DJI Matrice 300 RTK","capturedAt":"25/10/2026 09:30:00","vehicle":"DRONE-01","confidence":1.0}`},
+		}
+		for _, p := range photos {
+			Pool.Exec(ctx, `INSERT INTO google_photo_entries (code, data) VALUES ($1, $2::jsonb)`, p.Code, p.Data)
+		}
+	}
+
 	fmt.Println("✅ Complete mining domain datasets successfully verified and seeded in PostgreSQL!")
+
+	// ===== Seed new modules from meeting requirements =====
+
+	// Seed vehicle trips (Camera AI)
+	var tripCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM vehicle_trips").Scan(&tripCount)
+	if tripCount == 0 {
+		fmt.Println("🌱 Seeding Vehicle Trips (Camera AI)...")
+		trips := []struct {
+			Plate    string
+			Driver   string
+			Camera   string
+			Dir      string
+			InTime   string
+			OutTime  string
+			TripNum  int
+			Eqty     float64
+			Aqty     float64
+			Conf     float64
+			Status   string
+		}{
+			{"29E-380.15", "Nguyễn Văn Mạnh", "CAM-01", "inbound", "2026-08-27 06:30:00", "2026-08-27 06:45:00", 1, 30.5, 30.2, 0.98, "completed"},
+			{"29E-380.15", "Nguyễn Văn Mạnh", "CAM-01", "outbound", "2026-08-27 07:00:00", "2026-08-27 07:15:00", 2, 30.0, 29.8, 0.97, "completed"},
+			{"88H-042.27", "Trần Văn Bình", "CAM-02", "inbound", "2026-08-27 06:45:00", "2026-08-27 07:00:00", 1, 28.0, 27.6, 0.96, "completed"},
+			{"88H-042.27", "Trần Văn Bình", "CAM-02", "outbound", "2026-08-27 07:30:00", "2026-08-27 07:45:00", 2, 28.0, 27.9, 0.99, "completed"},
+			{"19H-056.22", "Lê Đức Hùng", "CAM-01", "inbound", "2026-08-27 08:00:00", "2026-08-27 08:15:00", 1, 32.0, 31.5, 0.95, "completed"},
+		}
+		for _, t := range trips {
+			Pool.Exec(ctx, `INSERT INTO vehicle_trips (license_plate, driver_name, camera_id, direction, check_in_time, check_out_time, trip_number, estimated_quantity, actual_quantity, ai_confidence, status) VALUES ($1,$2,$3,$4,$5::timestamptz,$6::timestamptz,$7,$8,$9,$10,$11)`,
+				t.Plate, t.Driver, t.Camera, t.Dir, t.InTime, t.OutTime, t.TripNum, t.Eqty, t.Aqty, t.Conf, t.Status)
+		}
+	}
+
+	// Seed cost norms
+	var cnCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM cost_norms").Scan(&cnCount)
+	if cnCount == 0 {
+		fmt.Println("🌱 Seeding Cost Norms...")
+		norms := []struct {
+			Name string
+			Type string
+			Cost float64
+			Unit string
+			Mat  string
+		}{
+			{"Nhiên liệu diesel", "fuel", 42000, "đ/lít", "Đá 1x2"},
+			{"Chi phí nhân công", "labor", 15000, "đ/tấn", "Tất cả"},
+			{"Khấu hao thiết bị", "depreciation", 8000, "đ/tấn", "Tất cả"},
+			{"Chi phí vận chuyển", "transport", 12000, "đ/tấn/km", "Tất cả"},
+			{"Chi phí sản xuất", "production", 5000, "đ/tấn", "Đá nghiền"},
+		}
+		for _, n := range norms {
+			Pool.Exec(ctx, `INSERT INTO cost_norms (norm_name, norm_type, unit_cost, unit, material_type, effective_date, status) VALUES ($1,$2,$3,$4,$5,'2026-01-01','active')`,
+				n.Name, n.Type, n.Cost, n.Unit, n.Mat)
+		}
+	}
+
+	// Seed tax records
+	var taxCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM tax_records").Scan(&taxCount)
+	if taxCount == 0 {
+		fmt.Println("🌱 Seeding Tax Records...")
+		taxes := []struct {
+			Type   string
+			Code   string
+			Period string
+			TaxAmt float64
+			Paid   float64
+			Due    string
+			Status string
+		}{
+			{"VAT", "VAT-2026-08", "08/2026", 85000000, 0, "2026-09-20", "pending"},
+			{"Thuế tài nguyên", "TR-2026-08", "08/2026", 120000000, 120000000, "2026-09-15", "paid"},
+			{"Thuế thu nhập DN", "CIT-2026-Q3", "Q3/2026", 250000000, 0, "2026-10-30", "pending"},
+		}
+		for _, t := range taxes {
+			Pool.Exec(ctx, `INSERT INTO tax_records (tax_type, tax_code, period, tax_amount, paid_amount, due_date, status, authority) VALUES ($1,$2,$3,$4,$5,$6,$7,'Cục Thuế Phú Thọ')`,
+				t.Type, t.Code, t.Period, t.TaxAmt, t.Paid, t.Due, t.Status)
+		}
+	}
+
+	// Seed risk alerts
+	var riskCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM risk_alerts").Scan(&riskCount)
+	if riskCount == 0 {
+		fmt.Println("🌱 Seeding Risk Alerts...")
+		alerts := []struct {
+			Type    string
+			Sev     string
+			Title   string
+			Desc    string
+			Module  string
+			Status  string
+		}{
+			{"vehicle", "high", "Xe 88H-042.27 đi sai tuyến", "Phát hiện xe ra khỏi vùng geofence allowed", "gps", "open"},
+			{"permit", "medium", "Giấy phép mỏ sắp hết hạn", "Giấy phép 189/GP-BTNMT hết hạn sau 45 ngày", "permits", "open"},
+			{"production", "low", "Sản lượng tháng 8 dưới kế hoạch", "Đạt 78% kế hoạch tháng", "mining-plan", "open"},
+			{"hr", "medium", "Thiếu 3 nhân sự ca sáng", "Ca sáng thiếu 3 người so với lịch phân công", "hr", "open"},
+		}
+		for _, a := range alerts {
+			Pool.Exec(ctx, `INSERT INTO risk_alerts (alert_type, severity, title, description, module_source, status) VALUES ($1,$2,$3,$4,$5,$6)`,
+				a.Type, a.Sev, a.Title, a.Desc, a.Module, a.Status)
+		}
+	}
+
+	// Seed delegations
+	var delCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM delegations").Scan(&delCount)
+	if delCount == 0 {
+		fmt.Println("🌱 Seeding Delegations...")
+		dels := []struct {
+			Delegator string
+			Delegate  string
+			PermType  string
+			Scope     string
+			From      string
+			To        string
+			Status    string
+		}{
+			{"Giám đốc Nguyễn Văn A", "Phó Giám đốc Trần Văn B", "Ký hợp đồng", "Hợp đồng mua bán đá", "2026-08-01", "2026-08-31", "active"},
+			{"Kế toán trưởng Lê Văn C", "Nhân viên kế toán Phạm Thị D", "Xác nhận hóa đơn", "Hóa đơn VAT dưới 500 triệu", "2026-08-15", "2026-09-15", "active"},
+		}
+		for _, d := range dels {
+			Pool.Exec(ctx, `INSERT INTO delegations (delegator_name, delegate_name, permission_type, scope, start_date, end_date, status) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+				d.Delegator, d.Delegate, d.PermType, d.Scope, d.From, d.To, d.Status)
+		}
+	}
+
+	fmt.Println("✅ New module seed data completed!")
 }
+
