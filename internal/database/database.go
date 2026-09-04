@@ -32,9 +32,7 @@ func loadEnvFile(filename string) {
 		if len(parts) == 2 {
 			k := strings.TrimSpace(parts[0])
 			v := strings.TrimSpace(parts[1])
-			if os.Getenv(k) == "" {
-				os.Setenv(k, v)
-			}
+			os.Setenv(k, v)
 		}
 	}
 }
@@ -68,14 +66,11 @@ func Connect() {
 
 	err = Pool.Ping(context.Background())
 	if err != nil {
-		fmt.Printf("\n⚠️ [Supabase DB Auth] Không thể xác thực mật khẩu Postgres cho project 'nsdkctqxgrqvvgdtqyyr' (%v).\n", err)
-		fmt.Printf("👉 Vui lòng kiểm tra hoặc reset mật khẩu Database trong Supabase Dashboard (Project Settings -> Database) và cập nhật vào file backend/.env:\n")
-		fmt.Printf("   SUPABASE_PASSWORD_DATABASE=<Mật_khẩu_Supabase_của_bạn>\n")
-		fmt.Printf("   DATABASE_URL=postgres://postgres.nsdkctqxgrqvvgdtqyyr:<Mật_khẩu_URL_encoded>@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require\n\n")
+		fmt.Printf("\n⚠️ [Supabase DB Auth] Không thể xác thực mật khẩu Postgres cho project (%v).\n", err)
 		return
 	}
 
-	fmt.Println("🎉 Connected to Supabase PostgreSQL (ap-southeast-2) successfully!")
+	fmt.Printf("🎉 Connected to Supabase PostgreSQL (%s) successfully!\n", config.ConnConfig.Host)
 }
 
 func Close() {

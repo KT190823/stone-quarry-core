@@ -263,13 +263,106 @@ func (s *EsignService) Sign(signerID, status, note string) error {
 	if rejected > 0 {
 		docStatus = "tu_choi"
 	} else if pending == 0 {
-		docStatus = "da_ky_du"
+		docStatus = "da_ky"
 		var contractID string
 		database.Pool.QueryRow(ctx, `SELECT contract_id FROM hr_esign_documents WHERE id=$1`, docID).Scan(&contractID)
 		database.Pool.Exec(ctx, `UPDATE hr_contracts SET status='dang_hieu_luc' WHERE id=$1`, contractID)
 	}
 	_, err := database.Pool.Exec(ctx, `UPDATE hr_esign_documents SET status=$1 WHERE id=$2`, docStatus, docID)
 	return err
+}
+
+func (s *EsignService) SignDocument(docIDOrCode, signerID, signatureData, note string) (map[string]interface{}, error) {
+	ctx := context.Background()
+	now := time.Now().Format("02/01/2006 15:04")
+
+	var docID string
+	err := database.Pool.QueryRow(ctx,
+		`SELECT id FROM hr_esign_documents WHERE id=$1 OR code=$1 LIMIT 1`, docIDOrCode).Scan(&docID)
+	if err != nil {
+		docID = docIDOrCode
+	}
+
+	var targetSignerID string
+	if signerID != "" && signerID != "admin" {
+		_ = database.Pool.QueryRow(ctx,
+			`SELECT id FROM hr_esign_signers WHERE document_id=$1 AND (id=$2 OR employee_id=$2) AND sign_status='cho_ky' LIMIT 1`,
+			docID, signerID).Scan(&targetSignerID)
+	}
+	if targetSignerID == "" {
+		_ = database.Pool.QueryRow(ctx,
+			`SELECT id FROM hr_esign_signers WHERE document_id=$1 AND sign_status='cho_ky' ORDER BY sign_order ASC LIMIT 1`,
+			docID).Scan(&targetSignerID)
+	}
+
+	if targetSignerID != "" {
+		_, _ = database.Pool.Exec(ctx,
+			`UPDATE hr_esign_signers SET sign_status='da_ky', sign_date=$1, sign_note=$2 WHERE id=$3`,
+			now, note, targetSignerID)
+	}
+
+	var pending int
+	_ = database.Pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM hr_esign_signers WHERE document_id=$1 AND sign_status='cho_ky'`, docID).Scan(&pending)
+	var rejected int
+	_ = database.Pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM hr_esign_signers WHERE document_id=$1 AND sign_status='tu_choi'`, docID).Scan(&rejected)
+
+	docStatus := "cho_ky"
+	var currentDocStatus string
+	_ = database.Pool.QueryRow(ctx, `SELECT status FROM hr_esign_documents WHERE id=$1`, docID).Scan(&currentDocStatus)
+	if currentDocStatus == "da_chuyen" {
+		docStatus = "da_chuyen"
+	}
+	if rejected > 0 {
+		docStatus = "tu_choi"
+	} else if pending == 0 {
+		docStatus = "da_ky"
+		var contractID string
+		_ = database.Pool.QueryRow(ctx, `SELECT contract_id FROM hr_esign_documents WHERE id=$1`, docID).Scan(&contractID)
+		if contractID != "" {
+			_, _ = database.Pool.Exec(ctx, `UPDATE hr_contracts SET status='dang_hieu_luc' WHERE id=$1`, contractID)
+		}
+	}
+
+	_, _ = database.Pool.Exec(ctx, `UPDATE hr_esign_documents SET status=$1 WHERE id=$2`, docStatus, docID)
+
+	var data []byte
+	_ = database.Pool.QueryRow(ctx, `SELECT row_to_json(t) FROM (SELECT * FROM hr_esign_documents WHERE id=$1) t`, docID).Scan(&data)
+	var out map[string]interface{}
+	jsonUnmarshal(data, &out)
+	return out, nil
+}
+
+func (s *EsignService) DelegateDocument(docIDOrCode, fromSignerID, toSignerID, reason string) (map[string]interface{}, error) {
+	ctx := context.Background()
+	now := time.Now().Format("02/01/2006 15:04")
+
+	var docID string
+	err := database.Pool.QueryRow(ctx,
+		`SELECT id FROM hr_esign_documents WHERE id=$1 OR code=$1 LIMIT 1`, docIDOrCode).Scan(&docID)
+	if err != nil {
+		docID = docIDOrCode
+	}
+
+	var targetSignerID string
+	_ = database.Pool.QueryRow(ctx,
+		`SELECT id FROM hr_esign_signers WHERE document_id=$1 AND sign_status='cho_ky' ORDER BY sign_order ASC LIMIT 1`,
+		docID).Scan(&targetSignerID)
+
+	if targetSignerID != "" {
+		_, _ = database.Pool.Exec(ctx,
+			`UPDATE hr_esign_signers SET sign_status='da_chuyen', sign_date=$1, sign_note=$2 WHERE id=$3`,
+			now, reason, targetSignerID)
+	}
+
+	_, _ = database.Pool.Exec(ctx, `UPDATE hr_esign_documents SET status='da_chuyen' WHERE id=$1`, docID)
+
+	var data []byte
+	_ = database.Pool.QueryRow(ctx, `SELECT row_to_json(t) FROM (SELECT * FROM hr_esign_documents WHERE id=$1) t`, docID).Scan(&data)
+	var out map[string]interface{}
+	jsonUnmarshal(data, &out)
+	return out, nil
 }
 
 // ---------------------- Insurance ----------------------

@@ -58,6 +58,16 @@ func main() {
 
 	mux.HandleFunc("GET /api/dashboard", handlers.DashboardHandler)
 
+	// Executive Command Center
+	mux.HandleFunc("GET /api/executive/overview", handlers.ExecutiveOverview)
+	mux.HandleFunc("GET /api/executive/issues", handlers.ExecutiveIssues)
+	mux.HandleFunc("GET /api/analytics/cost-per-ton", handlers.CostPerTon)
+	mux.HandleFunc("GET /api/analytics/cost-breakdown", handlers.CostBreakdown)
+	mux.HandleFunc("GET /api/analytics/profitability/vehicle", handlers.VehicleProfitabilityHandler)
+	mux.HandleFunc("GET /api/analytics/profitability/customer", handlers.CustomerProfitabilityHandler)
+	mux.HandleFunc("POST /api/copilot/ask", handlers.AskCopilot)
+	mux.HandleFunc("POST /api/scenario/simulate", handlers.SimulateScenario)
+
 	mux.HandleFunc("GET /api/tickets", ticketH.List)
 	mux.HandleFunc("GET /api/tickets/{id}", ticketH.Get)
 	mux.HandleFunc("POST /api/tickets", ticketH.Create)

@@ -53,29 +53,31 @@ type MiningPlanItem struct {
 }
 
 type ProductionStage struct {
-	StageNumber       int    `json:"stageNumber"`
-	StageName         string `json:"stageName"`
-	Icon              string `json:"icon"`
-	VolumeMonth       string `json:"volumeMonth"`
-	VolumeYTD         string `json:"volumeYtd"`
-	LossRate          string `json:"lossRate"`
-	LossStatus        string `json:"lossStatus"`
-	MeasurementMethod string `json:"measurementMethod"`
-	Description       string `json:"description"`
+	StageNumber       int     `json:"stageNumber"`
+	StageName         string  `json:"stageName"`
+	Icon              string  `json:"icon"`
+	VolumeMonth       float64 `json:"volumeMonth"`
+	VolumeYTD         float64 `json:"volumeYtd"`
+	Unit              string  `json:"unit"`
+	LossRate          string  `json:"lossRate"`
+	LossStatus        string  `json:"lossStatus"`
+	MeasurementMethod string  `json:"measurementMethod"`
+	Description       string  `json:"description"`
 }
 
 type StatutoryReport struct {
-	ID           string `json:"id"`
-	Code         string `json:"code"`
-	Title        string `json:"title"`
-	Recipient    string `json:"recipient"`
-	Period       string `json:"period"`
-	Date         string `json:"date"`
-	MinedVolume  string `json:"minedVolume"`
-	TaxAmount    string `json:"taxAmount"`
-	EnvFeeAmount string `json:"envFeeAmount"`
-	Status       string `json:"status"`
-	StatusLabel  string `json:"statusLabel"`
+	ID           string  `json:"id"`
+	Code         string  `json:"code"`
+	Title        string  `json:"title"`
+	Recipient    string  `json:"recipient"`
+	Period       string  `json:"period"`
+	Date         string  `json:"date"`
+	MinedVolume  float64 `json:"minedVolume"`
+	Unit         string  `json:"unit"`
+	TaxAmount    float64 `json:"taxAmount"`
+	EnvFeeAmount float64 `json:"envFeeAmount"`
+	Status       string  `json:"status"`
+	StatusLabel  string  `json:"statusLabel"`
 }
 
 type NaturalResourceTax struct {
@@ -83,6 +85,7 @@ type NaturalResourceTax struct {
 	Code              string  `json:"code"`
 	MineralType       string  `json:"mineralType"`
 	MinedVolume       float64 `json:"minedVolume"`
+	Unit              string  `json:"unit"`
 	TaxPricePerUnit   float64 `json:"taxPricePerUnit"`
 	TaxRate           string  `json:"taxRate"`
 	ResourceTaxAmount float64 `json:"resourceTaxAmount"`

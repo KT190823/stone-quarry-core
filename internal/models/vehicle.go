@@ -1,16 +1,17 @@
 package models
 
 type Vehicle struct {
-	BS          string `json:"bs"`
-	Loai        string `json:"loai"`
-	BI          string `json:"bi"`
-	RFID        string `json:"rfid"`
-	TaiTrong    string `json:"taiTrong"`
-	Status      string `json:"status"`
-	Count       int    `json:"count"`
-	HanDangKiem string `json:"hanDangKiem,omitempty"`
-	Date        string `json:"date,omitempty"`
-	ChuXe       string `json:"chuXe,omitempty"`
+	BS          string  `json:"bs"`
+	Loai        string  `json:"loai"`
+	BI          float64 `json:"bi"`
+	RFID        string  `json:"rfid"`
+	TaiTrong    float64 `json:"taiTrong"`
+	Unit        string  `json:"unit,omitempty"`
+	Status      string  `json:"status"`
+	Count       int     `json:"count"`
+	HanDangKiem string  `json:"hanDangKiem,omitempty"`
+	Date        string  `json:"date,omitempty"`
+	ChuXe       string  `json:"chuXe,omitempty"`
 }
 
 type Alert struct {

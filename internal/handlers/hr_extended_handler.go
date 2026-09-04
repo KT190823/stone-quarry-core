@@ -244,6 +244,8 @@ func (h *HrExtendedHandler) Register(mux *http.ServeMux) {
 	reg("GET /api/hr-ext/esign-documents", L(h.esignDocSvc))
 	reg("GET /api/hr-ext/esign-documents/{id}", G(h.esignDocSvc))
 	reg("POST /api/hr-ext/esign-documents", h.EsignCreate)
+	reg("POST /api/hr-ext/esign-documents/{id}/sign", h.EsignDocSign)
+	reg("POST /api/hr-ext/esign-documents/{id}/delegate", h.EsignDocDelegate)
 	reg("GET /api/hr-ext/esign-signers", L(h.esignSignerSvc))
 	reg("PATCH /api/hr-ext/esign-signers/{id}", h.EsignSign)
 
@@ -397,6 +399,50 @@ func (h *HrExtendedHandler) EsignSign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	JSON(w, map[string]string{"status": "signed"})
+}
+
+func (h *HrExtendedHandler) EsignDocSign(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	data, err := readJSON(r)
+	if err != nil {
+		http.Error(w, "invalid JSON", 400)
+		return
+	}
+	signerID, _ := data["signerId"].(string)
+	if signerID == "" {
+		signerID, _ = data["signer_id"].(string)
+	}
+	sigData, _ := data["signatureData"].(string)
+	if sigData == "" {
+		sigData, _ = data["signature_data"].(string)
+	}
+	note, _ := data["note"].(string)
+
+	result, err := h.esignSrv.SignDocument(id, signerID, sigData, note)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	JSON(w, result)
+}
+
+func (h *HrExtendedHandler) EsignDocDelegate(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	data, err := readJSON(r)
+	if err != nil {
+		http.Error(w, "invalid JSON", 400)
+		return
+	}
+	fromSignerID, _ := data["fromSignerId"].(string)
+	toSignerID, _ := data["toSignerId"].(string)
+	reason, _ := data["reason"].(string)
+
+	result, err := h.esignSrv.DelegateDocument(id, fromSignerID, toSignerID, reason)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	JSON(w, result)
 }
 
 func (h *HrExtendedHandler) InsuranceDeclaration(w http.ResponseWriter, r *http.Request) {

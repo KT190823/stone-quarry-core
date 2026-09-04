@@ -1,20 +1,21 @@
 package models
 
 type CatalogMaterial struct {
-	Code     string `json:"code"`
-	Ma       string `json:"ma"`
-	Name     string `json:"name"`
-	Ten      string `json:"ten"`
-	DVT      string `json:"dvt"`
-	Density  string `json:"density"`
-	TyTrong  string `json:"tyTrong"`
-	DinhMuc  string `json:"dinhMuc"`
-	Price    string `json:"price"`
-	Gia      string `json:"gia"`
-	Kho      string `json:"kho"`
-	Standard string `json:"standard"`
-	Status   string `json:"status"`
-	Date     string `json:"date"`
+	Code     string  `json:"code"`
+	Ma       string  `json:"ma"`
+	Name     string  `json:"name"`
+	Ten      string  `json:"ten"`
+	DVT      string  `json:"dvt"`
+	Unit     string  `json:"unit"`
+	Density  float64 `json:"density"`
+	TyTrong  float64 `json:"tyTrong"`
+	DinhMuc  float64 `json:"dinhMuc"`
+	Price    float64 `json:"price"`
+	Gia      float64 `json:"gia"`
+	Kho      string  `json:"kho"`
+	Standard string  `json:"standard"`
+	Status   string  `json:"status"`
+	Date     string  `json:"date"`
 }
 
 type Supplier struct {
