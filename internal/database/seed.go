@@ -1079,6 +1079,407 @@ func Seed() {
 		}
 	}
 
+	seedTradeAndWarehouse(ctx)
+
 	fmt.Println("✅ New module seed data completed!")
+}
+
+func seedTradeAndWarehouse(ctx context.Context) {
+	// 1. Seed Inventory Products (Master Data Sản phẩm kho)
+	var prodCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM inventory_products").Scan(&prodCount)
+	if prodCount == 0 {
+		fmt.Println("🌱 Seeding Inventory Products Master Data...")
+		products := []struct {
+			Code, Name, Category, Unit, StorageLoc, Standard, Status, Notes string
+			Density, SalePrice, PurchasePrice, MinStock, CurrentStock       float64
+		}{
+			{"SP-DA-1X2", "Đá 1x2 Xanh Đồng Nai", "Đá thành phẩm", "m³", "Bãi Đá 1x2 Lô A", "TCVN 7570:2006", "Đang kinh doanh", "Đá xây dựng cấp phối bê tông mác 250 - 400", 1.55, 285000, 210000, 5000, 24800},
+			{"SP-DA-2X4", "Đá 2x4 Đổ Bê Tông Khối Lớn", "Đá thành phẩm", "m³", "Bãi Đá 2x4 Lô B", "TCVN 7570:2006", "Đang kinh doanh", "Dùng cho móng công trình, cọc khoan nhồi, trụ cầu", 1.58, 235000, 175000, 4000, 18500},
+			{"SP-DA-4X6", "Đá 4x6 Cầu Đường & Kè Đập", "Đá thành phẩm", "m³", "Bãi Đá 4x6 Lô C", "TCVN 7570:2006", "Đang kinh doanh", "Cốt liệu móng nền đường giao thông cấp cao", 1.60, 220000, 165000, 3000, 14200},
+			{"SP-DA-0X4-BASE", "Đá 0x4 Cấp Phối Dăm Loại 1 (Base)", "Đá cấp phối", "m³", "Bãi Cấp Phối Base Cổng 1", "TCVN 8859:2011", "Đang kinh doanh", "Lớp móng trên cho mặt đường cao tốc & quốc lộ", 1.65, 210000, 150000, 8000, 36000},
+			{"SP-DA-0X4-SUB", "Đá 0x4 Subbase Cấp Phối Loại 2", "Đá cấp phối", "m³", "Bãi Subbase Cổng 2", "TCVN 8859:2011", "Đang kinh doanh", "Lớp móng dưới tiêu chuẩn cao tốc Bắc - Nam", 1.62, 195000, 140000, 6000, 29400},
+			{"SP-CAT-NGHIEN", "Cát Nghiền Nhân Tạo Hạt Mịn TCVN", "Cát nghiền", "m³", "Silo Cát Nghiền Trạm 2", "TCVN 9205:2012", "Đang kinh doanh", "Thay thế cát tự nhiên đổ bê tông và vữa xây trát", 1.45, 260000, 195000, 6000, 19800},
+			{"SP-DA-HOC", "Đá Hộc Khai Thác Kè Moong Mỏ", "Đá thô nổ mìn", "m³", "Bãi Đá Hộc Moong 3", "TCVN 4447:2012", "Đang kinh doanh", "Đá xây móng kè chắn đất và đê kè sông suối", 1.70, 180000, 130000, 2000, 12500},
+			{"SP-DA-MI-BUI", "Đá Mi Bụi Đắp Nền K98", "Đá mạt - phụ phẩm", "m³", "Bãi Đá Mi Bụi", "TCVN 8859:2011", "Đang kinh doanh", "Làm lớp đệm móng và cấp phối gạch không nung", 1.40, 150000, 110000, 3000, 16700},
+			{"SP-DA-MI-SANG", "Đá Mi Sàng Lọc Bê Tông Nhựa (3-8mm)", "Đá thành phẩm", "m³", "Bãi Mi Sàng Trạm 1", "TCVN 7570:2006", "Đang kinh doanh", "Phụ gia bê tông nhựa nóng Asphalt và gạch Terrazzo", 1.48, 175000, 125000, 2500, 11300},
+			{"SP-DAU-DO", "Dầu DO 0.05S-II Cấp Máy Xúc & Cơ Giới", "Nhiên liệu & Vật tư", "lít", "Kho Bồn Nhiên Liệu Số 1", "QCVN 01:2015/BCT", "Đang kinh doanh", "Dầu Diesel tiêu chuẩn Euro 4 cấp cho cơ giới mỏ", 0.84, 23500, 21000, 10000, 45000},
+		}
+		for _, p := range products {
+			Pool.Exec(ctx, `
+				INSERT INTO inventory_products (code, name, category, unit, density, sale_price, purchase_price, storage_loc, standard, min_stock, current_stock, status, notes)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+				ON CONFLICT (code) DO NOTHING
+			`, p.Code, p.Name, p.Category, p.Unit, p.Density, p.SalePrice, p.PurchasePrice, p.StorageLoc, p.Standard, p.MinStock, p.CurrentStock, p.Status, p.Notes)
+		}
+	}
+
+	// 2. Seed Purchase Vouchers (Phiếu mua hàng)
+	var poCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM purchase_vouchers").Scan(&poCount)
+	if poCount == 0 {
+		fmt.Println("🌱 Seeding Purchase Vouchers...")
+		purchases := []struct {
+			Code, SuppCode, SuppName, Date, Loc, PayStatus, Status, Notes, By string
+			Total, Vat, Grand                                                 float64
+			Items                                                             []struct {
+				ProdCode, ProdName, Unit, Standard, Loc string
+				Density, Price, Qty, Total, Ton         float64
+			}
+		}{
+			{
+				Code: "PM-202610-001", SuppCode: "SUP-MIC-01", SuppName: "Công ty Hóa chất Mỏ MIC Miền Bắc",
+				Date: "2026-10-24", Loc: "Kho Hóa Chất & Bãi Cửa Bắc", PayStatus: "partial", Status: "completed", By: "Nguyễn Đức Trường", Notes: "Mua vật tư kíp nổ và bao tiêu đá hộc",
+				Total: 425000000, Vat: 42500000, Grand: 467500000,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-HOC", "Đá Hộc Khai Thác Kè Moong Mỏ", "m³", "TCVN 4447:2012", "Bãi Đá Hộc Moong 3", 1.70, 130000, 2500, 325000000, 4250},
+					{"SP-DA-MI-BUI", "Đá Mi Bụi Đắp Nền K98", "m³", "TCVN 8859:2011", "Bãi Đá Mi Bụi", 1.40, 110000, 909.09, 100000000, 1272.7},
+				},
+			},
+			{
+				Code: "PM-202610-002", SuppCode: "SUP-PLX-02", SuppName: "Chi nhánh Xăng dầu Petrolimex Phú Thọ",
+				Date: "2026-10-26", Loc: "Kho Bồn Nhiên Liệu Số 1", PayStatus: "paid", Status: "completed", By: "Nguyễn Văn Dũng", Notes: "Nhập bồn dầu DO 0.05S cấp máy xúc Komatsu PC450",
+				Total: 420000000, Vat: 42000000, Grand: 462000000,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DAU-DO", "Dầu DO 0.05S-II Cấp Máy Xúc & Cơ Giới", "lít", "QCVN 01:2015/BCT", "Kho Bồn Nhiên Liệu Số 1", 0.84, 21000, 20000, 420000000, 16.8},
+				},
+			},
+			{
+				Code: "PM-202610-003", SuppCode: "SUP-MO-TU", SuppName: "Mỏ Đá Tân Uyên Bình Dương (TTC 02)",
+				Date: "2026-10-27", Loc: "Bãi Đá 1x2 Lô A", PayStatus: "unpaid", Status: "received", By: "Lê Hữu Thắng", Notes: "Điều chuyển bao tiêu đá 1x2 tăng cường công trình cao tốc",
+				Total: 315000000, Vat: 31500000, Grand: 346500000,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-1X2", "Đá 1x2 Xanh Đồng Nai", "m³", "TCVN 7570:2006", "Bãi Đá 1x2 Lô A", 1.55, 210000, 1500, 315000000, 2325},
+				},
+			},
+			{
+				Code: "PM-202610-004", SuppCode: "SUP-VINAMAC", SuppName: "Công ty CP Vật Tư Thiết Bị Vinamac",
+				Date: "2026-10-28", Loc: "Xưởng Cơ Điện Nghiền Sàng", PayStatus: "paid", Status: "completed", By: "Trần Văn Kiên", Notes: "Vật tư thay thế lưới sàng và đá mi lọc",
+				Total: 125000000, Vat: 12500000, Grand: 137500000,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-MI-SANG", "Đá Mi Sàng Lọc Bê Tông Nhựa (3-8mm)", "m³", "TCVN 7570:2006", "Bãi Mi Sàng Trạm 1", 1.48, 125000, 1000, 125000000, 1480},
+				},
+			},
+			{
+				Code: "PM-202610-005", SuppCode: "SUP-HTX-DH", SuppName: "Hợp Tác Xã Khai Thác Khoáng Sản Đoan Hùng",
+				Date: "2026-10-28", Loc: "Bãi Cấp Phối Base Cổng 1", PayStatus: "paid", Status: "completed", By: "Nguyễn Thị Thủy", Notes: "Bao tiêu cấp phối đá dăm loại 1 phục vụ gói thầu 12",
+				Total: 300000000, Vat: 30000000, Grand: 330000000,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-0X4-BASE", "Đá 0x4 Cấp Phối Dăm Loại 1 (Base)", "m³", "TCVN 8859:2011", "Bãi Cấp Phối Base Cổng 1", 1.65, 150000, 2000, 300000000, 3300},
+				},
+			},
+		}
+
+		for _, po := range purchases {
+			var voucherID int
+			err := Pool.QueryRow(ctx, `
+				INSERT INTO purchase_vouchers (code, supplier_code, supplier_name, date, warehouse_loc, total_amount, vat_amount, grand_total, payment_status, status, created_by, notes)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+				ON CONFLICT (code) DO UPDATE SET total_amount = EXCLUDED.total_amount RETURNING id
+			`, po.Code, po.SuppCode, po.SuppName, po.Date, po.Loc, po.Total, po.Vat, po.Grand, po.PayStatus, po.Status, po.By, po.Notes).Scan(&voucherID)
+
+			if err == nil && voucherID > 0 {
+				for _, itm := range po.Items {
+					Pool.Exec(ctx, `
+						INSERT INTO purchase_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc)
+						VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+					`, voucherID, po.Code, itm.ProdCode, itm.ProdName, itm.Unit, itm.Density, itm.Price, itm.Qty, itm.Total, itm.Ton, itm.Standard, itm.Loc)
+				}
+			}
+		}
+	}
+
+	// 3. Seed Sales Vouchers (Phiếu bán hàng)
+	var soCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM sales_vouchers").Scan(&soCount)
+	if soCount == 0 {
+		fmt.Println("🌱 Seeding Sales Vouchers...")
+		sales := []struct {
+			Code, CustCode, CustName, Date, Loc, Plate, Ticket, PayStatus, Status, Notes, By string
+			Total, Vat, Grand, Paid, Debt                                                    float64
+			Items                                                                            []struct {
+				ProdCode, ProdName, Unit, Standard, Loc string
+				Density, Price, Qty, Total, Ton         float64
+			}
+		}{
+			{
+				Code: "PB-202610-001", CustCode: "CUST-DEOCA", CustName: "Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)",
+				Date: "2026-10-28", Loc: "Bãi Đá 1x2 Lô A", Plate: "19H-056.22", Ticket: "NA281025-22", PayStatus: "paid", Status: "completed", By: "Nguyễn Văn Dũng", Notes: "Xuất đá 1x2 bê tông mác 350 dầm cầu vượt",
+				Total: 17100000, Vat: 1710000, Grand: 18810000, Paid: 18810000, Debt: 0,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-1X2", "Đá 1x2 Xanh Đồng Nai", "m³", "TCVN 7570:2006", "Bãi Đá 1x2 Lô A", 1.55, 285000, 60, 17100000, 93},
+				},
+			},
+			{
+				Code: "PB-202610-002", CustCode: "CUST-BQP319", CustName: "Tổng Công ty 319 - Bộ Quốc Phòng",
+				Date: "2026-10-28", Loc: "Bãi Cấp Phối Base Cổng 1", Plate: "88H-042.27", Ticket: "TK-2810-038", PayStatus: "paid", Status: "completed", By: "Hoàng Minh Đức", Notes: "Xuất cấp phối đá dăm Base K98 gói thầu quốc phòng",
+				Total: 25200000, Vat: 2520000, Grand: 27720000, Paid: 27720000, Debt: 0,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-0X4-BASE", "Đá 0x4 Cấp Phối Dăm Loại 1 (Base)", "m³", "TCVN 8859:2011", "Bãi Cấp Phối Base Cổng 1", 1.65, 210000, 120, 25200000, 198},
+				},
+			},
+			{
+				Code: "PB-202610-003", CustCode: "CUST-BTVT", CustName: "Công ty TNHH Bê Tông Việt Trì",
+				Date: "2026-10-27", Loc: "Silo Cát Nghiền Trạm 2", Plate: "29C-882.14", Ticket: "TK-2810-041", PayStatus: "partial", Status: "completed", By: "Nguyễn Văn Dũng", Notes: "Cát nhân tạo trạm trộn bê tông tươi Việt Trì",
+				Total: 20800000, Vat: 2080000, Grand: 22880000, Paid: 18605000, Debt: 4275000,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-CAT-NGHIEN", "Cát Nghiền Nhân Tạo Hạt Mịn TCVN", "m³", "TCVN 9205:2012", "Silo Cát Nghiền Trạm 2", 1.45, 260000, 80, 20800000, 116},
+				},
+			},
+			{
+				Code: "PB-202610-004", CustCode: "CUST-CIENCO4", CustName: "Công ty CP Đầu Tư Xây Dựng Cienco 4",
+				Date: "2026-10-26", Loc: "Bãi Đá 2x4 Lô B", Plate: "19C-109.85", Ticket: "TK-2810-045", PayStatus: "paid", Status: "completed", By: "Hoàng Minh Đức", Notes: "Đá 2x4 đổ cọc khoan nhồi trụ T3 cầu Sông Lô",
+				Total: 22325000, Vat: 2232500, Grand: 24557500, Paid: 24557500, Debt: 0,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-2X4", "Đá 2x4 Đổ Bê Tông Khối Lớn", "m³", "TCVN 7570:2006", "Bãi Đá 2x4 Lô B", 1.58, 235000, 95, 22325000, 150.1},
+				},
+			},
+			{
+				Code: "PB-202610-005", CustCode: "CUST-TL", CustName: "Doanh Nghiệp Tư Nhân Thắng Lợi",
+				Date: "2026-10-25", Loc: "Bãi Đá Mi Bụi", Plate: "29H-712.33", Ticket: "TK-2810-049", PayStatus: "paid", Status: "completed", By: "Nguyễn Văn Dũng", Notes: "Cung cấp đá mi bụi đắp nền nhà xưởng khu công nghiệp",
+				Total: 22500000, Vat: 2250000, Grand: 24750000, Paid: 24750000, Debt: 0,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-MI-BUI", "Đá Mi Bụi Đắp Nền K98", "m³", "TCVN 8859:2011", "Bãi Đá Mi Bụi", 1.40, 150000, 150, 22500000, 210},
+				},
+			},
+			{
+				Code: "PB-202610-006", CustCode: "CUST-VC9", CustName: "Công ty CP Xây Dựng Vinaconex 9",
+				Date: "2026-10-25", Loc: "Bãi Subbase Cổng 2", Plate: "88C-234.56", Ticket: "TK-2810-052", PayStatus: "unpaid", Status: "completed", By: "Nguyễn Thị Thủy", Notes: "Subbase móng đường khu đô thị Thanh Ba",
+				Total: 39000000, Vat: 3900000, Grand: 42900000, Paid: 0, Debt: 42900000,
+				Items: []struct {
+					ProdCode, ProdName, Unit, Standard, Loc string
+					Density, Price, Qty, Total, Ton         float64
+				}{
+					{"SP-DA-0X4-SUB", "Đá 0x4 Subbase Cấp Phối Loại 2", "m³", "TCVN 8859:2011", "Bãi Subbase Cổng 2", 1.62, 195000, 200, 39000000, 324},
+				},
+			},
+		}
+
+		for _, so := range sales {
+			var voucherID int
+			err := Pool.QueryRow(ctx, `
+				INSERT INTO sales_vouchers (code, customer_code, customer_name, date, warehouse_loc, license_plate, ticket_code, total_amount, vat_amount, grand_total, paid_amount, debt_amount, payment_status, status, created_by, notes)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+				ON CONFLICT (code) DO UPDATE SET total_amount = EXCLUDED.total_amount RETURNING id
+			`, so.Code, so.CustCode, so.CustName, so.Date, so.Loc, so.Plate, so.Ticket, so.Total, so.Vat, so.Grand, so.Paid, so.Debt, so.PayStatus, so.Status, so.By, so.Notes).Scan(&voucherID)
+
+			if err == nil && voucherID > 0 {
+				for _, itm := range so.Items {
+					Pool.Exec(ctx, `
+						INSERT INTO sales_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc)
+						VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+					`, voucherID, so.Code, itm.ProdCode, itm.ProdName, itm.Unit, itm.Density, itm.Price, itm.Qty, itm.Total, itm.Ton, itm.Standard, itm.Loc)
+				}
+			}
+		}
+	}
+
+	// 4. Seed Return Vouchers (Phiếu trả hàng)
+	var roCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM return_vouchers").Scan(&roCount)
+	if roCount == 0 {
+		fmt.Println("🌱 Seeding Return Vouchers...")
+		returns := []struct {
+			Code, RType, PartnerCode, PartnerName, RefCode, Date, Loc, Reason, Status, By, Notes string
+			Total                                                                                float64
+			Items                                                                                []struct {
+				ProdCode, ProdName, Unit string
+				Price, Qty, Total        float64
+			}
+		}{
+			{
+				Code: "PT-202610-001", RType: "sales_return", PartnerCode: "CUST-BTVT", PartnerName: "Công ty TNHH Bê Tông Việt Trì",
+				RefCode: "PB-202610-003", Date: "2026-10-28", Loc: "Bãi Kiểm Định Lô C", Reason: "Đá có tỉ lệ hạt thoi dẹt vượt ngưỡng 15% mác bê tông yêu cầu",
+				Status: "approved", By: "Lê Hữu Thắng", Notes: "Đã trừ trực tiếp vào công nợ phiếu bán PB-202610-003", Total: 4275000,
+				Items: []struct {
+					ProdCode, ProdName, Unit string
+					Price, Qty, Total        float64
+				}{
+					{"SP-DA-1X2", "Đá 1x2 Xanh Đồng Nai", "m³", 285000, 15, 4275000},
+				},
+			},
+			{
+				Code: "PT-202610-002", RType: "purchase_return", PartnerCode: "SUP-MO-TU", PartnerName: "Mỏ Đá Tân Uyên Bình Dương (TTC 02)",
+				RefCode: "PM-202610-003", Date: "2026-10-27", Loc: "Bãi Tiếp Nhận Cửa Tây", Reason: "Đá lẫn bùn sét tầng phủ bóc dở vượt quá 3%",
+				Status: "approved", By: "Trần Văn Kiên", Notes: "Trả lại mỏ bạn lô 40m3 đá kém phẩm chất", Total: 8400000,
+				Items: []struct {
+					ProdCode, ProdName, Unit string
+					Price, Qty, Total        float64
+				}{
+					{"SP-DA-1X2", "Đá 1x2 Xanh Đồng Nai", "m³", 210000, 40, 8400000},
+				},
+			},
+			{
+				Code: "PT-202610-003", RType: "sales_return", PartnerCode: "CUST-TL", PartnerName: "Doanh Nghiệp Tư Nhân Thắng Lợi",
+				RefCode: "PB-202610-005", Date: "2026-10-26", Loc: "Bãi Đá Mi Bụi", Reason: "Độ ẩm mạt đá quá cao do trời mưa đắp nền bị bết",
+				Status: "approved", By: "Nguyễn Văn Dũng", Notes: "Khách trả lại 20m3 mi bụi chuyển bãi phơi khô", Total: 3000000,
+				Items: []struct {
+					ProdCode, ProdName, Unit string
+					Price, Qty, Total        float64
+				}{
+					{"SP-DA-MI-BUI", "Đá Mi Bụi Đắp Nền K98", "m³", 150000, 20, 3000000},
+				},
+			},
+			{
+				Code: "PT-202610-004", RType: "purchase_return", PartnerCode: "SUP-HTX-DH", PartnerName: "Hợp Tác Xã Khai Thác Khoáng Sản Đoan Hùng",
+				RefCode: "PM-202610-005", Date: "2026-10-25", Loc: "Bãi Cấp Phối Base Cổng 1", Reason: "Hạt quá cỡ > 40mm vượt tiêu chuẩn nghiệm thu Base K98",
+				Status: "approved", By: "Hoàng Minh Đức", Notes: "HTX Đoan Hùng thu hồi nghiền lại cỡ hạt", Total: 7500000,
+				Items: []struct {
+					ProdCode, ProdName, Unit string
+					Price, Qty, Total        float64
+				}{
+					{"SP-DA-0X4-BASE", "Đá 0x4 Cấp Phối Dăm Loại 1 (Base)", "m³", 150000, 50, 7500000},
+				},
+			},
+		}
+
+		for _, ro := range returns {
+			var voucherID int
+			err := Pool.QueryRow(ctx, `
+				INSERT INTO return_vouchers (code, return_type, partner_code, partner_name, ref_voucher_code, date, warehouse_loc, reason, total_amount, status, created_by, notes)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+				ON CONFLICT (code) DO UPDATE SET total_amount = EXCLUDED.total_amount RETURNING id
+			`, ro.Code, ro.RType, ro.PartnerCode, ro.PartnerName, ro.RefCode, ro.Date, ro.Loc, ro.Reason, ro.Total, ro.Status, ro.By, ro.Notes).Scan(&voucherID)
+
+			if err == nil && voucherID > 0 {
+				for _, itm := range ro.Items {
+					Pool.Exec(ctx, `
+						INSERT INTO return_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, unit_price, quantity, total_amount)
+						VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+					`, voucherID, ro.Code, itm.ProdCode, itm.ProdName, itm.Unit, itm.Price, itm.Qty, itm.Total)
+				}
+			}
+		}
+	}
+
+	// 5. Seed Receipt Vouchers (Phiếu thu)
+	var rcCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM receipt_vouchers").Scan(&rcCount)
+	if rcCount == 0 {
+		fmt.Println("🌱 Seeding Receipt Vouchers...")
+		receipts := []struct {
+			Code, PCode, PName, PType, Payer, Reason, RefCode, Words, Method, Account, Date, By, Status, Notes string
+			Amount                                                                                             float64
+		}{
+			{
+				Code: "PT-THU-001", PCode: "CUST-DEOCA", PName: "Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)", PType: "customer",
+				Payer: "Nguyễn Hữu Tài (Thủ quỹ Đèo Cả)", Reason: "Thanh toán đợt 1 tiền mua đá 1x2 theo PB-202610-001", RefCode: "PB-202610-001",
+				Amount: 18810000, Words: "Mười tám triệu tám trăm mười nghìn đồng", Method: "bank_transfer",
+				Account: "Vietcombank - 001100456789 (Mỏ TTC Phú Thọ)", Date: "2026-10-28", By: "Nguyễn Thị Thủy", Status: "posted", Notes: "Đã khớp với sao kê ngân hàng VCB",
+			},
+			{
+				Code: "PT-THU-002", PCode: "CUST-BQP319", PName: "Tổng Công ty 319 - Bộ Quốc Phòng", PType: "customer",
+				Payer: "Đại úy Lê Văn Hòa (Kế toán BQP 319)", Reason: "Tạm ứng tiền vật tư cấp phối đá dăm Base cao tốc", RefCode: "PB-202610-002",
+				Amount: 27720000, Words: "Hai mươi bảy triệu bảy trăm hai mươi nghìn đồng", Method: "bank_transfer",
+				Account: "BIDV - 215100008899 (Công ty CP TTC)", Date: "2026-10-28", By: "Nguyễn Thị Thủy", Status: "posted", Notes: "Ủy nhiệm chi ngân hàng Quân đội MB sang BIDV",
+			},
+			{
+				Code: "PT-THU-003", PCode: "CUST-BTVT", PName: "Công ty TNHH Bê Tông Việt Trì", PType: "customer",
+				Payer: "Trần Thị Mai (Kế toán thanh toán)", Reason: "Thu tiền mặt trực tiếp tại trạm cân theo chuyến cân TK-2810-041", RefCode: "PB-202610-003",
+				Amount: 18605000, Words: "Mười tám triệu sáu trăm linh năm nghìn đồng (Đã cấn trừ phiếu trả PT-202610-001)", Method: "cash",
+				Account: "Quỹ tiền mặt Trạm cân Cổng 1", Date: "2026-10-28", By: "Nguyễn Văn Dũng", Status: "posted", Notes: "Đã nộp quỹ tiền mặt ca nhật trình trạm cân",
+			},
+			{
+				Code: "PT-THU-004", PCode: "CUST-TL", PName: "Doanh Nghiệp Tư Nhân Thắng Lợi", PType: "customer",
+				Payer: "Đinh Văn Thắng (Chủ DNTN)", Reason: "Thanh toán dứt điểm tiền mua đá mi bụi và cấp phối", RefCode: "PB-202610-005",
+				Amount: 21750000, Words: "Hai mươi mốt triệu bảy trăm năm mươi nghìn đồng", Method: "cash",
+				Account: "Quỹ tiền mặt Trạm cân Cổng 2", Date: "2026-10-26", By: "Hoàng Minh Đức", Status: "posted", Notes: "Tiền mặt đã kiểm đếm đầy đủ",
+			},
+			{
+				Code: "PT-THU-005", PCode: "CUST-CIENCO4", PName: "Công ty CP Đầu Tư Xây Dựng Cienco 4", PType: "customer",
+				Payer: "Phạm Quốc Hùng (Ban Tài chính Cienco 4)", Reason: "Thanh toán chuyển khoản hóa đơn đá 2x4 đổ cọc khoan nhồi", RefCode: "PB-202610-004",
+				Amount: 24557500, Words: "Hai mươi bốn triệu năm trăm năm mươi bảy nghìn năm trăm đồng", Method: "bank_transfer",
+				Account: "VietinBank - 110002889911 (TTC Mỏ)", Date: "2026-10-27", By: "Nguyễn Thị Thủy", Status: "posted", Notes: "UNC số 2810/UNC-CIENCO4",
+			},
+		}
+
+		for _, rc := range receipts {
+			Pool.Exec(ctx, `
+				INSERT INTO receipt_vouchers (code, partner_code, partner_name, partner_type, payer_name, reason, ref_code, amount, amount_in_words, payment_method, fund_account, status, date, created_by, notes)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+				ON CONFLICT (code) DO NOTHING
+			`, rc.Code, rc.PCode, rc.PName, rc.PType, rc.Payer, rc.Reason, rc.RefCode, rc.Amount, rc.Words, rc.Method, rc.Account, rc.Status, rc.Date, rc.By, rc.Notes)
+		}
+	}
+
+	// 6. Seed Payment Vouchers (Phiếu chi)
+	var pvCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM payment_vouchers").Scan(&pvCount)
+	if pvCount == 0 {
+		fmt.Println("🌱 Seeding Payment Vouchers...")
+		payments := []struct {
+			Code, PCode, PName, PType, Receiver, Reason, RefCode, Words, Method, Account, Date, By, Status, Notes string
+			Amount                                                                                                float64
+		}{
+			{
+				Code: "PC-CHI-001", PCode: "SUP-PLX-02", PName: "Chi nhánh Xăng dầu Petrolimex Phú Thọ", PType: "supplier",
+				Receiver: "Hoàng Văn Tuấn (Petrolimex Kế toán)", Reason: "Thanh toán 20,000 lít dầu DO 0.05S theo phiếu mua PM-202610-002", RefCode: "PM-202610-002",
+				Amount: 462000000, Words: "Bốn trăm sáu mươi hai triệu đồng", Method: "bank_transfer",
+				Account: "Vietcombank - 001100456789 (TTC Mỏ)", Date: "2026-10-27", By: "Nguyễn Thị Thủy", Status: "posted", Notes: "Đã thanh toán hợp đồng cung ứng nhiên liệu cơ giới",
+			},
+			{
+				Code: "PC-CHI-002", PCode: "SUP-MIC-01", PName: "Công ty Hóa chất Mỏ MIC Miền Bắc", PType: "supplier",
+				Receiver: "Nguyễn Thị Sen (Thủ quỹ MIC)", Reason: "Thanh toán tạm ứng mua vật tư nổ mìn đợt 8 theo PM-202610-001", RefCode: "PM-202610-001",
+				Amount: 250000000, Words: "Hai trăm năm mươi triệu đồng", Method: "bank_transfer",
+				Account: "BIDV - 215100008899", Date: "2026-10-25", By: "Nguyễn Đức Trường", Status: "posted", Notes: "Ký duyệt theo biên bản nổ mìn tầng 3",
+			},
+			{
+				Code: "PC-CHI-003", PCode: "CUST-BTVT", PName: "Công ty TNHH Bê Tông Việt Trì", PType: "customer_refund",
+				Receiver: "Lê Đình Thắng (Tài xế nhận hoàn tiền)", Reason: "Hoàn tiền hàng bán trả lại do đá dẹt theo phiếu trả PT-202610-001", RefCode: "PT-202610-001",
+				Amount: 4275000, Words: "Bốn triệu hai trăm bảy mươi lăm nghìn đồng", Method: "cash",
+				Account: "Quỹ tiền mặt Trạm Cân Cổng 1", Date: "2026-10-28", By: "Nguyễn Văn Dũng", Status: "posted", Notes: "Đã chi tiền mặt trực tiếp cho lái xe mang về nộp công ty",
+			},
+			{
+				Code: "PC-CHI-004", PCode: "SUP-VINAMAC", PName: "Công ty CP Vật Tư Thiết Bị Vinamac", PType: "supplier",
+				Receiver: "Trần Văn Lộc (Đại diện Vinamac)", Reason: "Chi tiền mua phụ tùng lưới sàng rung theo phiếu mua PM-202610-004", RefCode: "PM-202610-004",
+				Amount: 137500000, Words: "Một trăm ba mươi bảy triệu năm trăm nghìn đồng", Method: "bank_transfer",
+				Account: "Vietcombank - 001100456789", Date: "2026-10-28", By: "Nguyễn Thị Thủy", Status: "posted", Notes: "Kèm biên bản nghiệm thu chạy thử dây chuyền nghiền",
+			},
+			{
+				Code: "PC-CHI-005", PCode: "SUP-HTX-DH", PName: "Hợp Tác Xã Khai Thác Khoáng Sản Đoan Hùng", PType: "supplier",
+				Receiver: "Nguyễn Văn Đoan (Chủ nhiệm HTX)", Reason: "Thanh toán tiền mua bao tiêu đá 0x4 Base theo PM-202610-005", RefCode: "PM-202610-005",
+				Amount: 330000000, Words: "Ba trăm ba mươi triệu đồng", Method: "bank_transfer",
+				Account: "Agribank - 2800201019922 (Chi nhánh Đoan Hùng)", Date: "2026-10-28", By: "Nguyễn Thị Thủy", Status: "posted", Notes: "Đã nhận đủ hóa đơn điện tử hợp lệ",
+			},
+		}
+
+		for _, pv := range payments {
+			Pool.Exec(ctx, `
+				INSERT INTO payment_vouchers (code, partner_code, partner_name, partner_type, receiver_name, reason, ref_code, amount, amount_in_words, payment_method, fund_account, status, date, created_by, notes)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+				ON CONFLICT (code) DO NOTHING
+			`, pv.Code, pv.PCode, pv.PName, pv.PType, pv.Receiver, pv.Reason, pv.RefCode, pv.Amount, pv.Words, pv.Method, pv.Account, pv.Status, pv.Date, pv.By, pv.Notes)
+		}
+	}
 }
 

@@ -1591,6 +1591,184 @@ func Migrate() {
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
+
+		// Inventory Products - Sản phẩm kho đá / Master Data
+		`CREATE TABLE IF NOT EXISTS inventory_products (
+			id SERIAL PRIMARY KEY,
+			code TEXT UNIQUE,
+			name TEXT NOT NULL,
+			category TEXT,
+			unit TEXT DEFAULT 'm³',
+			density DOUBLE PRECISION DEFAULT 1.5,
+			sale_price DOUBLE PRECISION DEFAULT 0,
+			purchase_price DOUBLE PRECISION DEFAULT 0,
+			storage_loc TEXT,
+			standard TEXT,
+			min_stock DOUBLE PRECISION DEFAULT 0,
+			current_stock DOUBLE PRECISION DEFAULT 0,
+			status TEXT DEFAULT 'active',
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Purchase Vouchers - Phiếu mua hàng
+		`CREATE TABLE IF NOT EXISTS purchase_vouchers (
+			id SERIAL PRIMARY KEY,
+			code TEXT UNIQUE,
+			supplier_code TEXT,
+			supplier_name TEXT,
+			date TEXT,
+			warehouse_loc TEXT,
+			total_amount DOUBLE PRECISION DEFAULT 0,
+			vat_amount DOUBLE PRECISION DEFAULT 0,
+			grand_total DOUBLE PRECISION DEFAULT 0,
+			payment_status TEXT DEFAULT 'unpaid',
+			status TEXT DEFAULT 'completed',
+			created_by TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Purchase Voucher Items - Chi tiết dòng sản phẩm mua
+		`CREATE TABLE IF NOT EXISTS purchase_voucher_items (
+			id SERIAL PRIMARY KEY,
+			voucher_id INT,
+			voucher_code TEXT,
+			product_code TEXT,
+			product_name TEXT,
+			unit TEXT,
+			density DOUBLE PRECISION DEFAULT 1.5,
+			unit_price DOUBLE PRECISION DEFAULT 0,
+			quantity DOUBLE PRECISION DEFAULT 0,
+			total_amount DOUBLE PRECISION DEFAULT 0,
+			weight_ton DOUBLE PRECISION DEFAULT 0,
+			standard TEXT,
+			storage_loc TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Sales Vouchers - Phiếu bán hàng
+		`CREATE TABLE IF NOT EXISTS sales_vouchers (
+			id SERIAL PRIMARY KEY,
+			code TEXT UNIQUE,
+			customer_code TEXT,
+			customer_name TEXT,
+			date TEXT,
+			warehouse_loc TEXT,
+			license_plate TEXT,
+			ticket_code TEXT,
+			total_amount DOUBLE PRECISION DEFAULT 0,
+			vat_amount DOUBLE PRECISION DEFAULT 0,
+			grand_total DOUBLE PRECISION DEFAULT 0,
+			paid_amount DOUBLE PRECISION DEFAULT 0,
+			debt_amount DOUBLE PRECISION DEFAULT 0,
+			payment_status TEXT DEFAULT 'paid',
+			status TEXT DEFAULT 'completed',
+			created_by TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Sales Voucher Items - Chi tiết dòng sản phẩm bán
+		`CREATE TABLE IF NOT EXISTS sales_voucher_items (
+			id SERIAL PRIMARY KEY,
+			voucher_id INT,
+			voucher_code TEXT,
+			product_code TEXT,
+			product_name TEXT,
+			unit TEXT,
+			density DOUBLE PRECISION DEFAULT 1.5,
+			unit_price DOUBLE PRECISION DEFAULT 0,
+			quantity DOUBLE PRECISION DEFAULT 0,
+			total_amount DOUBLE PRECISION DEFAULT 0,
+			weight_ton DOUBLE PRECISION DEFAULT 0,
+			standard TEXT,
+			storage_loc TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Return Vouchers - Phiếu trả hàng
+		`CREATE TABLE IF NOT EXISTS return_vouchers (
+			id SERIAL PRIMARY KEY,
+			code TEXT UNIQUE,
+			return_type TEXT DEFAULT 'sales_return',
+			partner_code TEXT,
+			partner_name TEXT,
+			ref_voucher_code TEXT,
+			date TEXT,
+			warehouse_loc TEXT,
+			reason TEXT,
+			total_amount DOUBLE PRECISION DEFAULT 0,
+			status TEXT DEFAULT 'approved',
+			created_by TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Return Voucher Items - Chi tiết dòng sản phẩm trả
+		`CREATE TABLE IF NOT EXISTS return_voucher_items (
+			id SERIAL PRIMARY KEY,
+			voucher_id INT,
+			voucher_code TEXT,
+			product_code TEXT,
+			product_name TEXT,
+			unit TEXT,
+			unit_price DOUBLE PRECISION DEFAULT 0,
+			quantity DOUBLE PRECISION DEFAULT 0,
+			total_amount DOUBLE PRECISION DEFAULT 0,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Receipt Vouchers - Phiếu thu
+		`CREATE TABLE IF NOT EXISTS receipt_vouchers (
+			id SERIAL PRIMARY KEY,
+			code TEXT UNIQUE,
+			partner_code TEXT,
+			partner_name TEXT,
+			partner_type TEXT DEFAULT 'customer',
+			payer_name TEXT,
+			reason TEXT,
+			ref_code TEXT,
+			amount DOUBLE PRECISION DEFAULT 0,
+			amount_in_words TEXT,
+			payment_method TEXT DEFAULT 'bank_transfer',
+			fund_account TEXT,
+			status TEXT DEFAULT 'posted',
+			date TEXT,
+			created_by TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Payment Vouchers - Phiếu chi
+		`CREATE TABLE IF NOT EXISTS payment_vouchers (
+			id SERIAL PRIMARY KEY,
+			code TEXT UNIQUE,
+			partner_code TEXT,
+			partner_name TEXT,
+			partner_type TEXT DEFAULT 'supplier',
+			receiver_name TEXT,
+			reason TEXT,
+			ref_code TEXT,
+			amount DOUBLE PRECISION DEFAULT 0,
+			amount_in_words TEXT,
+			payment_method TEXT DEFAULT 'bank_transfer',
+			fund_account TEXT,
+			status TEXT DEFAULT 'posted',
+			date TEXT,
+			created_by TEXT,
+			notes TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
 	}
 	for _, a := range alters {
 		stepCtx, cancel := context.WithTimeout(ctx, 3*time.Second)

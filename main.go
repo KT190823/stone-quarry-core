@@ -33,6 +33,9 @@ func main() {
 	printH := handlers.NewPrintHandler()
 	quarryH := handlers.NewQuarryHandler()
 	integrationH := handlers.NewIntegrationHandler()
+	productH := handlers.NewProductHandler()
+	tradeH := handlers.NewTradeVoucherHandler()
+	pvH := handlers.NewPaymentVoucherHandler()
 
 	// Register Quarry Core & 3rd-Party Integration Gateway
 	quarryH.Register(mux)
@@ -101,6 +104,48 @@ func main() {
 	mux.HandleFunc("GET /api/inventory/outbound", inventoryH.ListOutbound)
 	mux.HandleFunc("GET /api/inventory/stocktake", inventoryH.ListStocktake)
 	mux.HandleFunc("GET /api/inventory/movement", inventoryH.ListMovements)
+
+	// Inventory Products (Master Data)
+	mux.HandleFunc("GET /api/inventory/products", productH.ListProducts)
+	mux.HandleFunc("GET /api/inventory/products/{id}", productH.GetProduct)
+	mux.HandleFunc("POST /api/inventory/products", productH.CreateProduct)
+	mux.HandleFunc("PUT /api/inventory/products/{id}", productH.UpdateProduct)
+	mux.HandleFunc("DELETE /api/inventory/products/{id}", productH.DeleteProduct)
+
+	// Purchases (Phiếu mua hàng)
+	mux.HandleFunc("GET /api/purchases", tradeH.ListPurchases)
+	mux.HandleFunc("GET /api/purchases/{id}", tradeH.GetPurchase)
+	mux.HandleFunc("POST /api/purchases", tradeH.CreatePurchase)
+	mux.HandleFunc("PUT /api/purchases/{id}", tradeH.UpdatePurchase)
+	mux.HandleFunc("DELETE /api/purchases/{id}", tradeH.DeletePurchase)
+
+	// Sales (Phiếu bán hàng)
+	mux.HandleFunc("GET /api/sales", tradeH.ListSales)
+	mux.HandleFunc("GET /api/sales/{id}", tradeH.GetSales)
+	mux.HandleFunc("POST /api/sales", tradeH.CreateSales)
+	mux.HandleFunc("PUT /api/sales/{id}", tradeH.UpdateSales)
+	mux.HandleFunc("DELETE /api/sales/{id}", tradeH.DeleteSales)
+
+	// Returns (Phiếu trả hàng)
+	mux.HandleFunc("GET /api/returns", tradeH.ListReturns)
+	mux.HandleFunc("GET /api/returns/{id}", tradeH.GetReturn)
+	mux.HandleFunc("POST /api/returns", tradeH.CreateReturn)
+	mux.HandleFunc("PUT /api/returns/{id}", tradeH.UpdateReturn)
+	mux.HandleFunc("DELETE /api/returns/{id}", tradeH.DeleteReturn)
+
+	// Receipts (Phiếu thu)
+	mux.HandleFunc("GET /api/receipts", pvH.ListReceipts)
+	mux.HandleFunc("GET /api/receipts/{id}", pvH.GetReceipt)
+	mux.HandleFunc("POST /api/receipts", pvH.CreateReceipt)
+	mux.HandleFunc("PUT /api/receipts/{id}", pvH.UpdateReceipt)
+	mux.HandleFunc("DELETE /api/receipts/{id}", pvH.DeleteReceipt)
+
+	// Payment Vouchers (Phiếu chi)
+	mux.HandleFunc("GET /api/payment-vouchers", pvH.ListPaymentVouchers)
+	mux.HandleFunc("GET /api/payment-vouchers/{id}", pvH.GetPaymentVoucher)
+	mux.HandleFunc("POST /api/payment-vouchers", pvH.CreatePaymentVoucher)
+	mux.HandleFunc("PUT /api/payment-vouchers/{id}", pvH.UpdatePaymentVoucher)
+	mux.HandleFunc("DELETE /api/payment-vouchers/{id}", pvH.DeletePaymentVoucher)
 
 	mux.HandleFunc("GET /api/payments/invoices", paymentH.ListInvoices)
 	mux.HandleFunc("GET /api/payments/debt", paymentH.ListDebt)
