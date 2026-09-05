@@ -164,3 +164,7 @@ func (s *QuarryService) CalculateReconciliation(
 
 	return recon, nil
 }
+
+func (s *QuarryService) GetQuarryOverview(identifier string) (map[string]interface{}, error) {
+	return s.repo.GetQuarryOverview(identifier)
+}

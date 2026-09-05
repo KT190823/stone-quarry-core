@@ -33,12 +33,17 @@ func parseListParams(r *http.Request) services.ListParams {
 	if pageSize < 1 {
 		pageSize = 50
 	}
+	qCode := r.URL.Query().Get("quarryCode")
+	if qCode == "" {
+		qCode = r.URL.Query().Get("quarry_code")
+	}
 	return services.ListParams{
-		Page:     page,
-		PageSize: pageSize,
-		Search:   r.URL.Query().Get("search"),
-		Sort:     r.URL.Query().Get("sort"),
-		Order:    r.URL.Query().Get("order"),
+		Page:       page,
+		PageSize:   pageSize,
+		Search:     r.URL.Query().Get("search"),
+		Sort:       r.URL.Query().Get("sort"),
+		Order:      r.URL.Query().Get("order"),
+		QuarryCode: qCode,
 	}
 }
 

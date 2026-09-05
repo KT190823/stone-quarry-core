@@ -1926,6 +1926,19 @@ func Migrate() {
 		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS current_driver_id TEXT`,
 		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS current_driver_name TEXT`,
 		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS current_shift_id TEXT`,
+
+		// Multi-Quarry Context Support
+		`ALTER TABLE crusher_plants ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE equipment_fuel_logs ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE inventory_inbound ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE inventory_outbound ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE blasting_passports ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE mining_plans ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE mining_permits ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE weigh_bridges ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE alerts ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 	}
 
 	for _, a := range alters {

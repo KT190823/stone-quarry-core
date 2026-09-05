@@ -10,11 +10,12 @@ import (
 )
 
 type ListParams struct {
-	Page     int
-	PageSize int
-	Search   string
-	Sort     string
-	Order    string
+	Page       int
+	PageSize   int
+	Search     string
+	Sort       string
+	Order      string
+	QuarryCode string
 }
 
 type BaseRepo struct {
@@ -36,14 +37,44 @@ func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error
 		params.PageSize = 50
 	}
 
-	where := ""
+	whereConditions := []string{}
 	args := []interface{}{}
 	argIdx := 1
 
 	if params.Search != "" {
-		where = fmt.Sprintf(" WHERE CAST(row_to_json(%s) AS TEXT) ILIKE $%d", r.Table, argIdx)
+		whereConditions = append(whereConditions, fmt.Sprintf("CAST(row_to_json(%s) AS TEXT) ILIKE $%d", r.Table, argIdx))
 		args = append(args, "%"+params.Search+"%")
 		argIdx++
+	}
+
+	qCode := strings.TrimSpace(params.QuarryCode)
+	if qCode != "" && qCode != "TTC-ALL" && qCode != "ALL" && qCode != "all" {
+		upperQ := strings.ToUpper(qCode)
+		var matchTerm string
+		if strings.Contains(upperQ, "PT") || strings.Contains(upperQ, "PHÚ THỌ") {
+			matchTerm = "Phú Thọ"
+		} else if strings.Contains(upperQ, "HN") || strings.Contains(upperQ, "HÀ NAM") {
+			matchTerm = "Hà Nam"
+		} else if strings.Contains(upperQ, "TU") || strings.Contains(upperQ, "TÂN UYÊN") {
+			matchTerm = "Tân Uyên"
+		} else if strings.Contains(upperQ, "BP") || strings.Contains(upperQ, "BÌNH PHƯỚC") {
+			matchTerm = "Bình Phước"
+		}
+
+		if matchTerm != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("(CAST(row_to_json(%s) AS TEXT) ILIKE $%d OR CAST(row_to_json(%s) AS TEXT) ILIKE $%d)", r.Table, argIdx, r.Table, argIdx+1))
+			args = append(args, "%"+qCode+"%", "%"+matchTerm+"%")
+			argIdx += 2
+		} else {
+			whereConditions = append(whereConditions, fmt.Sprintf("CAST(row_to_json(%s) AS TEXT) ILIKE $%d", r.Table, argIdx))
+			args = append(args, "%"+qCode+"%")
+			argIdx++
+		}
+	}
+
+	where := ""
+	if len(whereConditions) > 0 {
+		where = " WHERE " + strings.Join(whereConditions, " AND ")
 	}
 
 	orderClause := " ORDER BY created_at DESC"

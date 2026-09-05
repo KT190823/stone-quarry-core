@@ -39,6 +39,17 @@ func (h *QuarryHandler) GetQuarry(w http.ResponseWriter, r *http.Request) {
 	JSON(w, q)
 }
 
+// GET /api/v1/quarries/{id}/overview
+func (h *QuarryHandler) GetQuarryOverview(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	overview, err := h.svc.GetQuarryOverview(id)
+	if err != nil {
+		JSONError(w, http.StatusNotFound, "Không tìm thấy thông tin tổng hợp mỏ đá: "+err.Error())
+		return
+	}
+	JSON(w, overview)
+}
+
 // POST /api/v1/quarries
 func (h *QuarryHandler) CreateQuarry(w http.ResponseWriter, r *http.Request) {
 	var q models.Quarry
@@ -211,6 +222,7 @@ func (h *QuarryHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 func (h *QuarryHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/quarries", h.ListQuarries)
 	mux.HandleFunc("GET /api/v1/quarries/{id}", h.GetQuarry)
+	mux.HandleFunc("GET /api/v1/quarries/{id}/overview", h.GetQuarryOverview)
 	mux.HandleFunc("POST /api/v1/quarries", h.CreateQuarry)
 
 	mux.HandleFunc("GET /api/v1/quarry-areas", h.ListQuarryAreas)
