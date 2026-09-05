@@ -36,10 +36,22 @@ func main() {
 	productH := handlers.NewProductHandler()
 	tradeH := handlers.NewTradeVoucherHandler()
 	pvH := handlers.NewPaymentVoucherHandler()
+	salesH := handlers.NewSalesContractHandler()
 
 	// Register Quarry Core & 3rd-Party Integration Gateway
 	quarryH.Register(mux)
 	integrationH.Register(mux)
+
+	// Commercial Sales Contracts & Prepaid Wallet Settlement
+	mux.HandleFunc("GET /api/sales/contracts", salesH.ListContracts)
+	mux.HandleFunc("GET /api/sales/contracts/{id}", salesH.GetContract)
+	mux.HandleFunc("POST /api/sales/contracts", salesH.CreateContract)
+	mux.HandleFunc("PUT /api/sales/contracts/{id}", salesH.UpdateContract)
+	mux.HandleFunc("DELETE /api/sales/contracts/{id}", salesH.DeleteContract)
+	mux.HandleFunc("POST /api/payments/prepaid/settle-daily", salesH.SettleDailyPrepaid)
+	mux.HandleFunc("GET /api/sales/consolidated-delivery", salesH.ListConsolidatedOrders)
+	mux.HandleFunc("GET /api/sales/consolidated-delivery/{id}", salesH.GetConsolidatedOrder)
+	mux.HandleFunc("POST /api/sales/consolidated-delivery", salesH.ConsolidateDeliveryOrders)
 
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		handlers.JSON(w, map[string]string{"status": "ok", "service": "mo-da-backend"})
@@ -260,6 +272,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/vehicles/gps-fleet", cameraH.ListGpsFleet)
 	mux.HandleFunc("GET /api/vehicles/fuel-theft-audit", cameraH.ListFuelTheftAudits)
+	mux.HandleFunc("GET /api/vehicles/fuel-theft-audit/{id}", cameraH.GetFuelTheftAudit)
 	mux.HandleFunc("GET /api/vehicles/fuel-norms", cameraH.ListFuelNorms)
 	mux.HandleFunc("GET /api/vehicles/yard-checkinout", cameraH.ListYardCheckInOuts)
 

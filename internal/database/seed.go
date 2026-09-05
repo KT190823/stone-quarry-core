@@ -175,6 +175,14 @@ func Seed() {
 			{"TK-20261028-002", "Công ty Cổ phần Mỏ Đá TTC", "Tổng Công Ty XD Trường Sơn", "19H-056.22", "Xe ben Chenglong", "Nguyễn Văn Mạnh", "0982.145.882", "Cân bán hàng", "done", "Hoàn thành", "14.80", "46.20", "31.40", "31.40", "5.652.000", "08:30", "08:58", "28/10/2026", "Nguyễn Văn Dũng", "Đá Base Cấp Phối Dmax25", "TCVN 8859:2011", "DO-TS-045", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 1", "Đá cấp phối chuẩn cao tốc", 14.80, 180000},
 			{"TK-20261028-003", "Công ty Cổ phần Mỏ Đá TTC", "Công ty Bê Tông Việt Trì", "29H-882.19", "Xe bồn trộn 12m3", "Lê Văn Tuấn", "0912.445.667", "Cân bán hàng", "done", "Hoàn thành", "16.10", "42.50", "26.40", "26.40", "6.864.000", "09:05", "09:32", "28/10/2026", "Nguyễn Văn Dũng", "Cát Nghiền Nhân Tạo", "Mô đun độ lớn 2.6", "DO-VT-012", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 2", "Cát nghiền mịn trạm trộn bê tông", 16.10, 260000},
 			{"TK-20261028-004", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Tập Đoàn Đèo Cả", "90C-123.45", "Xe đầu kéo Howo", "Vũ Quốc Đạt", "0978.556.223", "Cân bán hàng", "weighing_2", "Đang cân bì lần 2", "18.50", "—", "—", "—", "—", "09:40", "—", "28/10/2026", "Nguyễn Văn Dũng", "Đá 4x6 Kè Móng", "Đá 4x6 tuyển", "DO-DC-098", "Trạm Cân 02 (120 Tấn)", "Cổng Cân Số 1", "Đang bốc hàng moong tầng 3", 18.50, 220000},
+			{"NA281026-2001", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Đầu Tư Xây Dựng 319", "29C-345.67", "Xe ben 4 chân Sinotruk", "Trần Đình Trọng", "0984.112.334", "Cân bán hàng", "confirmed", "Đã chốt số", "16.20", "46.20", "30.00", "30.00", "7.200.000 đ", "08:15", "08:42", "28/10/2026", "Nguyễn Văn Dũng", "Đá 1x2 Bê tông", "TCVN 7570:2006", "DO-319-082", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 1", "Chuyến vận chuyển xe 29C-345.67", 16.20, 240000},
+			{"NA251026-2012", "Công ty Cổ phần Mỏ Đá TTC", "Tổng Công Ty XD Trường Sơn", "19H-056.22", "Xe ben Chenglong", "Nguyễn Văn Mạnh", "0982.145.882", "Cân bán hàng", "confirmed", "Đã chốt số", "14.80", "46.20", "31.40", "31.40", "5.652.000 đ", "08:30", "08:58", "25/10/2026", "Nguyễn Văn Dũng", "Đá Base Cấp Phối Dmax25", "TCVN 8859:2011", "DO-TS-045", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 1", "Chuyến vận chuyển cao tốc", 14.80, 180000},
+			{"NA281025-22", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Đầu Tư Xây Dựng 319", "29C-345.67", "Xe ben 4 chân Sinotruk", "Trần Đình Trọng", "0984.112.334", "Cân bán hàng", "confirmed", "Đã chốt số", "16.42", "46.42", "30.00", "30.00", "7.200.000 đ", "13:59", "14:25", "28/10/2026", "Trần Văn Cân 01", "Đá 1x2 Xây Dựng", "TCVN 7570:2006", "DO-319-083", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Cảnh báo lệch bì kiểm định +220kg", 16.42, 240000},
+			{"NA281025-14", "Công ty Cổ phần Mỏ Đá TTC", "Công ty Bê Tông Việt Trì", "29H-882.19", "Xe bồn trộn 12m3", "Lê Văn Tuấn", "0912.445.667", "Cân bán hàng", "confirmed", "Đã chốt số", "16.23", "46.23", "30.00", "30.00", "7.800.000 đ", "10:15", "10:45", "28/10/2026", "Nguyễn Văn Dũng", "Cát Nghiền Nhân Tạo", "Mô đun độ lớn 2.6", "DO-VT-014", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Xuất mỏ bình thường", 16.23, 260000},
+			{"NA271025-88", "Công ty Cổ phần Mỏ Đá TTC", "Tổng Công Ty XD Trường Sơn", "19H-056.22", "Xe ben Chenglong", "Nguyễn Văn Mạnh", "0982.145.882", "Cân bán hàng", "confirmed", "Đã chốt số", "16.18", "47.58", "31.40", "31.40", "5.652.000 đ", "16:20", "16:50", "27/10/2026", "Trần Văn Cân 01", "Đá Base Cấp Phối Dmax25", "TCVN 8859:2011", "DO-TS-046", "Trạm Cân Cổng 02", "Cổng Cân Số 2", "Chuyến chiều", 16.18, 180000},
+			{"NA271025-45", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Đầu Tư Xây Dựng 319", "88H-042.27", "Xe ben 4 chân", "Trần Đình Trọng", "0984.112.334", "Cân bán hàng", "confirmed", "Đã chốt số", "16.21", "49.39", "33.18", "33.18", "7.963.200 đ", "11:05", "11:35", "27/10/2026", "Nguyễn Văn Dũng", "Đá 1x2 Xây Dựng", "TCVN 7570:2006", "DO-319-084", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Xuất mỏ đủ tải", 16.21, 240000},
+			{"NA261025-19", "Công ty Cổ phần Mỏ Đá TTC", "Tổng Công Ty XD Trường Sơn", "76C-102.34", "Xe đầu kéo mooc ben", "Vũ Quốc Đạt", "0978.556.223", "Cân bán hàng", "confirmed", "Đã chốt số", "16.19", "46.19", "30.00", "30.00", "5.400.000 đ", "08:40", "09:10", "26/10/2026", "Nguyễn Văn Dũng", "Đá Base Cấp Phối Dmax25", "TCVN 8859:2011", "DO-TS-047", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Xuất mỏ bình thường", 16.19, 180000},
+			{"NA281025-23", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Tập Đoàn Đèo Cả", "29E-380.15", "Xe tải ben 4 chân", "Hoàng Văn Hậu", "0963.221.789", "Cân bán hàng", "confirmed", "Đã chốt số", "15.80", "48.20", "32.40", "32.40", "7.128.000 đ", "14:15", "14:48", "28/10/2026", "Lê Văn Cân 02", "Đá 4x6 Kè Móng", "Đá 4x6 tuyển", "DO-DC-099", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 1", "Phiếu điều chỉnh khối lượng", 15.80, 220000},
 		}
 
 		for _, t := range tickets {
@@ -184,7 +192,54 @@ func Seed() {
 				ON CONFLICT (id) DO NOTHING
 			`, t.ID, t.BenBan, t.BenMua, t.BienSo, t.LoaiXe, t.LaiXe, t.Sdt, t.Loai, t.Stage, t.StageLabel, t.CanL1, t.KL1, t.KL2, t.KL2, t.KLHang, t.KLTinhTien, t.DonGia, t.ThanhTien, t.Time1, t.Time2, t.Date, t.NguoiCan1, t.MatHang, t.QuyCach, t.DOCode, t.TramCan, t.CongCan, t.GhiChu)
 		}
+	} else {
+		// Even if ticketCount > 0, make sure all NA tickets are inserted
+		extraTickets := []struct {
+			ID, BenBan, BenMua, BienSo, LoaiXe, LaiXe, Sdt, Loai, Stage, StageLabel, KL1, KL2, KLHang, KLTinhTien, ThanhTien, Time1, Time2, Date, NguoiCan1, MatHang, QuyCach, DOCode, TramCan, CongCan, GhiChu string
+			CanL1, DonGia                                                                                                                                                                                       float64
+		}{
+			{"NA281026-2001", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Đầu Tư Xây Dựng 319", "29C-345.67", "Xe ben 4 chân Sinotruk", "Trần Đình Trọng", "0984.112.334", "Cân bán hàng", "confirmed", "Đã chốt số", "16.20", "46.20", "30.00", "30.00", "7.200.000 đ", "08:15", "08:42", "28/10/2026", "Nguyễn Văn Dũng", "Đá 1x2 Bê tông", "TCVN 7570:2006", "DO-319-082", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 1", "Chuyến vận chuyển xe 29C-345.67", 16.20, 240000},
+			{"NA251026-2012", "Công ty Cổ phần Mỏ Đá TTC", "Tổng Công Ty XD Trường Sơn", "19H-056.22", "Xe ben Chenglong", "Nguyễn Văn Mạnh", "0982.145.882", "Cân bán hàng", "confirmed", "Đã chốt số", "14.80", "46.20", "31.40", "31.40", "5.652.000 đ", "08:30", "08:58", "25/10/2026", "Nguyễn Văn Dũng", "Đá Base Cấp Phối Dmax25", "TCVN 8859:2011", "DO-TS-045", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 1", "Chuyến vận chuyển cao tốc", 14.80, 180000},
+			{"NA281025-22", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Đầu Tư Xây Dựng 319", "29C-345.67", "Xe ben 4 chân Sinotruk", "Trần Đình Trọng", "0984.112.334", "Cân bán hàng", "confirmed", "Đã chốt số", "16.42", "46.42", "30.00", "30.00", "7.200.000 đ", "13:59", "14:25", "28/10/2026", "Trần Văn Cân 01", "Đá 1x2 Xây Dựng", "TCVN 7570:2006", "DO-319-083", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Cảnh báo lệch bì kiểm định +220kg", 16.42, 240000},
+			{"NA281025-14", "Công ty Cổ phần Mỏ Đá TTC", "Công ty Bê Tông Việt Trì", "29H-882.19", "Xe bồn trộn 12m3", "Lê Văn Tuấn", "0912.445.667", "Cân bán hàng", "confirmed", "Đã chốt số", "16.23", "46.23", "30.00", "30.00", "7.800.000 đ", "10:15", "10:45", "28/10/2026", "Nguyễn Văn Dũng", "Cát Nghiền Nhân Tạo", "Mô đun độ lớn 2.6", "DO-VT-014", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Xuất mỏ bình thường", 16.23, 260000},
+			{"NA271025-88", "Công ty Cổ phần Mỏ Đá TTC", "Tổng Công Ty XD Trường Sơn", "19H-056.22", "Xe ben Chenglong", "Nguyễn Văn Mạnh", "0982.145.882", "Cân bán hàng", "confirmed", "Đã chốt số", "16.18", "47.58", "31.40", "31.40", "5.652.000 đ", "16:20", "16:50", "27/10/2026", "Trần Văn Cân 01", "Đá Base Cấp Phối Dmax25", "TCVN 8859:2011", "DO-TS-046", "Trạm Cân Cổng 02", "Cổng Cân Số 2", "Chuyến chiều", 16.18, 180000},
+			{"NA271025-45", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Đầu Tư Xây Dựng 319", "88H-042.27", "Xe ben 4 chân", "Trần Đình Trọng", "0984.112.334", "Cân bán hàng", "confirmed", "Đã chốt số", "16.21", "49.39", "33.18", "33.18", "7.963.200 đ", "11:05", "11:35", "27/10/2026", "Nguyễn Văn Dũng", "Đá 1x2 Xây Dựng", "TCVN 7570:2006", "DO-319-084", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Xuất mỏ đủ tải", 16.21, 240000},
+			{"NA261025-19", "Công ty Cổ phần Mỏ Đá TTC", "Tổng Công Ty XD Trường Sơn", "76C-102.34", "Xe đầu kéo mooc ben", "Vũ Quốc Đạt", "0978.556.223", "Cân bán hàng", "confirmed", "Đã chốt số", "16.19", "46.19", "30.00", "30.00", "5.400.000 đ", "08:40", "09:10", "26/10/2026", "Nguyễn Văn Dũng", "Đá Base Cấp Phối Dmax25", "TCVN 8859:2011", "DO-TS-047", "Trạm Cân Cổng 01", "Cổng Cân Số 1", "Xuất mỏ bình thường", 16.19, 180000},
+			{"NA281025-23", "Công ty Cổ phần Mỏ Đá TTC", "Công ty CP Tập Đoàn Đèo Cả", "29E-380.15", "Xe tải ben 4 chân", "Hoàng Văn Hậu", "0963.221.789", "Cân bán hàng", "confirmed", "Đã chốt số", "15.80", "48.20", "32.40", "32.40", "7.128.000 đ", "14:15", "14:48", "28/10/2026", "Lê Văn Cân 02", "Đá 4x6 Kè Móng", "Đá 4x6 tuyển", "DO-DC-099", "Trạm Cân 01 (100 Tấn)", "Cổng Cân Số 1", "Phiếu điều chỉnh khối lượng", 15.80, 220000},
+		}
+		for _, t := range extraTickets {
+			Pool.Exec(ctx, `
+				INSERT INTO tickets (id, ben_ban, ben_mua, bien_so, loai_xe, lai_xe, sdt_lai_xe, loai, stage, stage_label, can_l1, kl1, can_l2, kl2, kl_hang, kl_tinh_tien, don_gia, thanh_tien, time1, time2, date, nguoi_can1, mat_hang, quy_cach, do_code, tram_can, cong_can, ghi_chu)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+				ON CONFLICT (id) DO NOTHING
+			`, t.ID, t.BenBan, t.BenMua, t.BienSo, t.LoaiXe, t.LaiXe, t.Sdt, t.Loai, t.Stage, t.StageLabel, t.CanL1, t.KL1, t.KL2, t.KL2, t.KLHang, t.KLTinhTien, t.DonGia, t.ThanhTien, t.Time1, t.Time2, t.Date, t.NguoiCan1, t.MatHang, t.QuyCach, t.DOCode, t.TramCan, t.CongCan, t.GhiChu)
+		}
 	}
+
+	// Enrich all tickets in database with complete cameras snapshots, chatter logs, STT and RFID
+	Pool.Exec(ctx, `
+		UPDATE tickets SET
+			stt = COALESCE(stt, 1),
+			rfid = COALESCE(NULLIF(rfid, ''), 'RFID-' || bien_so),
+			hoa_don_so = COALESCE(NULLIF(hoa_don_so, ''), 'HD-2026-' || LPAD(COALESCE(SUBSTRING(id FROM '[0-9]+$'), '101'), 5, '0')),
+			nguoi_can2 = COALESCE(NULLIF(nguoi_can2, ''), 'Lê Văn Cân 02 (Thủ kho bãi)'),
+			cameras = CASE WHEN cameras IS NULL OR cameras = '{}'::jsonb THEN
+				jsonb_build_object(
+					'front', jsonb_build_object('camera', 'Camera 01 - ANPR Biển số đầu xe', 'image', 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&auto=format&fit=crop&q=70', 'time', date || ' ' || time1, 'status', 'Hoạt động bình thường'),
+					'rear', jsonb_build_object('camera', 'Camera 02 - Thùng xe & Đuôi', 'image', 'https://images.unsplash.com/photo-1586191582151-f73972d3b24f?w=800&auto=format&fit=crop&q=70', 'time', date || ' ' || time2, 'status', 'Hoạt động bình thường'),
+					'cabin', jsonb_build_object('camera', 'Camera 03 - Cabin Lái xe', 'image', 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=800&auto=format&fit=crop&q=70', 'time', date || ' ' || time1, 'status', 'Hoạt động bình thường'),
+					'overview', jsonb_build_object('camera', 'Camera 04 - Toàn cảnh Bàn Cân 100 Tấn', 'image', 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=800&auto=format&fit=crop&q=70', 'time', date || ' ' || time2, 'status', 'Hoạt động bình thường')
+				)
+			ELSE cameras END,
+			chatter = CASE WHEN chatter IS NULL OR chatter = '[]'::jsonb THEN
+				jsonb_build_array(
+					jsonb_build_object('id', 'c-1', 'author', 'Hệ thống Cân ANPR', 'avatarText', 'AI', 'time', date || ' ' || time1, 'type', 'activity', 'content', 'Nhận diện biển số ' || bien_so || ' và quét thẻ RFID thành công tại Cổng Cân Số 1.'),
+					jsonb_build_object('id', 'c-2', 'author', 'Nguyễn Văn Dũng (NV Cân)', 'avatarText', 'VD', 'time', date || ' ' || time1, 'type', 'log', 'content', 'Cân lần 1 (Cân xác bì): Hoàn tất chuẩn xác.'),
+					jsonb_build_object('id', 'c-3', 'author', 'Lê Văn Cân 02 (Thủ kho)', 'avatarText', 'LC', 'time', date || ' ' || time2, 'type', 'log', 'content', 'Xác nhận xe đã bốc hàng tại Moong Khai Thác theo phiếu xuất kho ' || COALESCE(do_code, 'DO-01') || '.'),
+					jsonb_build_object('id', 'c-4', 'author', 'Nguyễn Văn Dũng (NV Cân)', 'avatarText', 'VD', 'time', date || ' ' || time2, 'type', 'log', 'content', 'Cân lần 2 (Tổng trọng tải): Hoàn tất cân, tự động chốt số và lưu trữ dữ liệu.')
+				)
+			ELSE chatter END
+	`)
 
 	// 3. Seed Vehicles
 	// 3. Seed Vehicles
@@ -196,8 +251,13 @@ func Seed() {
 	}{
 		{"88H-042.27", "Xe ben 4 chân HOWO", "RFID-88H-042", "Hoạt động", "15/12/2026", "28/10/2026", "Công ty CP Đầu Tư Xây Dựng 319", "tấn", 15.42, 30.0, 142},
 		{"19H-056.22", "Xe ben Chenglong", "RFID-19H-056", "Hoạt động", "20/01/2027", "28/10/2026", "Tổng Công Ty XD Trường Sơn", "tấn", 14.80, 30.0, 98},
+		{"76C-102.34", "Xe đầu kéo mooc ben FAW", "RFID-76C-102", "Hoạt động", "20/08/2027", "28/10/2026", "Tổng Cty Công Nghiệp Mỏ", "tấn", 19.50, 30.0, 89},
+		{"29C-345.67", "Xe ben 4 chân Sinotruk", "RFID-29C-345", "Hoạt động", "01/06/2027", "28/10/2026", "Cty CP Vận Tải Quang Trung", "tấn", 16.20, 20.0, 82},
 		{"29H-882.19", "Xe bồn trộn bê tông", "RFID-29H-882", "Hoạt động", "10/11/2026", "28/10/2026", "Công ty Bê Tông Việt Trì", "tấn", 16.10, 25.0, 76},
 		{"90C-123.45", "Xe đầu kéo Mooc ben", "RFID-90C-123", "Hoạt động", "05/03/2027", "28/10/2026", "Công ty CP Tập Đoàn Đèo Cả", "tấn", 18.50, 45.0, 64},
+		{"36C-789.12", "Xe ben Howo 8x4", "RFID-36C-789", "Hoạt động", "15/03/2027", "28/10/2026", "HTX Vận Tải Ngọc Sơn", "tấn", 15.80, 19.0, 64},
+		{"14B-567.89", "Xe ben 6 chân Shacman", "RFID-14B-567", "Hoạt động", "10/01/2028", "28/10/2026", "Cty TNHH Vật Liệu Xây Dựng Hà Giang", "tấn", 17.00, 22.0, 53},
+		{"24C-222.11", "Xe ben 4 chân CAMC", "RFID-24C-222", "Hoạt động", "05/05/2027", "28/10/2026", "Cty CP Đá Nguyên Khối", "tấn", 14.50, 16.0, 41},
 		{"19C-098.76", "Xe tải ben 3 chân", "RFID-19C-098", "Bảo dưỡng", "28/10/2026", "28/10/2026", "Hợp tác xã Vận tải Hùng Vương", "tấn", 11.20, 20.0, 35},
 	}
 
@@ -434,24 +494,192 @@ func Seed() {
 		('PLAN-06', 'Mỏ Cẩm Khê (Moong)', 'Đá base cấp phối loại 1', 160000, 'tấn', 40000, 41200, 40000, 40500, 40000, 39800, 40000, 13900, 135400, 84.6, 'active', 'Đang thực hiện')
 		ON CONFLICT (id) DO UPDATE SET mine=EXCLUDED.mine, item=EXCLUDED.item, annual_target=EXCLUDED.annual_target, unit=EXCLUDED.unit`,
 
-		`INSERT INTO blasting_passports (id, code, mine_name, blast_date, blast_time, location, hole_count, hole_depth_meters, anfo_explosive_kg, emulsion_explosive_kg, detonator_count, designed_rock_volume_m3, powder_factor_kg_per_m3, actual_rock_mined_m3, safety_status, blaster_in_charge, certified_number) VALUES
-		('BLAST-01', 'HC-20261028-01', 'Mỏ 1 (Thanh Ba)', '28/10/2026', '11:30', 'Tầng +45m Khai trường Tây', 42, 12.5, 3850, 450, 42, 9800, 0.438, 10250, 'Đã nghiệm thu', 'Nguyễn Văn Hùng', 'CH-VLNCN-2024-089'),
-		('BLAST-02', 'HC-20261027-02', 'Mỏ 1 (Thanh Ba)', '27/10/2026', '11:30', 'Tầng +30m Khai trường Nam', 36, 11.8, 3200, 380, 36, 8200, 0.436, 8560, 'Đã nghiệm thu', 'Trần Đình Trọng', 'CH-VLNCN-2023-112'),
-		('BLAST-03', 'HC-20261029-01', 'Mỏ 2 (Cẩm Khê)', '29/10/2026', '16:30', 'Tầng +60m Vỉa Bắc', 48, 13.0, 4500, 520, 48, 11500, 0.436, 0, 'Chờ kích nổ', 'Hoàng Minh Đức', 'CH-VLNCN-2025-045')
-		ON CONFLICT (id) DO NOTHING`,
+		`DELETE FROM blasting_passports WHERE id IN ('BLAST-01', 'BLAST-02', 'BLAST-03', 'BLAST-04', 'BLAST-05')`,
+		`INSERT INTO blasting_passports (
+			id, code, mine_name, blast_date, blast_time, location, bench_level,
+			hole_count, hole_depth_meters, hole_diameter_mm, burden_m, spacing_m, row_spacing_m, stemming_length_m, rock_hardness_f, firing_method, delay_interval_ms,
+			anfo_explosive_kg, emulsion_explosive_kg, detonator_count, designed_rock_volume_m3, powder_factor_kg_per_m3, actual_rock_mined_m3,
+			safety_status, status_code, blaster_in_charge, certified_number, certificate_expiry, approved_by, approved_at,
+			license_number, quota_annual_limit_tons, quota_used_ytd_tons, quota_remaining_tons,
+			safety_perimeter_m, police_notified, commune_notified, notification_doc_ref, all_guards_confirmed, evacuation_confirmed, siren_alerts_completed,
+			guard_posts, materials, same_day_return_closed, return_completed_time,
+			post_blast_clearance, smoke_clearing_minutes, misfire_reported, misfire_count, misfire_details, misfire_resolution,
+			explosive_cost, drilling_cost, blasting_service_fee, guard_labor_cost, total_blast_cost, cost_per_m3_rock, cost_per_ton_rock, notes
+		) VALUES
+		(
+			'BLAST-01', 'HC-20261028-01', 'Mỏ 1 (Thanh Ba)', '28/10/2026', '11:30', 'Tầng +45m Khai trường Tây', 'Tầng +45m',
+			42, 12.5, 105, 3.2, 3.5, 3.0, 3.2, 'f = 10 - 12 (Đá vôi kết tinh)', 'Vi sai phi điện MS', 25,
+			3850, 450, 42, 9800, 0.438, 10250,
+			'Đã nghiệm thu', 'COMPLETED', 'Nguyễn Văn Hùng', 'CH-VLNCN-2024-089', '28/10/2027', 'Lê Hữu Thắng (GĐ Mỏ)', '27/10/2026 15:00',
+			'GP-118-SCT-2026', 180, 142.5, 37.5,
+			450, true, true, 'TB-20261027-UBND/CA', true, true, true,
+			'[
+				{"postName":"Trạm 1: Ngã 3 đường lên moong","guardPerson":"Vũ Văn Lợi","phone":"0987123451","distanceFromPitM":450,"status":"Đã chốt chặn","checkedInAt":"11:00"},
+				{"postName":"Trạm 2: Đỉnh vách phía Bắc","guardPerson":"Trần Đình Tuấn","phone":"0987123452","distanceFromPitM":500,"status":"Đã chốt chặn","checkedInAt":"11:05"},
+				{"postName":"Trạm 3: Tuyến đường nội bộ số 2","guardPerson":"Nguyễn Văn Bình","phone":"0987123453","distanceFromPitM":460,"status":"Đã chốt chặn","checkedInAt":"11:02"},
+				{"postName":"Trạm 4: Trạm cân mỏ","guardPerson":"Đỗ Quốc Cường","phone":"0987123454","distanceFromPitM":480,"status":"Đã chốt chặn","checkedInAt":"11:10"}
+			]'::jsonb,
+			'[
+				{"materialName":"Thuốc nổ ANFO chịu nước","category":"Thuốc nổ","batchLotNo":"LOT-ANFO-MICCO-2026-10","supplier":"Tổng Công Ty MICCO","plannedQty":3850,"issuedQty":4000,"actualUsedQty":3850,"returnedQty":150,"discrepancy":0,"unit":"kg","expiryDate":"15/06/2027","returnStatus":"Đã nhập kho 14:15"},
+				{"materialName":"Thuốc nổ nhũ tương mồi thỏi","category":"Thuốc nổ","batchLotNo":"LOT-EMU-GAET-0926","supplier":"Tổng Công Ty GAET","plannedQty":450,"issuedQty":450,"actualUsedQty":450,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"20/08/2027","returnStatus":"Sử dụng hết 100%"},
+				{"materialName":"Kíp nổ vi sai phi điện MS (25ms)","category":"Kíp nổ","batchLotNo":"LOT-KIP-2026-441","supplier":"Công ty TNHH MTV Hóa chất 21","plannedQty":42,"issuedQty":45,"actualUsedQty":42,"returnedQty":3,"discrepancy":0,"unit":"quả","expiryDate":"30/12/2027","returnStatus":"Đã nhập kho 14:15"}
+			]'::jsonb,
+			true, '14:15',
+			true, 22, false, 0, 'Không phát hiện hiện tượng nổ sót hoặc mìn câm', 'Bãi mìn an toàn tuyệt đối',
+			78200000, 24500000, 8500000, 3600000, 114800000, 11200, 4480, 'Đợt nổ nứt dỡ đồng đều, tỷ lệ đá quá cỡ dưới 4.5%'
+		),
+		(
+			'BLAST-02', 'HC-20261027-02', 'Mỏ 1 (Thanh Ba)', '27/10/2026', '11:30', 'Tầng +30m Khai trường Nam', 'Tầng +30m',
+			36, 11.8, 105, 3.0, 3.5, 3.0, 3.0, 'f = 10 - 12 (Đá vôi)', 'Vi sai phi điện MS', 25,
+			3200, 380, 36, 8200, 0.436, 8560,
+			'Đã nghiệm thu', 'COMPLETED', 'Trần Đình Trọng', 'CH-VLNCN-2023-112', '15/10/2026', 'Lê Hữu Thắng (GĐ Mỏ)', '26/10/2026 14:30',
+			'GP-118-SCT-2026', 180, 138.2, 41.8,
+			400, true, true, 'TB-20261026-UBND/CA', true, true, true,
+			'[
+				{"postName":"Trạm 1: Ngã 3 ranh giới Nam","guardPerson":"Lê Văn Hào","phone":"0987123455","distanceFromPitM":400,"status":"Đã chốt chặn","checkedInAt":"11:00"},
+				{"postName":"Trạm 2: Trạm biến áp moong","guardPerson":"Phạm Đức Hải","phone":"0987123456","distanceFromPitM":420,"status":"Đã chốt chặn","checkedInAt":"11:05"}
+			]'::jsonb,
+			'[
+				{"materialName":"Thuốc nổ ANFO","category":"Thuốc nổ","batchLotNo":"LOT-ANFO-MICCO-2026-09","supplier":"Tổng Công Ty MICCO","plannedQty":3200,"issuedQty":3300,"actualUsedQty":3200,"returnedQty":100,"discrepancy":0,"unit":"kg","expiryDate":"10/05/2027","returnStatus":"Đã nhập kho 15:00"},
+				{"materialName":"Thuốc nổ nhũ tương","category":"Thuốc nổ","batchLotNo":"LOT-EMU-GAET-0926","supplier":"Tổng Công Ty GAET","plannedQty":380,"issuedQty":380,"actualUsedQty":380,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"20/08/2027","returnStatus":"Sử dụng hết 100%"},
+				{"materialName":"Kíp nổ vi sai phi điện","category":"Kíp nổ","batchLotNo":"LOT-KIP-2026-440","supplier":"Hóa chất 21","plannedQty":36,"issuedQty":38,"actualUsedQty":36,"returnedQty":2,"discrepancy":0,"unit":"quả","expiryDate":"30/12/2027","returnStatus":"Đã nhập kho 15:00"}
+			]'::jsonb,
+			true, '15:00',
+			true, 20, false, 0, 'Bãi mìn thông thoáng, không sót mìn', 'Nghiệm thu an toàn',
+			64800000, 21200000, 7200000, 3000000, 96200000, 11238, 4495, 'Khai trường Nam hạ tầng an toàn'
+		),
+		(
+			'BLAST-03', 'HC-20261029-01', 'Mỏ 2 (Cẩm Khê)', '29/10/2026', '16:30', 'Tầng +60m Vỉa Bắc', 'Tầng +60m',
+			48, 13.0, 115, 3.5, 3.8, 3.2, 3.5, 'f = 12 - 14 (Đá vôi rắn chắc)', 'Vi sai phi điện MS', 25,
+			4500, 520, 48, 11500, 0.436, 0,
+			'Chờ kích nổ', 'READY', 'Hoàng Minh Đức', 'CH-VLNCN-2025-045', '12/03/2028', 'Nguyễn Tiến Dũng (GĐ Mỏ)', '28/10/2026 16:00',
+			'GP-1506-SCT-2026', 150, 98.5, 51.5,
+			500, true, true, 'TB-20261028-UBND/CA', true, true, true,
+			'[
+				{"postName":"Trạm 1: Ngã 3 chân dốc vỉa Bắc","guardPerson":"Bùi Văn Thắng","phone":"0987123457","distanceFromPitM":500,"status":"Đang chốt chặn","checkedInAt":"15:50"},
+				{"postName":"Trạm 2: Ranh giới đồi cây giáp dân","guardPerson":"Nguyễn Văn Tài","phone":"0987123458","distanceFromPitM":520,"status":"Đang chốt chặn","checkedInAt":"15:55"},
+				{"postName":"Trạm 3: Cổng trạm nghiền số 2","guardPerson":"Hoàng Văn Kiên","phone":"0987123459","distanceFromPitM":480,"status":"Đang chốt chặn","checkedInAt":"16:00"}
+			]'::jsonb,
+			'[
+				{"materialName":"Thuốc nổ ANFO","category":"Thuốc nổ","batchLotNo":"LOT-ANFO-MICCO-2026-10","supplier":"Tổng Công Ty MICCO","plannedQty":4500,"issuedQty":4500,"actualUsedQty":4500,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"15/06/2027","returnStatus":"Đã nạp vào lỗ mìn"},
+				{"materialName":"Thuốc nổ nhũ tương","category":"Thuốc nổ","batchLotNo":"LOT-EMU-GAET-0926","supplier":"Tổng Công Ty GAET","plannedQty":520,"issuedQty":520,"actualUsedQty":520,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"20/08/2027","returnStatus":"Đã nạp vào lỗ mìn"},
+				{"materialName":"Kíp nổ vi sai phi điện","category":"Kíp nổ","batchLotNo":"LOT-KIP-2026-441","supplier":"Hóa chất 21","plannedQty":48,"issuedQty":48,"actualUsedQty":48,"returnedQty":0,"discrepancy":0,"unit":"quả","expiryDate":"30/12/2027","returnStatus":"Đã đấu nối mạng"}
+			]'::jsonb,
+			false, '',
+			false, 0, false, 0, '', '',
+			91200000, 29000000, 9800000, 4200000, 134200000, 11669, 4668, 'Đã nạp thuốc xong, đang chờ phát hiệu lệnh còi đợt 2'
+		),
+		(
+			'BLAST-04', 'HC-20261030-01', 'Mỏ 1 (Thanh Ba)', '30/10/2026', '11:30', 'Tầng +45m Vỉa Đông', 'Tầng +45m',
+			40, 12.0, 105, 3.2, 3.5, 3.0, 3.2, 'f = 10 - 12 (Đá vôi)', 'Vi sai phi điện MS', 25,
+			3600, 420, 40, 9200, 0.436, 9450,
+			'Đã xử lý mìn câm', 'COMPLETED', 'Nguyễn Văn Hùng', 'CH-VLNCN-2024-089', '28/10/2027', 'Lê Hữu Thắng (GĐ Mỏ)', '29/10/2026 15:30',
+			'GP-118-SCT-2026', 180, 146.5, 33.5,
+			450, true, true, 'TB-20261029-UBND/CA', true, true, true,
+			'[
+				{"postName":"Trạm 1: Ngã 3 Đông","guardPerson":"Vũ Văn Lợi","phone":"0987123451","distanceFromPitM":450,"status":"Đã chốt chặn","checkedInAt":"11:00"},
+				{"postName":"Trạm 2: Đỉnh vách Đông","guardPerson":"Trần Đình Tuấn","phone":"0987123452","distanceFromPitM":480,"status":"Đã chốt chặn","checkedInAt":"11:05"}
+			]'::jsonb,
+			'[
+				{"materialName":"Thuốc nổ ANFO","category":"Thuốc nổ","batchLotNo":"LOT-ANFO-MICCO-2026-10","supplier":"Tổng Công Ty MICCO","plannedQty":3600,"issuedQty":3700,"actualUsedQty":3600,"returnedQty":100,"discrepancy":0,"unit":"kg","expiryDate":"15/06/2027","returnStatus":"Đã nhập kho 15:10"},
+				{"materialName":"Thuốc nổ nhũ tương bổ sung khử mìn câm","category":"Thuốc nổ","batchLotNo":"LOT-EMU-GAET-0926","supplier":"Tổng Công Ty GAET","plannedQty":420,"issuedQty":430,"actualUsedQty":425,"returnedQty":5,"discrepancy":0,"unit":"kg","expiryDate":"20/08/2027","returnStatus":"Đã nhập kho 15:10"},
+				{"materialName":"Kíp nổ vi sai phi điện","category":"Kíp nổ","batchLotNo":"LOT-KIP-2026-441","supplier":"Hóa chất 21","plannedQty":40,"issuedQty":42,"actualUsedQty":41,"returnedQty":1,"discrepancy":0,"unit":"quả","expiryDate":"30/12/2027","returnStatus":"Đã nhập kho 15:10"}
+			]'::jsonb,
+			true, '15:10',
+			true, 25, true, 1, 'Phát hiện 01 lỗ mìn câm tại mép ngoài hàng số 1 (do đá nứt đứt ống dẫn tín hiệu phi điện)', 'Đã duy trì phong tỏa bán kính 450m; Chỉ huy nổ mìn tiến hành thổi rửa 1.5m bua bằng khí nén áp lực thấp, nạp bổ sung 1 thỏi mồi nhũ tương 0.2kg + 1 kíp nổ mới và kích nổ khử hủy thành công lúc 13h15. Biên bản an toàn số BB-MC-01/2026.',
+			74500000, 23800000, 8200000, 4500000, 111000000, 11746, 4698, 'Đã xử lý dứt điểm mìn câm theo quy chuẩn QCVN 01:2019/BCT, mặt bằng bãi mìn an toàn'
+		),
+		(
+			'BLAST-05', 'HC-20261102-01', 'Mỏ 2 (Cẩm Khê)', '02/11/2026', '11:30', 'Tầng +50m Moong Khai thác', 'Tầng +50m',
+			50, 12.0, 115, 3.2, 3.6, 3.0, 3.2, 'f = 11 - 13 (Đá vôi hoa hóa)', 'Vi sai phi điện MS', 25,
+			4600, 500, 50, 11200, 0.435, 0,
+			'Chờ duyệt Hộ chiếu', 'WAITING_APPROVAL', 'Hoàng Minh Đức', 'CH-VLNCN-2025-045', '12/03/2028', '', '',
+			'GP-1506-SCT-2026', 150, 98.5, 51.5,
+			450, false, false, 'Dự thảo gửi UBND/CA', false, false, false,
+			'[]'::jsonb,
+			'[
+				{"materialName":"Thuốc nổ ANFO","category":"Thuốc nổ","batchLotNo":"Dự trù","supplier":"Tổng Công Ty MICCO","plannedQty":4600,"issuedQty":0,"actualUsedQty":0,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"-","returnStatus":"Chưa cấp phát"},
+				{"materialName":"Thuốc nổ nhũ tương","category":"Thuốc nổ","batchLotNo":"Dự trù","supplier":"Tổng Công Ty GAET","plannedQty":500,"issuedQty":0,"actualUsedQty":0,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"-","returnStatus":"Chưa cấp phát"},
+				{"materialName":"Kíp nổ vi sai phi điện","category":"Kíp nổ","batchLotNo":"Dự trù","supplier":"Hóa chất 21","plannedQty":50,"issuedQty":0,"actualUsedQty":0,"returnedQty":0,"discrepancy":0,"unit":"quả","expiryDate":"-","returnStatus":"Chưa cấp phát"}
+			]'::jsonb,
+			false, '',
+			false, 0, false, 0, '', '',
+			92800000, 28500000, 9500000, 3800000, 134600000, 12017, 4807, 'Đã hoàn thiện hồ sơ thiết kế mạng lỗ khoan, trình GĐ phê duyệt'
+		)
+		ON CONFLICT (id) DO UPDATE SET 
+			code = EXCLUDED.code,
+			mine_name = EXCLUDED.mine_name,
+			blast_date = EXCLUDED.blast_date,
+			blast_time = EXCLUDED.blast_time,
+			location = EXCLUDED.location,
+			bench_level = EXCLUDED.bench_level,
+			hole_count = EXCLUDED.hole_count,
+			hole_depth_meters = EXCLUDED.hole_depth_meters,
+			hole_diameter_mm = EXCLUDED.hole_diameter_mm,
+			burden_m = EXCLUDED.burden_m,
+			spacing_m = EXCLUDED.spacing_m,
+			row_spacing_m = EXCLUDED.row_spacing_m,
+			stemming_length_m = EXCLUDED.stemming_length_m,
+			rock_hardness_f = EXCLUDED.rock_hardness_f,
+			firing_method = EXCLUDED.firing_method,
+			delay_interval_ms = EXCLUDED.delay_interval_ms,
+			anfo_explosive_kg = EXCLUDED.anfo_explosive_kg,
+			emulsion_explosive_kg = EXCLUDED.emulsion_explosive_kg,
+			detonator_count = EXCLUDED.detonator_count,
+			designed_rock_volume_m3 = EXCLUDED.designed_rock_volume_m3,
+			powder_factor_kg_per_m3 = EXCLUDED.powder_factor_kg_per_m3,
+			actual_rock_mined_m3 = EXCLUDED.actual_rock_mined_m3,
+			safety_status = EXCLUDED.safety_status,
+			status_code = EXCLUDED.status_code,
+			blaster_in_charge = EXCLUDED.blaster_in_charge,
+			certified_number = EXCLUDED.certified_number,
+			certificate_expiry = EXCLUDED.certificate_expiry,
+			approved_by = EXCLUDED.approved_by,
+			approved_at = EXCLUDED.approved_at,
+			license_number = EXCLUDED.license_number,
+			quota_annual_limit_tons = EXCLUDED.quota_annual_limit_tons,
+			quota_used_ytd_tons = EXCLUDED.quota_used_ytd_tons,
+			quota_remaining_tons = EXCLUDED.quota_remaining_tons,
+			safety_perimeter_m = EXCLUDED.safety_perimeter_m,
+			police_notified = EXCLUDED.police_notified,
+			commune_notified = EXCLUDED.commune_notified,
+			notification_doc_ref = EXCLUDED.notification_doc_ref,
+			all_guards_confirmed = EXCLUDED.all_guards_confirmed,
+			evacuation_confirmed = EXCLUDED.evacuation_confirmed,
+			siren_alerts_completed = EXCLUDED.siren_alerts_completed,
+			guard_posts = EXCLUDED.guard_posts,
+			materials = EXCLUDED.materials,
+			same_day_return_closed = EXCLUDED.same_day_return_closed,
+			return_completed_time = EXCLUDED.return_completed_time,
+			post_blast_clearance = EXCLUDED.post_blast_clearance,
+			smoke_clearing_minutes = EXCLUDED.smoke_clearing_minutes,
+			misfire_reported = EXCLUDED.misfire_reported,
+			misfire_count = EXCLUDED.misfire_count,
+			misfire_details = EXCLUDED.misfire_details,
+			misfire_resolution = EXCLUDED.misfire_resolution,
+			explosive_cost = EXCLUDED.explosive_cost,
+			drilling_cost = EXCLUDED.drilling_cost,
+			blasting_service_fee = EXCLUDED.blasting_service_fee,
+			guard_labor_cost = EXCLUDED.guard_labor_cost,
+			total_blast_cost = EXCLUDED.total_blast_cost,
+			cost_per_m3_rock = EXCLUDED.cost_per_m3_rock,
+			cost_per_ton_rock = EXCLUDED.cost_per_ton_rock,
+			notes = EXCLUDED.notes`,
 
 		`DELETE FROM crusher_plants`,
 		`INSERT INTO crusher_plants (plant_code, plant_name, capacity_ton_per_hour, input_rock_today_tons, power_consumption_kwh, kwh_per_ton, yield_breakdown) VALUES
 		('PLANT-01', 'Dây Chuyền Nghiền Sàng Số 01 (350T/h)', 350, 2680, 3216, 1.20, '[{"productName":"Đá 1x2 bê tông tiêu chuẩn","producedTons":1340,"yieldPercent":50,"standardRate":48},{"productName":"Đá 4x6 móng công trình","producedTons":804,"yieldPercent":30,"standardRate":32},{"productName":"Cát nghiền nhân tạo (Mạt đá)","producedTons":402,"yieldPercent":15,"standardRate":14},{"productName":"Đá mi bụi sàng tuyển","producedTons":134,"yieldPercent":5,"standardRate":6}]'::jsonb),
 		('PLANT-02', 'Dây Chuyền Nghiền Sàng Số 02 (250T/h)', 250, 1850, 2312, 1.25, '[{"productName":"Đá 1x2 sàng tuyển mác cao","producedTons":925,"yieldPercent":50,"standardRate":48},{"productName":"Đá 2x4 đổ bê tông","producedTons":555,"yieldPercent":30,"standardRate":30},{"productName":"Cát nhân tạo VSI","producedTons":277,"yieldPercent":15,"standardRate":16},{"productName":"Bột đá phụ gia","producedTons":93,"yieldPercent":5,"standardRate":6}]'::jsonb)`,
 
-		`INSERT INTO equipment_fuel_logs (id, equipment_code, equipment_name, category, operator_name, hours_worked_today, total_hours_meter, fuel_quota_liters_per_hour, actual_fuel_issued_liters, actual_fuel_consumed_liters, fuel_variance_liters, variance_status, location, maintenance_status) VALUES
-		('FUEL-01', 'EQ-EXC-01', 'Máy Xúc Bánh Xích Komatsu PC450 #01', 'Máy xúc moong', 'Nguyễn Văn Dũng', 7.5, 4820.5, 32.0, 240, 234.5, -5.5, 'Tiết kiệm (-5.5L)', 'Moong Khai Thác Tầng 3', 'Bảo dưỡng định kỳ A'),
-		('FUEL-02', 'EQ-EXC-02', 'Máy Xúc Bánh Xích Hitachi ZX350 #02', 'Máy xúc moong', 'Trần Văn Kiên', 8.0, 3915.0, 28.0, 224, 221.0, -3.0, 'Tiết kiệm (-3.0L)', 'Moong Khai Thác Tầng 2', 'Hoạt động tốt'),
-		('FUEL-03', 'EQ-TRK-01', 'Xe Ben Howo 371HP 8x4 #01', 'Xe ben nội bộ', 'Lê Hữu Thắng', 8.0, 5210.0, 14.5, 120, 116.0, -4.0, 'Tiết kiệm (-4.0L)', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt'),
-		('FUEL-04', 'EQ-TRK-02', 'Xe Ben Howo 371HP 8x4 #02', 'Xe ben nội bộ', 'Hoàng Minh Đức', 8.0, 4980.0, 14.5, 120, 118.5, -1.5, 'Đạt định mức', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt'),
-		('FUEL-05', 'EQ-DRL-01', 'Dàn Khoan Thủy Lực Furukawa D45', 'Máy khoan tự hành', 'Phạm Văn Nam', 6.5, 2150.0, 22.0, 145, 142.0, -3.0, 'Tiết kiệm (-3.0L)', 'Tầng +45m Khai trường Tây', 'Hoạt động tốt')
+		`DELETE FROM equipment_fuel_logs WHERE id IN ('FUEL-01', 'FUEL-02', 'FUEL-03', 'FUEL-04', 'FUEL-05')`,
+		`INSERT INTO equipment_fuel_logs (id, equipment_code, equipment_name, category, operator_name, hours_worked_today, total_hours_meter, fuel_quota_liters_per_hour, actual_fuel_issued_liters, actual_fuel_consumed_liters, fuel_variance_liters, variance_status, location, maintenance_status, tank_capacity_liters, current_fuel_liters, last_dispense_at, next_maintenance_hours, engine_specs, fuel_dispense_logs) VALUES
+		('FUEL-01', 'EQ-EXC-01', 'Máy Xúc Bánh Xích Komatsu PC450 #01', 'Máy xúc moong', 'Nguyễn Văn Dũng', 7.5, 4820.5, 32.0, 240, 234.5, -5.5, 'Tiết kiệm (-5.5L)', 'Moong Khai Thác Tầng 3', 'Bảo dưỡng định kỳ A', 650, 480, '28/10/2026 06:15', 5000, '{"engineModel":"Komatsu SAA6D125E-5","ratedPower":"345 HP","bucketCapacity":"2.1 m³","emissionStandard":"Tier 3 / Euro III"}'::jsonb, '[{"ticketCode":"PBD-20261028-001","dispensedAt":"28/10/2026 06:15","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":240,"hourMeterAtDispense":4813.0,"operatorName":"Nguyễn Văn Dũng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu đầu ca sáng tại moong"},{"ticketCode":"PBD-20261027-002","dispensedAt":"27/10/2026 06:20","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":235,"hourMeterAtDispense":4805.5,"operatorName":"Nguyễn Văn Dũng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu ca sáng"}]'::jsonb),
+		('FUEL-02', 'EQ-EXC-02', 'Máy Xúc Bánh Xích Hitachi ZX350 #02', 'Máy xúc moong', 'Trần Văn Kiên', 8.0, 3915.0, 28.0, 224, 221.0, -3.0, 'Tiết kiệm (-3.0L)', 'Moong Khai Thác Tầng 2', 'Hoạt động tốt', 560, 410, '28/10/2026 06:30', 4200, '{"engineModel":"Isuzu AH-6HK1XYSA-01","ratedPower":"271 HP","bucketCapacity":"1.6 m³","emissionStandard":"Tier 3"}'::jsonb, '[{"ticketCode":"PBD-20261028-002","dispensedAt":"28/10/2026 06:30","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":224,"hourMeterAtDispense":3907.0,"operatorName":"Trần Văn Kiên","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu ca sáng tầng 2"}]'::jsonb),
+		('FUEL-03', 'EQ-TRK-01', 'Xe Ben Howo 371HP 8x4 #01', 'Xe ben nội bộ', 'Lê Hữu Thắng', 8.0, 5210.0, 14.5, 120, 116.0, -4.0, 'Tiết kiệm (-4.0L)', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt', 400, 284, '28/10/2026 06:45', 5500, '{"engineModel":"Sinotruk WD615.47","ratedPower":"371 HP","payload":"30 Tấn","chassisConfig":"8x4 Cầu đúc CNHTC","emissionStandard":"Euro V"}'::jsonb, '[{"ticketCode":"PBD-20261028-003","dispensedAt":"28/10/2026 06:45","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":120,"hourMeterAtDispense":5202.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu đầu ca sáng đầy bình"},{"ticketCode":"PBD-20261027-011","dispensedAt":"27/10/2026 06:30","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":115,"hourMeterAtDispense":5194.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu ca sáng"},{"ticketCode":"PBD-20261026-008","dispensedAt":"26/10/2026 06:35","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":118,"hourMeterAtDispense":5186.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Nguyễn Văn Bình","fuelBatch":"Lô DO 0.05S Petrolimex #43","notes":"Cấp lưu động tại bãi xúc moong"}]'::jsonb),
+		('FUEL-04', 'EQ-TRK-02', 'Xe Ben Howo 371HP 8x4 #02', 'Xe ben nội bộ', 'Hoàng Minh Đức', 8.0, 4980.0, 14.5, 120, 118.5, -1.5, 'Đạt định mức', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt', 400, 260, '28/10/2026 06:55', 5200, '{"engineModel":"Sinotruk WD615.47","ratedPower":"371 HP","payload":"30 Tấn","chassisConfig":"8x4 Cầu đúc CNHTC","emissionStandard":"Euro V"}'::jsonb, '[{"ticketCode":"PBD-20261028-004","dispensedAt":"28/10/2026 06:55","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":120,"hourMeterAtDispense":4972.0,"operatorName":"Hoàng Minh Đức","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu ca sáng đầy bình"}]'::jsonb),
+		('FUEL-05', 'EQ-DRL-01', 'Dàn Khoan Thủy Lực Furukawa D45', 'Máy khoan tự hành', 'Phạm Văn Nam', 6.5, 2150.0, 22.0, 145, 142.0, -3.0, 'Tiết kiệm (-3.0L)', 'Tầng +45m Khai trường Tây', 'Hoạt động tốt', 450, 310, '28/10/2026 07:10', 2500, '{"engineModel":"Caterpillar C7.1 ACERT","ratedPower":"225 HP","holeDiameter":"90-115 mm","drillDepthMax":"25 m"}'::jsonb, '[{"ticketCode":"PBD-20261028-005","dispensedAt":"28/10/2026 07:10","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":145,"hourMeterAtDispense":2143.5,"operatorName":"Phạm Văn Nam","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu khoan tầng +45m"}]'::jsonb)
 		ON CONFLICT (id) DO NOTHING`,
+
 
 		`INSERT INTO mining_permits (id, code, title, mine_name, category, category_label, issuer, license_number, issue_date, expiry_date, capacity, approved_reserve, mined_so_far, mined_percent, depth_level, area, coordinates, status, status_label, days_remaining, files, notes) VALUES
 		('PERMIT-01', 'GP-28102018-BTNMT', 'Giấy phép khai thác khoáng sản Mỏ Đá Vôi Thanh Ba', 'Mỏ 1 (Thanh Ba)', 'mining_license', 'Giấy phép khai thác mỏ', 'Bộ Tài nguyên và Môi trường', 'Số 2810/GP-BTNMT', '28/10/2018', '28/10/2038', '1.000.000 Tấn/năm', '20.000.000 Tấn', '5.240.000 Tấn', 26, 'Mức cao +85m đến +15m', '48.5 Hecta', '21.3210°N, 105.3280°E', 'valid', 'Còn hiệu lực', 4380, '[{"name":"Quyet_Dinh_Cap_Phep_2810.pdf","size":"4.2 MB","type":"pdf","url":"#"}]'::jsonb, 'Được phép khai thác đá vôi làm VLXD thông thường'),
@@ -1480,6 +1708,97 @@ func seedTradeAndWarehouse(ctx context.Context) {
 				ON CONFLICT (code) DO NOTHING
 			`, pv.Code, pv.PCode, pv.PName, pv.PType, pv.Receiver, pv.Reason, pv.RefCode, pv.Amount, pv.Words, pv.Method, pv.Account, pv.Status, pv.Date, pv.By, pv.Notes)
 		}
+	}
+
+	// 7. Seed Sales Contracts & Prepaid Accounts
+	var scCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM sales_contracts").Scan(&scCount)
+	if scCount == 0 {
+		fmt.Println("🌱 Seeding Commercial Sales Contracts & Prepaid Accounts...")
+		contracts := []struct {
+			Code, CustCode, CustName, Project, Start, End, Terms, Status, Notes, By string
+			Committed, Delivered, Rate, Credit                                     float64
+			Items                                                                  string
+			Plates                                                                 string
+		}{
+			{
+				Code: "HDBH-2026-DEOCA", CustCode: "CUST-DEOCA", CustName: "Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)",
+				Project: "Gói thầu XL-08 Đường cao tốc Bắc - Nam đoạn Mai Sơn - QL45",
+				Start: "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
+				Committed: 350000, Delivered: 218500, Rate: 62.4, Credit: 1500000000,
+				Notes: "Cam kết ưu tiên cấp đá 1x2 bê tông mác 350 và cấp phối đá dăm Base K98", By: "Phạm Minh Hoàng",
+				Items: `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":200000,"deliveredTons":134000,"unitPrice":285000,"discountPct":5},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":150000,"deliveredTons":84500,"unitPrice":180000,"discountPct":3}]`,
+				Plates: `["19H-056.22","19C-128.45","29H-882.19","88C-091.22"]`,
+			},
+			{
+				Code: "HDBH-2026-BQP319", CustCode: "CUST-BQP319", CustName: "Tổng Công ty 319 - Bộ Quốc Phòng",
+				Project: "Dự án Nâng cấp Sân bay Quân sự & Đường cơ động",
+				Start: "2026-03-15", End: "2026-11-30", Terms: "deferred_7d", Status: "active",
+				Committed: 180000, Delivered: 142000, Rate: 78.9, Credit: 800000000,
+				Notes: "Đá 4x6 kè móng và Base loại 1 chuẩn quốc phòng", By: "Hoàng Minh Đức",
+				Items: `[{"productCode":"SP-DA-4X6","productName":"Đá 4x6 Kè Móng","committedTons":80000,"deliveredTons":65000,"unitPrice":220000,"discountPct":2},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":100000,"deliveredTons":77000,"unitPrice":180000,"discountPct":3}]`,
+				Plates: `["88H-042.27","88C-114.56","19C-205.88"]`,
+			},
+			{
+				Code: "HDBH-2026-BTVT", CustCode: "CUST-BTVT", CustName: "Công ty TNHH Bê Tông Việt Trì",
+				Project: "Cung ứng trạm trộn bê tông tươi KCN Thụy Vân",
+				Start: "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
+				Committed: 120000, Delivered: 98400, Rate: 82.0, Credit: 500000000,
+				Notes: "Bao tiêu đá 1x2 và cát nhân tạo rửa sạch giao hằng ngày", By: "Nguyễn Văn Dũng",
+				Items: `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":80000,"deliveredTons":66000,"unitPrice":285000,"discountPct":4},{"productCode":"SP-CAT-NT","productName":"Cát Nghiền Nhân Tạo","committedTons":40000,"deliveredTons":32400,"unitPrice":230000,"discountPct":2}]`,
+				Plates: `["19C-088.99","19H-002.31","19C-155.67"]`,
+			},
+			{
+				Code: "HDBH-2026-VICEM", CustCode: "CUST-VICEM", CustName: "Công ty CP Xi Măng Vicem Sông Thao",
+				Project: "Nguyên liệu phụ gia sản xuất xi măng PCB40",
+				Start: "2026-02-01", End: "2026-10-31", Terms: "bank_guarantee", Status: "near_expiry",
+				Committed: 90000, Delivered: 86500, Rate: 96.1, Credit: 1200000000,
+				Notes: "Đá mi sàng 0-5mm và cao lanh M2, hợp đồng sắp hoàn thành", By: "Phạm Minh Hoàng",
+				Items: `[{"productCode":"SP-DA-MI","productName":"Đá Mi Bụi Sàng Khô","committedTons":90000,"deliveredTons":86500,"unitPrice":115000,"discountPct":5}]`,
+				Plates: `["29H-771.20","29C-663.15"]`,
+			},
+		}
+
+		for _, c := range contracts {
+			Pool.Exec(ctx, `
+				INSERT INTO sales_contracts (code, customer_code, customer_name, project_name, start_date, end_date, total_committed_tons, total_delivered_tons, completion_rate, credit_limit, payment_terms, status, notes, created_by, items, whitelisted_plates)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16::jsonb)
+				ON CONFLICT (code) DO NOTHING
+			`, c.Code, c.CustCode, c.CustName, c.Project, c.Start, c.End, c.Committed, c.Delivered, c.Rate, c.Credit, c.Terms, c.Status, c.Notes, c.By, c.Items, c.Plates)
+		}
+
+		// Seed prepaid wallets
+		Pool.Exec(ctx, `DELETE FROM payments_prepaid`)
+		prepaids := []struct {
+			Code, Cust, Init, Curr, Status, Date string
+		}{
+			{"WALLET-01", "Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)", "2000000000", "1485200000", "active", "2026-10-28"},
+			{"WALLET-02", "Tổng Công ty 319 - Bộ Quốc Phòng", "1000000000", "724500000", "active", "2026-10-28"},
+			{"WALLET-03", "Công ty TNHH Bê Tông Việt Trì", "800000000", "312800000", "active", "2026-10-28"},
+			{"WALLET-04", "Công ty CP Xi Măng Vicem Sông Thao", "1500000000", "42100000", "alert_low", "2026-10-28"},
+		}
+		for _, p := range prepaids {
+			Pool.Exec(ctx, `
+				INSERT INTO payments_prepaid (code, customer, initial_balance, current_balance, status, date)
+				VALUES ($1, $2, $3, $4, $5, $6)
+			`, p.Code, p.Cust, p.Init, p.Curr, p.Status, p.Date)
+		}
+
+		// Seed Consolidated Delivery Orders
+		Pool.Exec(ctx, `
+			INSERT INTO consolidated_delivery_orders (
+				code, customer_code, customer_name, contract_code, period_start, period_end,
+				total_trips, total_tons, total_amount, vat_amount, grand_total,
+				einvoice_no, einvoice_status, einvoice_lookup_url, status, ticket_codes, created_by
+			) VALUES 
+			('PXK-202610-001', 'CUST-DEOCA', 'Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)', 'HDBH-2026-DEOCA', '2026-10-27', '2026-10-28',
+			 24, 756.8, 215688000, 21568800, 237256800,
+			 'HD-26-8910', 'issued', 'https://sinvoice.viettel.vn/tra-cuu?code=HD-26-8910', 'settled', '["NA281025-22","TK-2810-001","TK-2810-002"]'::jsonb, 'Nguyễn Thị Lan'),
+			('PXK-202610-002', 'CUST-BTVT', 'Công ty TNHH Bê Tông Việt Trì', 'HDBH-2026-BTVT', '2026-10-28', '2026-10-28',
+			 18, 520.4, 148314000, 14831400, 163145400,
+			 'HD-26-8911', 'issued', 'https://sinvoice.viettel.vn/tra-cuu?code=HD-26-8911', 'settled', '["TK-2810-015","TK-2810-016"]'::jsonb, 'Nguyễn Thị Lan')
+			ON CONFLICT (code) DO NOTHING
+		`)
 	}
 }
 

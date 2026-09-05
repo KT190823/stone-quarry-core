@@ -112,6 +112,17 @@ func (h *CameraHandler) ListFuelTheftAudits(w http.ResponseWriter, r *http.Reque
 	JSON(w, map[string]interface{}{"data": results, "total": total})
 }
 
+func (h *CameraHandler) GetFuelTheftAudit(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	result, err := h.fuelTheft.GetByID(id)
+	if err != nil {
+		http.Error(w, "not found", 404)
+		return
+	}
+	JSON(w, result)
+}
+
+
 func (h *CameraHandler) ListFuelNorms(w http.ResponseWriter, r *http.Request) {
 	params := parseListParams(r)
 	results, total, err := h.fuelNorm.ListJSONB(params)

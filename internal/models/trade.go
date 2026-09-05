@@ -176,3 +176,63 @@ type PaymentVoucher struct {
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
+
+// SalesContract represents a customer commercial contract with committed tonnage & price schedule
+type SalesContract struct {
+	ID                 int                 `json:"id"`
+	Code               string              `json:"code"`
+	CustomerCode       string              `json:"customerCode"`
+	CustomerName       string              `json:"customerName"`
+	ProjectName        string              `json:"projectName"`
+	StartDate          string              `json:"startDate"`
+	EndDate            string              `json:"endDate"`
+	TotalCommittedTons float64             `json:"totalCommittedTons"`
+	TotalDeliveredTons float64             `json:"totalDeliveredTons"`
+	CompletionRate     float64             `json:"completionRate"`
+	CreditLimit        float64             `json:"creditLimit"`
+	PaymentTerms       string              `json:"paymentTerms"` // 'prepaid_wallet', 'deferred_7d', 'bank_guarantee'
+	Status             string              `json:"status"`       // 'active', 'near_expiry', 'completed', 'suspended'
+	Notes              string              `json:"notes"`
+	CreatedBy          string              `json:"createdBy"`
+	CreatedAt          time.Time           `json:"createdAt"`
+	UpdatedAt          time.Time           `json:"updatedAt"`
+	Items              []SalesContractItem `json:"items,omitempty"`
+	WhitelistedPlates  []string            `json:"whitelistedPlates,omitempty"`
+}
+
+type SalesContractItem struct {
+	ID            int     `json:"id"`
+	ContractID    int     `json:"contractId"`
+	ContractCode  string  `json:"contractCode"`
+	ProductCode   string  `json:"productCode"`
+	ProductName   string  `json:"productName"`
+	CommittedTons float64 `json:"committedTons"`
+	DeliveredTons float64 `json:"deliveredTons"`
+	UnitPrice     float64 `json:"unitPrice"`
+	DiscountPct   float64 `json:"discountPct"`
+	Notes         string  `json:"notes"`
+}
+
+// ConsolidatedDeliveryOrder represents an official batch dispatch slip grouping multiple scale tickets for e-invoicing
+type ConsolidatedDeliveryOrder struct {
+	ID                int       `json:"id"`
+	Code              string    `json:"code"`
+	CustomerCode      string    `json:"customerCode"`
+	CustomerName      string    `json:"customerName"`
+	ContractCode      string    `json:"contractCode"`
+	PeriodStart       string    `json:"periodStart"`
+	PeriodEnd         string    `json:"periodEnd"`
+	TotalTrips        int       `json:"totalTrips"`
+	TotalTons         float64   `json:"totalTons"`
+	TotalAmount       float64   `json:"totalAmount"`
+	VatAmount         float64   `json:"vatAmount"`
+	GrandTotal        float64   `json:"grandTotal"`
+	EInvoiceNo        string    `json:"eInvoiceNo"`
+	EInvoiceStatus    string    `json:"eInvoiceStatus"` // 'pending', 'issued', 'synced'
+	EInvoiceLookupUrl string    `json:"eInvoiceLookupUrl"`
+	Status            string    `json:"status"` // 'draft', 'confirmed', 'invoiced', 'settled'
+	TicketCodes       []string  `json:"ticketCodes,omitempty"`
+	CreatedBy         string    `json:"createdBy"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
+}

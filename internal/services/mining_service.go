@@ -24,11 +24,19 @@ func NewMiningPlanService() *MiningPlanService {
 
 type BlastingPassportService struct {
 	*BaseService
+	blastingRepo *repositories.BlastingPassportRepo
 }
 
 func NewBlastingPassportService() *BlastingPassportService {
 	repo := repositories.NewBlastingPassportRepo()
-	return &BlastingPassportService{BaseService: NewBaseService(repo.BaseRepo)}
+	return &BlastingPassportService{
+		BaseService:  NewBaseService(repo.BaseRepo),
+		blastingRepo: repo,
+	}
+}
+
+func (s *BlastingPassportService) GetByID(idOrCode string) (map[string]interface{}, error) {
+	return s.blastingRepo.GetByID(idOrCode)
 }
 
 type CrusherPlantService struct {
@@ -42,12 +50,21 @@ func NewCrusherPlantService() *CrusherPlantService {
 
 type EquipmentFuelLogService struct {
 	*BaseService
+	fuelRepo *repositories.EquipmentFuelLogRepo
 }
 
 func NewEquipmentFuelLogService() *EquipmentFuelLogService {
 	repo := repositories.NewEquipmentFuelLogRepo()
-	return &EquipmentFuelLogService{BaseService: NewBaseService(repo.BaseRepo)}
+	return &EquipmentFuelLogService{
+		BaseService: NewBaseService(repo.BaseRepo),
+		fuelRepo:    repo,
+	}
 }
+
+func (s *EquipmentFuelLogService) GetByID(idOrCode string) (map[string]interface{}, error) {
+	return s.fuelRepo.GetByID(idOrCode)
+}
+
 
 type StatutoryReportService struct {
 	*BaseService

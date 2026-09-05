@@ -60,12 +60,21 @@ func NewGpsFleetService() *GpsFleetService {
 
 type FuelTheftAuditService struct {
 	*BaseService
+	theftRepo *repositories.FuelTheftAuditRepo
 }
 
 func NewFuelTheftAuditService() *FuelTheftAuditService {
 	repo := repositories.NewFuelTheftAuditRepo()
-	return &FuelTheftAuditService{BaseService: NewBaseService(repo.BaseRepo)}
+	return &FuelTheftAuditService{
+		BaseService: NewBaseService(repo.BaseRepo),
+		theftRepo:   repo,
+	}
 }
+
+func (s *FuelTheftAuditService) GetByID(idOrCode string) (map[string]interface{}, error) {
+	return s.theftRepo.GetByID(idOrCode)
+}
+
 
 type FuelNormConfigService struct {
 	*BaseService

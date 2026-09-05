@@ -95,23 +95,99 @@ type NaturalResourceTax struct {
 }
 
 type BlastingPassport struct {
-	ID                   string  `json:"id"`
-	Code                 string  `json:"code"`
-	MineName             string  `json:"mineName"`
-	BlastDate            string  `json:"blastDate"`
-	BlastTime            string  `json:"blastTime"`
-	Location             string  `json:"location"`
-	HoleCount            int     `json:"holeCount"`
-	HoleDepthMeters      float64 `json:"holeDepthMeters"`
-	AnfoExplosiveKg      float64 `json:"anfoExplosiveKg"`
-	EmulsionExplosiveKg  float64 `json:"emulsionExplosiveKg"`
-	DetonatorCount       int     `json:"detonatorCount"`
-	DesignedRockVolumeM3 float64 `json:"designedRockVolumeM3"`
-	PowderFactorKgPerM3  float64 `json:"powderFactorKgPerM3"`
-	ActualRockMinedM3    float64 `json:"actualRockMinedM3"`
-	SafetyStatus         string  `json:"safetyStatus"`
-	BlasterInCharge      string  `json:"blasterInCharge"`
-	CertifiedNumber      string  `json:"certifiedNumber"`
+	ID                   string              `json:"id"`
+	Code                 string              `json:"code"`
+	MineName             string              `json:"mineName"`
+	BlastDate            string              `json:"blastDate"`
+	BlastTime            string              `json:"blastTime"`
+	Location             string              `json:"location"`
+	BenchLevel           string              `json:"benchLevel"`
+	HoleCount            int                 `json:"holeCount"`
+	HoleDepthMeters      float64             `json:"holeDepthMeters"`
+	HoleDiameterMm       float64             `json:"holeDiameterMm"`
+	BurdenM              float64             `json:"burdenM"`
+	SpacingM             float64             `json:"spacingM"`
+	RowSpacingM          float64             `json:"rowSpacingM"`
+	StemmingLengthM      float64             `json:"stemmingLengthM"`
+	RockHardnessF        string              `json:"rockHardnessF"`
+	FiringMethod         string              `json:"firingMethod"`
+	DelayIntervalMs      int                 `json:"delayIntervalMs"`
+	AnfoExplosiveKg      float64             `json:"anfoExplosiveKg"`
+	EmulsionExplosiveKg  float64             `json:"emulsionExplosiveKg"`
+	DetonatorCount       int                 `json:"detonatorCount"`
+	DesignedRockVolumeM3 float64             `json:"designedRockVolumeM3"`
+	PowderFactorKgPerM3  float64             `json:"powderFactorKgPerM3"`
+	ActualRockMinedM3    float64             `json:"actualRockMinedM3"`
+	SafetyStatus         string              `json:"safetyStatus"`
+	StatusCode           string              `json:"statusCode"`
+	BlasterInCharge      string              `json:"blasterInCharge"`
+	CertifiedNumber      string              `json:"certifiedNumber"`
+	CertificateExpiry    string              `json:"certificateExpiry"`
+	ApprovedBy           string              `json:"approvedBy"`
+	ApprovedAt           string              `json:"approvedAt"`
+	
+	// Pháp lý & Quota Sở Công Thương
+	LicenseNumber        string              `json:"licenseNumber"`
+	QuotaAnnualLimitTons float64             `json:"quotaAnnualLimitTons"`
+	QuotaUsedYtdTons     float64             `json:"quotaUsedYtdTons"`
+	QuotaRemainingTons   float64             `json:"quotaRemainingTons"`
+	
+	// An toàn cảnh giới & Thông báo chính quyền (QCVN 01:2019/BCT)
+	SafetyPerimeterM     int                 `json:"safetyPerimeterM"`
+	PoliceNotified       bool                `json:"policeNotified"`
+	CommuneNotified      bool                `json:"communeNotified"`
+	NotificationDocRef   string              `json:"notificationDocRef"`
+	AllGuardsConfirmed   bool                `json:"allGuardsConfirmed"`
+	EvacuationConfirmed  bool                `json:"evacuationConfirmed"`
+	SirenAlertsCompleted bool                `json:"sirenAlertsCompleted"`
+	GuardPosts           []BlastGuardPost    `json:"guardPosts"`
+	
+	// Quản lý vật liệu nổ công nghiệp (Theo Lô & Hoàn trả trong ngày)
+	Materials            []BlastMaterialItem `json:"materials"`
+	SameDayReturnClosed  bool                `json:"sameDayReturnClosed"`
+	ReturnCompletedTime  string              `json:"returnCompletedTime"`
+	
+	// Kiểm tra sau nổ & Mìn câm (Misfire)
+	PostBlastClearance   bool                `json:"postBlastClearance"`
+	SmokeClearingMinutes int                 `json:"smokeClearingMinutes"`
+	MisfireReported      bool                `json:"misfireReported"`
+	MisfireCount         int                 `json:"misfireCount"`
+	MisfireDetails       string              `json:"misfireDetails"`
+	MisfireResolution    string              `json:"misfireResolution"`
+	
+	// Bảng tính giá thành đợt nổ (Cost Sheet)
+	ExplosiveCost        float64             `json:"explosiveCost"`
+	DrillingCost         float64             `json:"drillingCost"`
+	BlastingServiceFee   float64             `json:"blastingServiceFee"`
+	GuardLaborCost       float64             `json:"guardLaborCost"`
+	TotalBlastCost       float64             `json:"totalBlastCost"`
+	CostPerM3Rock        float64             `json:"costPerM3Rock"`
+	CostPerTonRock       float64             `json:"costPerTonRock"`
+	Notes                string              `json:"notes"`
+}
+
+type BlastGuardPost struct {
+	PostName         string `json:"postName"`
+	GuardPerson      string `json:"guardPerson"`
+	Phone            string `json:"phone"`
+	DistanceFromPitM int    `json:"distanceFromPitM"`
+	Status           string `json:"status"`
+	CheckedInAt      string `json:"checkedInAt"`
+}
+
+type BlastMaterialItem struct {
+	MaterialName  string  `json:"materialName"`
+	Category      string  `json:"category"`
+	BatchLotNo    string  `json:"batchLotNo"`
+	Supplier      string  `json:"supplier"`
+	PlannedQty    float64 `json:"plannedQty"`
+	IssuedQty     float64 `json:"issuedQty"`
+	ActualUsedQty float64 `json:"actualUsedQty"`
+	ReturnedQty   float64 `json:"returnedQty"`
+	Discrepancy   float64 `json:"discrepancy"`
+	Unit          string  `json:"unit"`
+	ExpiryDate    string  `json:"expiryDate"`
+	ReturnStatus  string  `json:"returnStatus"`
 }
 
 type YieldBreakdown struct {

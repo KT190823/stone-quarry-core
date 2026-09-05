@@ -1,5 +1,11 @@
 package repositories
 
+import (
+	"context"
+	"encoding/json"
+	"mo-da-backend/internal/database"
+)
+
 type CameraDeviceRepo struct {
 	*BaseRepo
 }
@@ -55,6 +61,27 @@ type FuelTheftAuditRepo struct {
 func NewFuelTheftAuditRepo() *FuelTheftAuditRepo {
 	return &FuelTheftAuditRepo{BaseRepo: NewBaseRepo("fuel_theft_audits", "id")}
 }
+
+func (r *FuelTheftAuditRepo) GetByID(idOrCode string) (map[string]interface{}, error) {
+	ctx := context.Background()
+	query := `SELECT COALESCE(data, row_to_json(t)::jsonb) FROM (
+		SELECT * FROM fuel_theft_audits WHERE id::text = $1 OR code ILIKE $1 OR data->>'code' ILIKE $1 OR data->>'plate' ILIKE $1 ORDER BY id DESC LIMIT 1
+	) t`
+
+	var data []byte
+	err := database.Pool.QueryRow(ctx, query, idOrCode).Scan(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	var item map[string]interface{}
+	if err := json.Unmarshal(data, &item); err != nil {
+		return nil, err
+	}
+
+	return item, nil
+}
+
 
 type FuelNormConfigRepo struct {
 	*BaseRepo
