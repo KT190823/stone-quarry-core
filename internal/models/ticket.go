@@ -57,9 +57,15 @@ type Ticket struct {
 	QuyCach    string          `json:"quyCach"`
 	Do         string          `json:"do"`
 	TramCan    string          `json:"tramCan"`
-	CongCan    string          `json:"congCan"`
-	GhiChu     string          `json:"ghiChu"`
-	HoaDonSo   string          `json:"hoaDonSo,omitempty"`
-	Cameras    TicketCameras   `json:"cameras"`
-	Chatter    []ChatterEntry  `json:"chatter"`
+	GhiChu           string          `json:"ghiChu"`
+	HoaDonSo         string          `json:"hoaDonSo,omitempty"`
+	VehicleOwnership string          `json:"vehicleOwnership,omitempty"` // "company", "customer", "contractor"
+	DriverID         string          `json:"driverId,omitempty"`         // Mã nhân viên tài xế (e.g. EMP-DRV-01)
+	DriverName       string          `json:"driverName,omitempty"`       // Họ tên tài xế
+	DriverPhone      string          `json:"driverPhone,omitempty"`
+	AssignmentCode   string          `json:"assignmentCode,omitempty"`   // Lệnh điều xe theo ca (e.g. DISPATCH-20261028-01)
+	ShiftName        string          `json:"shiftName,omitempty"`        // Ca làm việc (e.g. Ca 1)
+	AttendanceStatus string          `json:"attendanceStatus,omitempty"` // checked_in, in_progress, completed
+	Cameras          TicketCameras   `json:"cameras"`
+	Chatter          []ChatterEntry  `json:"chatter"`
 }

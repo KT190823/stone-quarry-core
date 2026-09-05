@@ -1831,6 +1831,37 @@ func Migrate() {
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
 
+		// Vehicle Assignments - Phân công điều xe & Chấm công lái xe theo ca
+		`CREATE TABLE IF NOT EXISTS vehicle_assignments (
+			id SERIAL PRIMARY KEY,
+			code TEXT UNIQUE,
+			date TEXT,
+			shift_id TEXT,
+			shift_name TEXT,
+			vehicle_id TEXT,
+			license_plate TEXT,
+			vehicle_type TEXT,
+			ownership_type TEXT DEFAULT 'company',
+			driver_id TEXT,
+			driver_name TEXT,
+			driver_phone TEXT,
+			driver_license_no TEXT,
+			route_assigned TEXT,
+			checkin_time TEXT,
+			checkout_time TEXT,
+			start_odo DOUBLE PRECISION DEFAULT 0,
+			end_odo DOUBLE PRECISION DEFAULT 0,
+			start_fuel_liters DOUBLE PRECISION DEFAULT 0,
+			end_fuel_liters DOUBLE PRECISION DEFAULT 0,
+			trips_completed INT DEFAULT 0,
+			tons_hauled DOUBLE PRECISION DEFAULT 0,
+			status TEXT DEFAULT 'assigned',
+			notes TEXT,
+			handover_officer TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
 		// Blasting Passports extended columns (QCVN 01:2019/BCT)
 		`ALTER TABLE blasting_passports ADD COLUMN IF NOT EXISTS bench_level TEXT`,
 		`ALTER TABLE blasting_passports ADD COLUMN IF NOT EXISTS hole_diameter_mm DOUBLE PRECISION DEFAULT 105`,
@@ -1880,6 +1911,21 @@ func Migrate() {
 		`ALTER TABLE equipment_fuel_logs ADD COLUMN IF NOT EXISTS last_dispense_at TEXT DEFAULT '07:30 28/10/2026'`,
 		`ALTER TABLE equipment_fuel_logs ADD COLUMN IF NOT EXISTS next_maintenance_hours DOUBLE PRECISION DEFAULT 5500`,
 		`ALTER TABLE equipment_fuel_logs ADD COLUMN IF NOT EXISTS engine_specs JSONB DEFAULT '{}'`,
+
+		// Separate Driver from Vehicle on Weighing Tickets & Track Shift Attendance
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS vehicle_ownership TEXT DEFAULT 'company'`,
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS driver_id TEXT DEFAULT 'EMP-DRV-01'`,
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS driver_name TEXT`,
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS driver_phone TEXT`,
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS assignment_code TEXT DEFAULT 'DISPATCH-20261028-01'`,
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS shift_name TEXT DEFAULT 'Ca 1 (06:00 - 14:00)'`,
+		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS attendance_status TEXT DEFAULT 'checked_in'`,
+
+		// Vehicles company ownership & current assigned driver
+		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS ownership_type TEXT DEFAULT 'company'`,
+		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS current_driver_id TEXT`,
+		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS current_driver_name TEXT`,
+		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS current_shift_id TEXT`,
 	}
 
 	for _, a := range alters {

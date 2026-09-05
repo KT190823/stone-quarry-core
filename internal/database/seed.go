@@ -329,7 +329,7 @@ func Seed() {
 			INSERT INTO camera_devices (code, name, ten, location, ip, res, status, type)
 			VALUES 
 			('CAM-01', 'Camera AI ANPR Cổng 1 (Biển số trước)', 'Camera AI ANPR Cổng 1', 'Trạm Cân 01 - Cổng vào', '192.168.1.201', '4MP 60FPS AI', 'Online 24/7', 'Camera AI Nhận diện biển số'),
-			('CAM-02', 'Camera Toàn Cảnh Thùng Xe Cổng 1', 'Camera Toàn Cảnh Thùng Xe Cổng 1', 'Trạm Cân 01 - Cột cao 6m', '192.168.1.202', '4K UHD Zoom', 'Online 24/7', 'Camera Giám sát gian lận tải trọng'),
+			('CAM-02', 'Camera Toàn Cảnh Thùng Xe Cổng 1', 'Camera Toàn Cảnh Thùng Xe Cổng 1', 'Trạm Cân 01 - Cột cao 6m', '192.168.1.202', '4K UHD Zoom', 'Online 24/7', 'Camera Giám sát quy cách & tải trọng'),
 			('CAM-03', 'Camera AI ANPR Cổng 2', 'Camera AI ANPR Cổng 2', 'Trạm Cân 02 - Cổng ra', '192.168.1.203', '4MP 60FPS AI', 'Online 24/7', 'Camera AI Nhận diện biển số')
 			ON CONFLICT (code) DO NOTHING
 		`)
@@ -342,37 +342,149 @@ func Seed() {
 		fmt.Println("🌱 Seeding Live GPS Fleet Telemetry...")
 		Pool.Exec(ctx, `
 			INSERT INTO gps_fleet (code, data) VALUES
-			('DRV-01', '{"id":"DRV-01","plate":"88H-042.27","driverName":"Trần Đình Trọng","driverPhone":"0984.112.334","rfidCode":"RFID-1008-TTC","vehicleType":"Xe ben HOWO 4 chân 371HP","status":"idling_alert","lat":21.3210,"lng":105.3280,"speed":0,"engineAcc":"OFF","engineRpm":0,"currentFuelLiters":182,"fuelTankPercent":45,"locationName":"Quán nước ven QL2 Km 72 (Tắt máy sụt dầu)","destination":"QL2 ➔ Trạm trộn Phù Ninh","cargo":"Đá 1x2 bê tông","updatedTime":"12:55 28/10/2026"}'::jsonb),
+			('DRV-01', '{"id":"DRV-01","plate":"88H-042.27","driverName":"Trần Đình Trọng","driverPhone":"0984.112.334","rfidCode":"RFID-1008-TTC","vehicleType":"Xe ben HOWO 4 chân 371HP","status":"idling_alert","lat":21.3210,"lng":105.3280,"speed":0,"engineAcc":"OFF","engineRpm":0,"currentFuelLiters":182,"fuelTankPercent":45,"locationName":"Quán nước ven QL2 Km 72 (Đứng yên sụt dầu)","destination":"QL2 ➔ Trạm trộn Phù Ninh","cargo":"Đá 1x2 bê tông","updatedTime":"12:55 28/10/2026"}'::jsonb),
 			('DRV-02', '{"id":"DRV-02","plate":"19H-056.22","driverName":"Nguyễn Văn Mạnh","driverPhone":"0982.145.882","rfidCode":"RFID-1015-TTC","vehicleType":"Xe ben Chenglong Hải Âu 385HP","status":"moving","lat":21.3240,"lng":105.3180,"speed":48,"engineAcc":"ON","engineRpm":1450,"currentFuelLiters":268,"fuelTankPercent":67,"locationName":"Đang chạy trên Quốc Lộ 2 Km 68","destination":"Mỏ Đá TTC ➔ Cảng Sông Lô","cargo":"Đá Base cấp phối","updatedTime":"13:02 28/10/2026"}'::jsonb),
 			('DRV-03', '{"id":"DRV-03","plate":"29C-781.90","driverName":"Lê Văn Cường","driverPhone":"0977.890.123","rfidCode":"RFID-1022-TTC","vehicleType":"Xe ben Shacman 4 chân X3000","status":"loading","lat":21.3255,"lng":105.3005,"speed":0,"engineAcc":"ON","engineRpm":800,"currentFuelLiters":310,"fuelTankPercent":77,"locationName":"Bãi Xe Trung Tâm - Khai Trường Mỏ TTC","destination":"Chờ nhận phiếu cân","cargo":"Đá hộc xô bồ","updatedTime":"13:05 28/10/2026"}'::jsonb)
 		`)
 	}
 
 	// 8. Seed Fuel Theft Audits
-	var theftCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM fuel_theft_audits").Scan(&theftCount)
-	if theftCount == 0 {
-		fmt.Println("🌱 Seeding Fuel Theft Audits...")
-		Pool.Exec(ctx, `
-			INSERT INTO fuel_theft_audits (code, data) VALUES
-			('AUD-01', '{"id":"AUD-01","code":"AUD-01","plate":"88H-042.27","driverName":"Trần Đình Trọng","vehicleType":"Xe ben HOWO 4 chân 371HP","shiftDate":"28/10/2026","totalKm":124,"totalKmLoaded":82,"totalKmEmpty":42,"idlingHours":2.1,"fuelInitialLiters":320,"fuelRefilledLiters":0,"fuelFinalLiters":182,"actualFuelConsumedLiters":138,"theoreticalNormLiters":52.7,"fuelVarianceLiters":85.3,"variancePercent":61.8,"theftCostLostVnd":1919250,"riskLevel":"CRITICAL_THEFT_DETECTED","anomalyDescription":"Tắt máy đứng yên 42 phút ven QL2 sụt 38L dầu bất thường","resolutionStatus":"Chờ đối soát kỷ luật","locationTheftDetected":"Km 72 QL2 (Quán nước ven đường)","investigator":"Tô Quốc Huy (Ban Thanh Tra Xăng Dầu)"}'::jsonb),
-			('AUD-02', '{"id":"AUD-02","code":"AUD-02","plate":"19H-056.22","driverName":"Nguyễn Văn Mạnh","vehicleType":"Xe ben Chenglong Hải Âu 385HP","shiftDate":"28/10/2026","totalKm":156,"totalKmLoaded":110,"totalKmEmpty":46,"idlingHours":0.6,"fuelInitialLiters":312,"fuelRefilledLiters":0,"fuelFinalLiters":268,"actualFuelConsumedLiters":44,"theoreticalNormLiters":46.5,"fuelVarianceLiters":-2.5,"variancePercent":-5.4,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Vận hành tiết kiệm dầu, đúng lộ trình cao tốc","resolutionStatus":"Bình thường / Khen thưởng","locationTheftDetected":"Tuyến Mỏ TTC ➔ Cao Tốc","investigator":"Tô Quốc Huy"}'::jsonb),
-			('AUD-03', '{"id":"AUD-03","code":"AUD-03","plate":"29C-781.90","driverName":"Lê Văn Cường","vehicleType":"Xe ben Shacman 4 chân X3000","shiftDate":"28/10/2026","totalKm":98,"totalKmLoaded":68,"totalKmEmpty":30,"idlingHours":0.8,"fuelInitialLiters":345,"fuelRefilledLiters":0,"fuelFinalLiters":310,"actualFuelConsumedLiters":35,"theoreticalNormLiters":36.2,"fuelVarianceLiters":-1.2,"variancePercent":-3.3,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Đạt định mức chuẩn nội bộ khai trường","resolutionStatus":"Bình thường","locationTheftDetected":"Khai trường Moong Tầng 3","investigator":"Tô Quốc Huy"}'::jsonb)
-		`)
-	}
+	Pool.Exec(ctx, "DELETE FROM fuel_theft_audits;")
+	fmt.Println("🌱 Seeding Fuel Theft Audits with Professional Variance Terminology...")
+	Pool.Exec(ctx, `
+		INSERT INTO fuel_theft_audits (code, data) VALUES
+		('AUD-01', '{"id":"AUD-01","code":"AUD-01","plate":"88H-042.27","driverName":"Trần Đình Trọng","vehicleType":"Xe ben HOWO 4 chân 371HP","shiftDate":"12:55 28/10/2026","totalKm":124,"totalKmLoaded":82,"totalKmEmpty":42,"idlingHours":2.1,"fuelInitialLiters":320,"fuelRefilledLiters":0,"fuelFinalLiters":249.5,"actualFuelConsumedLiters":70.5,"theoreticalNormLiters":52.0,"fuelVarianceLiters":18.5,"fuelVariancePercent":35.6,"variancePercent":35.6,"theftCostLostVnd":416250,"riskLevel":"CRITICAL_VARIANCE_DETECTED","anomalyDescription":"Mức dầu bình sụt giảm 18.5 Lít trong 11 phút khi dừng đỗ ven Quốc Lộ 2 Km 72 trong trạng thái tắt máy (ACC=OFF)","resolutionStatus":"Chờ đối soát xác minh","locationTheftDetected":"Km 72 QL2 (Ven đường)","investigator":"Tô Quốc Huy (Ban Kiểm Soát Nhiên Liệu)"}'::jsonb),
+		('AUD-02', '{"id":"AUD-02","code":"AUD-02","plate":"19H-056.22","driverName":"Nguyễn Văn Mạnh","vehicleType":"Xe ben Chenglong Hải Âu 385HP","shiftDate":"28/10/2026","totalKm":156,"totalKmLoaded":110,"totalKmEmpty":46,"idlingHours":0.6,"fuelInitialLiters":312,"fuelRefilledLiters":0,"fuelFinalLiters":268,"actualFuelConsumedLiters":44,"theoreticalNormLiters":46.5,"fuelVarianceLiters":-2.5,"fuelVariancePercent":-5.4,"variancePercent":-5.4,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Vận hành tiết kiệm dầu, đúng lộ trình cao tốc","resolutionStatus":"Bình thường / Khen thưởng","locationTheftDetected":"Tuyến Mỏ TTC ➔ Cao Tốc","investigator":"Tô Quốc Huy"}'::jsonb),
+		('AUD-03', '{"id":"AUD-03","code":"AUD-03","plate":"29C-781.90","driverName":"Lê Văn Cường","vehicleType":"Xe ben Shacman 4 chân X3000","shiftDate":"28/10/2026","totalKm":98,"totalKmLoaded":68,"totalKmEmpty":30,"idlingHours":0.8,"fuelInitialLiters":345,"fuelRefilledLiters":0,"fuelFinalLiters":310,"actualFuelConsumedLiters":35,"theoreticalNormLiters":36.2,"fuelVarianceLiters":-1.2,"fuelVariancePercent":-3.3,"variancePercent":-3.3,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Đạt định mức chuẩn nội bộ khai trường","resolutionStatus":"Bình thường","locationTheftDetected":"Khai trường Moong Tầng 3","investigator":"Tô Quốc Huy"}'::jsonb)
+	`)
 
 	// 9. Seed Fuel Norms
-	var normCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM fuel_norms").Scan(&normCount)
-	if normCount == 0 {
-		fmt.Println("🌱 Seeding Fleet Fuel Norms...")
-		Pool.Exec(ctx, `
-			INSERT INTO fuel_norms (code, data) VALUES
-			('V-01', '{"id":"V-01","code":"V-01","plate":"88H-042.27","vehicleType":"Xe ben HOWO 4 chân 371HP","type":"Xe ben HOWO 4 chân 371HP","driverName":"Trần Đình Trọng","driverPhone":"0984.112.334","rfidCode":"RFID-1008-TTC","status":"theft_alert","loadedNormLitersPer100km":42.5,"emptyNormLitersPer100km":28.0,"idlingNormLitersPerHour":3.5,"quarryTerrainFactor":1.15,"normLoadedL100km":42.5,"normUnloadedL100km":28.0,"normIdlingLiterPerHour":3.5,"slopeCorrectionFactor":1.15,"currentFuelLiters":182,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":184520,"driverIntegrityScore":58,"lastMaintenanceDate":"15/10/2026","fuelSensorStatus":"ACTIVE_ANOMALY","notes":"Phát hiện sụt dầu bất thường 38 Lít khi dừng tắt máy ven QL2."}'::jsonb),
-			('V-02', '{"id":"V-02","code":"V-02","plate":"19H-056.22","vehicleType":"Xe ben Chenglong Hải Âu 385HP","type":"Xe ben Chenglong Hải Âu 385HP","driverName":"Nguyễn Văn Mạnh","driverPhone":"0982.145.882","rfidCode":"RFID-1015-TTC","status":"active","loadedNormLitersPer100km":39.0,"emptyNormLitersPer100km":26.5,"idlingNormLitersPerHour":3.0,"quarryTerrainFactor":1.12,"normLoadedL100km":39.0,"normUnloadedL100km":26.5,"normIdlingLiterPerHour":3.0,"slopeCorrectionFactor":1.12,"currentFuelLiters":268,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":148580,"driverIntegrityScore":96,"lastMaintenanceDate":"20/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Đang vận chuyển đá 1x2 cho công trường Cao Tốc."}'::jsonb),
-			('V-03', '{"id":"V-03","code":"V-03","plate":"29C-781.90","vehicleType":"Xe ben Shacman 4 chân X3000","type":"Xe ben Shacman 4 chân X3000","driverName":"Lê Văn Cường","driverPhone":"0977.890.123","rfidCode":"RFID-1022-TTC","status":"active","loadedNormLitersPer100km":41.0,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.15,"normLoadedL100km":41.0,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.15,"currentFuelLiters":310,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":210400,"driverIntegrityScore":94,"lastMaintenanceDate":"12/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chạy tuyến khai trường mỏ về trạm nghiền trung tâm."}'::jsonb)
-		`)
-	}
+	// 9. Seed Fleet Fuel Norms with Multi-Driver Shift Allocations
+	Pool.Exec(ctx, "DELETE FROM fuel_norms;")
+	fmt.Println("🌱 Seeding Fleet Fuel Norms with Multi-Driver Shift Allocations...")
+	Pool.Exec(ctx, `
+		INSERT INTO fuel_norms (code, data) VALUES
+		('V-01', '{
+			"id":"V-01","code":"V-01","plate":"19H-056.22",
+			"vehicleType":"Xe ben Howo 371HP (8x4)","type":"Xe ben Howo 371HP (8x4)","model":"Howo Sinotruk 8x4","enginePowerHp":371,
+			"driverName":"Nguyễn Văn Toàn","driverPhone":"0912.888.999",
+			"drivers":[
+				{"id":"EMP-DRV-01","name":"Nguyễn Văn Toàn","phone":"0912.888.999","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ"},
+				{"id":"EMP-DRV-04","name":"Trần Đình Khang","phone":"0904.112.334","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"},
+				{"id":"EMP-DRV-07","name":"Vũ Văn Hải","phone":"0972.334.556","shift":"Dự phòng","role":"backup","status":"standby","notes":"Tài xế dự phòng thay ca"},
+				{"id":"EMP-DRV-P01","name":"Phạm Văn Quý","phone":"0913.445.667","shift":"Đã nghỉ việc","role":"past","status":"resigned","notes":"Nghỉ việc từ 01/10/2026, đã bàn giao xe"}
+			],
+			"rfidCode":"RFID-1015-TTC","status":"active",
+			"loadedNormLitersPer100km":39.0,"emptyNormLitersPer100km":26.5,"idlingNormLitersPerHour":3.0,"quarryTerrainFactor":1.12,
+			"normLoadedL100km":39.0,"normUnloadedL100km":26.5,"normIdlingLiterPerHour":3.0,"slopeCorrectionFactor":1.12,
+			"currentFuelLiters":268,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":148580,"driverIntegrityScore":96,
+			"lastMaintenanceDate":"20/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Xe công ty mỏ chở đá 1x2 cho công trường Cao Tốc."
+		}'::jsonb),
+		('V-02', '{
+			"id":"V-02","code":"V-02","plate":"19C-128.45",
+			"vehicleType":"Xe ben Howo 371HP (8x4)","type":"Xe ben Howo 371HP (8x4)","model":"Howo Sinotruk 8x4","enginePowerHp":371,
+			"driverName":"Lê Hữu Thắng","driverPhone":"0983.234.567",
+			"drivers":[
+				{"id":"EMP-DRV-02","name":"Lê Hữu Thắng","phone":"0983.234.567","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-08","name":"Đỗ Quang Dũng","phone":"0986.332.114","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"},
+				{"id":"EMP-DRV-09","name":"Nguyễn Thế Bảo","phone":"0903.441.229","shift":"Dự phòng","role":"backup","status":"standby","notes":"Lái phụ tăng cường"}
+			],
+			"rfidCode":"RFID-1016-TTC","status":"active",
+			"loadedNormLitersPer100km":40.0,"emptyNormLitersPer100km":26.8,"idlingNormLitersPerHour":3.1,"quarryTerrainFactor":1.15,
+			"normLoadedL100km":40.0,"normUnloadedL100km":26.8,"normIdlingLiterPerHour":3.1,"slopeCorrectionFactor":1.15,
+			"currentFuelLiters":315,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":172400,"driverIntegrityScore":93,
+			"lastMaintenanceDate":"18/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở hàng giao trạm trộn bê tông KCN Thụy Vân."
+		}'::jsonb),
+		('V-03', '{
+			"id":"V-03","code":"V-03","plate":"29C-781.90",
+			"vehicleType":"Xe ben Shacman 4 chân X3000","type":"Xe ben Shacman 4 chân X3000","model":"Shacman X3000 Weichai 380HP","enginePowerHp":380,
+			"driverName":"Lê Văn Cường","driverPhone":"0977.890.123",
+			"drivers":[
+				{"id":"EMP-DRV-05","name":"Lê Văn Cường","phone":"0977.890.123","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-03","name":"Hoàng Minh Đức","phone":"0977.456.123","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca đêm"},
+				{"id":"EMP-DRV-P02","name":"Bùi Văn Toản","phone":"0915.667.889","shift":"Chuyển xe","role":"past","status":"transferred","notes":"Đã điều chuyển sang lái máy xúc CAT 336D"}
+			],
+			"rfidCode":"RFID-1022-TTC","status":"active",
+			"loadedNormLitersPer100km":41.0,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.15,
+			"normLoadedL100km":41.0,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.15,
+			"currentFuelLiters":310,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":210400,"driverIntegrityScore":94,
+			"lastMaintenanceDate":"12/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chạy tuyến khai trường moong về trạm nghiền trung tâm."
+		}'::jsonb),
+		('V-04', '{
+			"id":"V-04","code":"V-04","plate":"88H-042.27",
+			"vehicleType":"Xe ben HOWO 4 chân 371HP","type":"Xe ben HOWO 4 chân 371HP","model":"Howo Sinotruk 371","enginePowerHp":371,
+			"driverName":"Trần Đình Trọng","driverPhone":"0984.112.334",
+			"drivers":[
+				{"id":"EMP-DRV-06","name":"Trần Đình Trọng","phone":"0984.112.334","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng (đang theo dõi hao hụt dầu)"},
+				{"id":"EMP-DRV-10","name":"Nguyễn Hữu Kiên","phone":"0966.554.433","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca tối"}
+			],
+			"rfidCode":"RFID-1008-TTC","status":"theft_alert",
+			"loadedNormLitersPer100km":42.5,"emptyNormLitersPer100km":28.0,"idlingNormLitersPerHour":3.5,"quarryTerrainFactor":1.15,
+			"normLoadedL100km":42.5,"normUnloadedL100km":28.0,"normIdlingLiterPerHour":3.5,"slopeCorrectionFactor":1.15,
+			"currentFuelLiters":182,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":184520,"driverIntegrityScore":58,
+			"lastMaintenanceDate":"15/10/2026","fuelSensorStatus":"ACTIVE_ANOMALY","notes":"Phát hiện sụt dầu bất thường 38 Lít khi dừng ven QL2."
+		}'::jsonb),
+		('V-05', '{
+			"id":"V-05","code":"V-05","plate":"29H-882.19",
+			"vehicleType":"Xe ben Shacman 4 chân 340HP","type":"Xe ben Shacman 4 chân 340HP","model":"Shacman Delong F3000","enginePowerHp":340,
+			"driverName":"Hoàng Minh Đức","driverPhone":"0977.456.123",
+			"drivers":[
+				{"id":"EMP-DRV-03","name":"Hoàng Minh Đức","phone":"0977.456.123","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-11","name":"Phan Đình Tuấn","phone":"0982.667.112","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều bóc tầng phủ"},
+				{"id":"EMP-DRV-P03","name":"Đinh Văn Hùng","phone":"0902.998.776","shift":"Đã nghỉ việc","role":"past","status":"resigned","notes":"Tài xế cũ đã nghỉ việc từ tháng 09/2026"}
+			],
+			"rfidCode":"RFID-1025-TTC","status":"active",
+			"loadedNormLitersPer100km":41.5,"emptyNormLitersPer100km":27.2,"idlingNormLitersPerHour":3.3,"quarryTerrainFactor":1.18,
+			"normLoadedL100km":41.5,"normUnloadedL100km":27.2,"normIdlingLiterPerHour":3.3,"slopeCorrectionFactor":1.18,
+			"currentFuelLiters":290,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":165200,"driverIntegrityScore":91,
+			"lastMaintenanceDate":"10/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đất đá bóc tầng phủ moong khai trường."
+		}'::jsonb),
+		('V-06', '{
+			"id":"V-06","code":"V-06","plate":"19C-089.12",
+			"vehicleType":"Xe ben Dongfeng 4 chân 375HP","type":"Xe ben Dongfeng 4 chân 375HP","model":"Dongfeng Cummins 375HP","enginePowerHp":375,
+			"driverName":"Vũ Tuấn Anh","driverPhone":"0916.223.344",
+			"drivers":[
+				{"id":"EMP-DRV-12","name":"Vũ Tuấn Anh","phone":"0916.223.344","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-13","name":"Đặng Quốc Huy","phone":"0989.112.233","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"},
+				{"id":"EMP-DRV-14","name":"Tạ Quang Minh","phone":"0907.332.118","shift":"Dự phòng","role":"backup","status":"standby","notes":"Lái phụ thay thế"}
+			],
+			"rfidCode":"RFID-1028-TTC","status":"active",
+			"loadedNormLitersPer100km":40.5,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.1,"quarryTerrainFactor":1.14,
+			"normLoadedL100km":40.5,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.1,"slopeCorrectionFactor":1.14,
+			"currentFuelLiters":340,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":198300,"driverIntegrityScore":95,
+			"lastMaintenanceDate":"22/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá cấp phối base ra cảng bốc hàng."
+		}'::jsonb),
+		('V-07', '{
+			"id":"V-07","code":"V-07","plate":"29C-654.32",
+			"vehicleType":"Xe ben Chenglong Hải Âu 385HP","type":"Xe ben Chenglong Hải Âu 385HP","model":"Chenglong Yuchai 385HP","enginePowerHp":385,
+			"driverName":"Trịnh Văn Giang","driverPhone":"0973.882.199",
+			"drivers":[
+				{"id":"EMP-DRV-15","name":"Trịnh Văn Giang","phone":"0973.882.199","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-16","name":"Lương Thế Vinh","phone":"0908.445.667","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca tối"},
+				{"id":"EMP-DRV-17","name":"Trần Văn Nam","phone":"0984.771.223","shift":"Dự phòng","role":"backup","status":"standby","notes":"Lái phụ trực ca"}
+			],
+			"rfidCode":"RFID-1031-TTC","status":"active",
+			"loadedNormLitersPer100km":39.5,"emptyNormLitersPer100km":26.0,"idlingNormLitersPerHour":3.0,"quarryTerrainFactor":1.12,
+			"normLoadedL100km":39.5,"normUnloadedL100km":26.0,"normIdlingLiterPerHour":3.0,"slopeCorrectionFactor":1.12,
+			"currentFuelLiters":360,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":134100,"driverIntegrityScore":97,
+			"lastMaintenanceDate":"25/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Xe chuyên tuyến mỏ đá TTC đi các trạm trộn bê tông Vĩnh Phúc."
+		}'::jsonb),
+		('V-08', '{
+			"id":"V-08","code":"V-08","plate":"88C-198.76",
+			"vehicleType":"Xe ben Shacman 4 chân X3000","type":"Xe ben Shacman 4 chân X3000","model":"Shacman X3000 Weichai 380HP","enginePowerHp":380,
+			"driverName":"Mai Văn Thắng","driverPhone":"0918.334.455",
+			"drivers":[
+				{"id":"EMP-DRV-18","name":"Mai Văn Thắng","phone":"0918.334.455","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-19","name":"Hoàng Quốc Việt","phone":"0967.889.001","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều"},
+				{"id":"EMP-DRV-P04","name":"Dương Văn Hòa","phone":"0919.882.331","shift":"Đã nghỉ việc","role":"past","status":"resigned","notes":"Tài xế cũ nghỉ việc tháng 08/2026 bàn giao cho Mai Văn Thắng"}
+			],
+			"rfidCode":"RFID-1035-TTC","status":"active",
+			"loadedNormLitersPer100km":41.2,"emptyNormLitersPer100km":27.5,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.16,
+			"normLoadedL100km":41.2,"normUnloadedL100km":27.5,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.16,
+			"currentFuelLiters":275,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":224800,"driverIntegrityScore":92,
+			"lastMaintenanceDate":"14/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá xô bồ nổ mìn về hộc máy kẹp nghiền thô."
+		}'::jsonb);
+	`)
 
 	// 10. Seed Yard CheckInOut
 	var yardCount int
@@ -991,7 +1103,7 @@ func Seed() {
 			{"ALT-2026-001", "Lệch bì +380 kg (Vượt ngưỡng)", "19H-056.22", "Bùn đất dính dày dưới gầm thùng xe sau mưa moong", "13:59 28/10", "28/10/2026", "Đang xử lý hiện trường", "danger", "TK-20261028-002", "Trạm Cân Cổng 01 - Phú Thọ", 26450, 26830, 380},
 			{"ALT-2026-002", "Lệch bì -140 kg (Trong dung sai nhưng bất thường)", "88H-042.27", "Trừ bì lệch do dư lượng thùng sau bốc hàng", "11:20 28/10", "28/10/2026", "Đã phê duyệt xử lý xong", "warning", "TK-20261028-001", "Trạm Cân Cổng 01 - Phú Thọ", 15420, 15280, 140},
 			{"ALT-2026-003", "Nhận diện biển số Camera AI thấp", "90C-123.45", "Camera ANPR độ tin cậy 82% do mưa lớn", "14:56 28/10", "28/10/2026", "Chuyển Thanh tra mỏ", "warning", "TK-20261028-004", "Trạm Cân Cổng 02 - Phú Thọ", 18500, 18500, 0},
-			{"ALT-2026-004", "Bảng giá đơn giá bất thường so với hợp đồng", "19C-098.76", "Nghi ngờ chỉnh sửa giá trọng tải đơn giá thủ công", "09:45 27/10", "27/10/2026", "Chờ xử lý", "info", "TK-20261027-009", "Trạm Cân Cổng 01 - Phú Thọ", 11200, 11200, 0},
+			{"ALT-2026-004", "Bảng giá đơn giá bất thường so với hợp đồng", "19C-098.76", "Kiểm tra sai lệch đơn giá áp dụng so với hợp đồng", "09:45 27/10", "27/10/2026", "Chờ xử lý", "info", "TK-20261027-009", "Trạm Cân Cổng 01 - Phú Thọ", 11200, 11200, 0},
 		}
 
 		for _, a := range alerts {
@@ -1798,6 +1910,95 @@ func seedTradeAndWarehouse(ctx context.Context) {
 			 18, 520.4, 148314000, 14831400, 163145400,
 			 'HD-26-8911', 'issued', 'https://sinvoice.viettel.vn/tra-cuu?code=HD-26-8911', 'settled', '["TK-2810-015","TK-2810-016"]'::jsonb, 'Nguyễn Thị Lan')
 			ON CONFLICT (code) DO NOTHING
+		`)
+	}
+
+	// 8. Seed Vehicle Assignments & Driver Shift Attendance
+	var vaCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM vehicle_assignments").Scan(&vaCount)
+	if vaCount == 0 {
+		fmt.Println("🌱 Seeding Vehicle Shift Assignments & Driver Attendance...")
+		assignments := []struct {
+			Code, Date, ShiftID, ShiftName, VehID, Plate, VehType, OwnerType, DrvID, DrvName, Phone, License, Route, InTime, OutTime, Status, Notes, Officer string
+			StartOdo, EndOdo, StartFuel, EndFuel, Tons                                                                                                          float64
+			Trips                                                                                                                                              int
+		}{
+			{
+				Code: "DISPATCH-20261028-01", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-TRK-01", Plate: "19H-056.22", VehType: "Xe ben Howo 371HP (8x4)", OwnerType: "company",
+				DrvID: "EMP-DRV-01", DrvName: "Nguyễn Văn Toàn", Phone: "0912 888 999", License: "GPLX Hạng FC - 19015528",
+				Route: "Tuyến Moong Tầng 3 ➔ Hộc Nạp Liệu Trạm Nghiền 01", InTime: "06:00 28/10/2026", OutTime: "",
+				StartOdo: 5210.0, EndOdo: 5294.0, StartFuel: 380, EndFuel: 284, Trips: 14, Tons: 420.0,
+				Status: "checked_in", Notes: "Đã kiểm tra xe đầu ca: Lốp tốt, ben hoạt động bình thường", Officer: "Phạm Quốc Tuấn (Đội trưởng Cơ giới)",
+			},
+			{
+				Code: "DISPATCH-20261028-02", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-TRK-02", Plate: "19C-128.45", VehType: "Xe ben Howo 371HP (8x4)", OwnerType: "company",
+				DrvID: "EMP-DRV-02", DrvName: "Lê Hữu Thắng", Phone: "0983 234 567", License: "GPLX Hạng C - 25018899",
+				Route: "Tuyến Bãi Đá 1x2 ➔ Giao trạm trộn bê tông KCN Thụy Vân", InTime: "06:15 28/10/2026", OutTime: "",
+				StartOdo: 4980.0, EndOdo: 5045.0, StartFuel: 360, EndFuel: 275, Trips: 8, Tons: 240.0,
+				Status: "in_progress", Notes: "Xe công ty chở hàng hợp đồng Tập đoàn Đèo Cả", Officer: "Phạm Quốc Tuấn (Đội trưởng Cơ giới)",
+			},
+			{
+				Code: "DISPATCH-20261028-03", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-TRK-03", Plate: "29H-882.19", VehType: "Xe ben Shacman 4 chân 340HP", OwnerType: "company",
+				DrvID: "EMP-DRV-03", DrvName: "Hoàng Minh Đức", Phone: "0977 456 123", License: "GPLX Hạng FC - 01024478",
+				Route: "Tuyến Moong Khai Thác ➔ Bãi Thải Đất Đá Bóc Phủ", InTime: "06:00 28/10/2026", OutTime: "",
+				StartOdo: 6120.0, EndOdo: 6185.0, StartFuel: 400, EndFuel: 310, Trips: 11, Tons: 330.0,
+				Status: "checked_in", Notes: "Vận chuyển đất đá bóc tầng phủ ca 1", Officer: "Nguyễn Văn Bình (Cán bộ Đội xe)",
+			},
+			{
+				Code: "DISPATCH-20261028-04", Date: "2026-10-28", ShiftID: "SHIFT-02", ShiftName: "Ca 2 (14:00 - 22:00)",
+				VehID: "EQ-TRK-01", Plate: "19H-056.22", VehType: "Xe ben Howo 371HP (8x4)", OwnerType: "company",
+				DrvID: "EMP-DRV-04", DrvName: "Trần Đình Khang", Phone: "0904 112 334", License: "GPLX Hạng FC - 19024411",
+				Route: "Tuyến Moong Tầng 3 ➔ Hộc Nạp Liệu Trạm Nghiền 01", InTime: "", OutTime: "",
+				StartOdo: 5294.0, EndOdo: 0, StartFuel: 0, EndFuel: 0, Trips: 0, Tons: 0,
+				Status: "assigned", Notes: "Phân công nhận ca 2 thay tài xế Nguyễn Văn Toàn", Officer: "Phạm Quốc Tuấn (Đội trưởng Cơ giới)",
+			},
+		}
+
+		for _, a := range assignments {
+			Pool.Exec(ctx, `
+				INSERT INTO vehicle_assignments (
+					code, date, shift_id, shift_name, vehicle_id, license_plate, vehicle_type, ownership_type,
+					driver_id, driver_name, driver_phone, driver_license_no, route_assigned, checkin_time, checkout_time,
+					start_odo, end_odo, start_fuel_liters, end_fuel_liters, trips_completed, tons_hauled, status, notes, handover_officer
+				) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+				ON CONFLICT (code) DO NOTHING
+			`, a.Code, a.Date, a.ShiftID, a.ShiftName, a.VehID, a.Plate, a.VehType, a.OwnerType,
+				a.DrvID, a.DrvName, a.Phone, a.License, a.Route, a.InTime, a.OutTime,
+				a.StartOdo, a.EndOdo, a.StartFuel, a.EndFuel, a.Trips, a.Tons, a.Status, a.Notes, a.Officer)
+		}
+
+		// Update vehicles table with company ownership and current assigned drivers
+		Pool.Exec(ctx, `
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-01', current_driver_name = 'Nguyễn Văn Toàn', current_shift_id = 'SHIFT-01' WHERE bs = '19H-056.22';
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-02', current_driver_name = 'Lê Hữu Thắng', current_shift_id = 'SHIFT-01' WHERE bs = '19C-128.45';
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-03', current_driver_name = 'Hoàng Minh Đức', current_shift_id = 'SHIFT-01' WHERE bs = '29H-882.19';
+			UPDATE vehicles SET ownership_type = 'customer', current_driver_name = 'Lái xe khách hàng' WHERE bs NOT IN ('19H-056.22', '19C-128.45', '29H-882.19');
+		`)
+
+		// Update tickets with separate driver and vehicle ownership
+		Pool.Exec(ctx, `
+			UPDATE tickets SET 
+				vehicle_ownership = 'company',
+				driver_id = 'EMP-DRV-01',
+				driver_name = 'Nguyễn Văn Toàn',
+				driver_phone = '0912 888 999',
+				assignment_code = 'DISPATCH-20261028-01',
+				shift_name = 'Ca 1 (06:00 - 14:00)',
+				attendance_status = 'checked_in'
+			WHERE bien_so = '19H-056.22';
+
+			UPDATE tickets SET 
+				vehicle_ownership = 'company',
+				driver_id = 'EMP-DRV-02',
+				driver_name = 'Lê Hữu Thắng',
+				driver_phone = '0983 234 567',
+				assignment_code = 'DISPATCH-20261028-02',
+				shift_name = 'Ca 1 (06:00 - 14:00)',
+				attendance_status = 'checked_in'
+			WHERE bien_so = '19C-128.45';
 		`)
 	}
 }

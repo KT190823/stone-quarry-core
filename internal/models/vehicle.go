@@ -9,9 +9,13 @@ type Vehicle struct {
 	Unit        string  `json:"unit,omitempty"`
 	Status      string  `json:"status"`
 	Count       int     `json:"count"`
-	HanDangKiem string  `json:"hanDangKiem,omitempty"`
-	Date        string  `json:"date,omitempty"`
-	ChuXe       string  `json:"chuXe,omitempty"`
+	HanDangKiem       string  `json:"hanDangKiem,omitempty"`
+	Date              string  `json:"date,omitempty"`
+	ChuXe             string  `json:"chuXe,omitempty"`
+	OwnershipType     string  `json:"ownershipType,omitempty"`     // "company" | "customer" | "contractor"
+	CurrentDriverID   string  `json:"currentDriverId,omitempty"`   // Mã NV tài xế đang nhận ca
+	CurrentDriverName string  `json:"currentDriverName,omitempty"` // Tên tài xế
+	CurrentShiftID    string  `json:"currentShiftId,omitempty"`    // Ca trực
 }
 
 type Alert struct {
@@ -129,4 +133,33 @@ type YardCheckInOut struct {
 	Guard      string `json:"guard"`
 	Status     string `json:"status"`
 	Note       string `json:"note"`
+}
+
+// VehicleAssignment represents shift dispatching & driver attendance for company-owned fleet
+type VehicleAssignment struct {
+	ID              int     `json:"id"`
+	Code            string  `json:"code"`
+	Date            string  `json:"date"`
+	ShiftID         string  `json:"shiftId"`
+	ShiftName       string  `json:"shiftName"`
+	VehicleID       string  `json:"vehicleId"`
+	LicensePlate    string  `json:"licensePlate"`
+	VehicleType     string  `json:"vehicleType"`
+	OwnershipType   string  `json:"ownershipType"` // company, customer, contractor
+	DriverID        string  `json:"driverId"`
+	DriverName      string  `json:"driverName"`
+	DriverPhone     string  `json:"driverPhone"`
+	DriverLicenseNo string  `json:"driverLicenseNo"`
+	RouteAssigned   string  `json:"routeAssigned"`
+	CheckinTime     string  `json:"checkinTime"`
+	CheckoutTime    string  `json:"checkoutTime"`
+	StartOdo        float64 `json:"startOdo"`
+	EndOdo          float64 `json:"endOdo"`
+	StartFuelLiters float64 `json:"startFuelLiters"`
+	EndFuelLiters   float64 `json:"endFuelLiters"`
+	TripsCompleted  int     `json:"tripsCompleted"`
+	TonsHauled      float64 `json:"tonsHauled"`
+	Status          string  `json:"status"` // assigned, checked_in, in_progress, completed
+	Notes           string  `json:"notes"`
+	HandoverOfficer string  `json:"handoverOfficer"`
 }

@@ -37,10 +37,21 @@ func main() {
 	tradeH := handlers.NewTradeVoucherHandler()
 	pvH := handlers.NewPaymentVoucherHandler()
 	salesH := handlers.NewSalesContractHandler()
+	assignmentH := handlers.NewVehicleAssignmentHandler()
 
 	// Register Quarry Core & 3rd-Party Integration Gateway
 	quarryH.Register(mux)
 	integrationH.Register(mux)
+
+	// Vehicle Assignments & Driver Shift Attendance (Phân công điều xe & Chấm công lái xe)
+	mux.HandleFunc("GET /api/vehicles/assignments", assignmentH.List)
+	mux.HandleFunc("GET /api/vehicles/assignments/active", assignmentH.GetActiveByPlate)
+	mux.HandleFunc("GET /api/vehicles/assignments/{id}", assignmentH.Get)
+	mux.HandleFunc("POST /api/vehicles/assignments", assignmentH.Create)
+	mux.HandleFunc("PUT /api/vehicles/assignments/{id}", assignmentH.Update)
+	mux.HandleFunc("DELETE /api/vehicles/assignments/{id}", assignmentH.Delete)
+	mux.HandleFunc("POST /api/vehicles/assignments/{id}/checkin", assignmentH.CheckIn)
+	mux.HandleFunc("POST /api/vehicles/assignments/{id}/checkout", assignmentH.CheckOut)
 
 	// Commercial Sales Contracts & Prepaid Wallet Settlement
 	mux.HandleFunc("GET /api/sales/contracts", salesH.ListContracts)
