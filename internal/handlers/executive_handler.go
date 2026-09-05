@@ -30,26 +30,62 @@ type BusinessIssue struct {
 }
 
 type ExecutiveOverviewResponse struct {
-	HealthScore      float64         `json:"health_score"`
-	HealthLabel      string          `json:"health_label"`
-	RedIssues        []BusinessIssue `json:"red_issues"`
-	YellowWarnings   []BusinessIssue `json:"yellow_warnings"`
-	GreenCount       int             `json:"green_count"`
-	TodayRevenue     float64         `json:"today_revenue"`
-	TodayCost        float64         `json:"today_cost"`
-	TodayProfit      float64         `json:"today_profit"`
-	TodayMargin      float64         `json:"today_margin"`
-	MonthRevenue     float64         `json:"month_revenue"`
-	MonthCost        float64         `json:"month_cost"`
-	MonthProfit      float64         `json:"month_profit"`
-	MonthMargin      float64         `json:"month_margin"`
-	PrevMonthProfit  float64         `json:"prev_month_profit"`
+	HealthScore     float64                  `json:"health_score"`
+	HealthLabel     string                   `json:"health_label"`
+	RedIssues       []BusinessIssue          `json:"red_issues"`
+	YellowWarnings  []BusinessIssue          `json:"yellow_warnings"`
+	GreenCount      int                      `json:"green_count"`
+	TodayRevenue    float64                  `json:"today_revenue"`
+	TodayCost       float64                  `json:"today_cost"`
+	TodayProfit     float64                  `json:"today_profit"`
+	TodayMargin     float64                  `json:"today_margin"`
+	MonthRevenue    float64                  `json:"month_revenue"`
+	MonthCost       float64                  `json:"month_cost"`
+	MonthProfit     float64                  `json:"month_profit"`
+	MonthMargin     float64                  `json:"month_margin"`
+	PrevMonthProfit float64                  `json:"prev_month_profit"`
+	Period          string                   `json:"period"`
+	CurrentPeriod   string                   `json:"current_period"`
+	PreviousPeriod  string                   `json:"previous_period"`
+	DomainSummaries []ExecutiveDomainSummary `json:"domain_summaries"`
+}
+
+type ExecutiveDomainSummary struct {
+	Key           string  `json:"key"`
+	Label         string  `json:"label"`
+	Description   string  `json:"description"`
+	Route         string  `json:"route"`
+	Unit          string  `json:"unit"`
+	CurrentValue  float64 `json:"current_value"`
+	PreviousValue float64 `json:"previous_value"`
+	DeltaPct      float64 `json:"delta_pct"`
+	Trend         string  `json:"trend"`
+	Favorable     bool    `json:"favorable"`
+}
+
+type executiveMetricSnapshot struct {
+	Production float64
+	Revenue    float64
+	Cost       float64
+	Trips      float64
+	Inventory  float64
+	Fuel       float64
+	Attendance float64
+	Alerts     float64
 }
 
 func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	db := database.Pool
 	quarryID := strings.TrimSpace(r.URL.Query().Get("quarry_id"))
+	period := normalizeExecutivePeriod(r.URL.Query().Get("period"))
+	now := time.Now().In(time.FixedZone("ICT", 7*60*60))
+	currentStart, currentEnd, previousStart, currentLabel, previousLabel := executivePeriodBounds(now, period)
+	comparisonEnd := now
+	if comparisonEnd.After(currentEnd) {
+		comparisonEnd = currentEnd
+	}
+	previousEnd := previousStart.Add(comparisonEnd.Sub(currentStart))
 
 	var wg sync.WaitGroup
 	var todayRev, monthRev, prevMonthRev float64
@@ -227,9 +263,149 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 		MonthProfit:     monthProfit,
 		MonthMargin:     monthMargin,
 		PrevMonthProfit: prevMonthProfit,
+		Period:          period,
+		CurrentPeriod:   currentLabel,
+		PreviousPeriod:  previousLabel,
+		DomainSummaries: buildExecutiveDomainSummaries(
+			loadExecutiveMetricSnapshot(ctx, currentStart, comparisonEnd),
+			loadExecutiveMetricSnapshot(ctx, previousStart, previousEnd),
+		),
 	}
 
 	JSON(w, resp)
+}
+
+func normalizeExecutivePeriod(period string) string {
+	switch strings.ToLower(strings.TrimSpace(period)) {
+	case "day", "week", "month", "quarter", "year":
+		return strings.ToLower(strings.TrimSpace(period))
+	default:
+		return "month"
+	}
+}
+
+func executivePeriodBounds(now time.Time, period string) (time.Time, time.Time, time.Time, string, string) {
+	location := now.Location()
+	dayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+
+	var currentStart, currentEnd, previousStart time.Time
+	var currentLabel, previousLabel string
+
+	switch period {
+	case "day":
+		currentStart = dayStart
+		currentEnd = currentStart.AddDate(0, 0, 1)
+		previousStart = currentStart.AddDate(0, 0, -1)
+		currentLabel = "Hôm nay"
+		previousLabel = "Hôm qua"
+	case "week":
+		daysSinceMonday := (int(dayStart.Weekday()) + 6) % 7
+		currentStart = dayStart.AddDate(0, 0, -daysSinceMonday)
+		currentEnd = currentStart.AddDate(0, 0, 7)
+		previousStart = currentStart.AddDate(0, 0, -7)
+		currentLabel = "Tuần này"
+		previousLabel = "Tuần trước"
+	case "quarter":
+		quarterMonth := time.Month(((int(now.Month())-1)/3)*3 + 1)
+		currentStart = time.Date(now.Year(), quarterMonth, 1, 0, 0, 0, 0, location)
+		currentEnd = currentStart.AddDate(0, 3, 0)
+		previousStart = currentStart.AddDate(0, -3, 0)
+		currentQuarter := (int(now.Month())-1)/3 + 1
+		previousQuarterMonth := previousStart.Month()
+		previousQuarter := (int(previousQuarterMonth)-1)/3 + 1
+		currentLabel = fmt.Sprintf("Quý %d/%d", currentQuarter, now.Year())
+		previousLabel = fmt.Sprintf("Quý %d/%d", previousQuarter, previousStart.Year())
+	case "year":
+		currentStart = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, location)
+		currentEnd = currentStart.AddDate(1, 0, 0)
+		previousStart = currentStart.AddDate(-1, 0, 0)
+		currentLabel = fmt.Sprintf("Năm %d", now.Year())
+		previousLabel = fmt.Sprintf("Năm %d", now.Year()-1)
+	default:
+		currentStart = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, location)
+		currentEnd = currentStart.AddDate(0, 1, 0)
+		previousStart = currentStart.AddDate(0, -1, 0)
+		currentLabel = fmt.Sprintf("Tháng %02d/%d", now.Month(), now.Year())
+		previousLabel = fmt.Sprintf("Tháng %02d/%d", previousStart.Month(), previousStart.Year())
+	}
+
+	return currentStart, currentEnd, previousStart, currentLabel, previousLabel
+}
+
+func loadExecutiveMetricSnapshot(ctx context.Context, start, end time.Time) executiveMetricSnapshot {
+	var snapshot executiveMetricSnapshot
+	err := database.Pool.QueryRow(ctx, `
+		SELECT
+			COALESCE((SELECT SUM(actual_quantity) FROM vehicle_trips WHERE COALESCE(check_in_time, created_at) >= $1 AND COALESCE(check_in_time, created_at) < $2), 0)::double precision,
+			COALESCE((SELECT SUM(grand_total) FROM sales_vouchers WHERE created_at >= $1 AND created_at < $2 AND COALESCE(status, '') NOT IN ('cancelled', 'Đã hủy')), 0)::double precision,
+			COALESCE((SELECT SUM(actual_value) FROM production_costs WHERE created_at >= $1 AND created_at < $2), 0)::double precision,
+			COALESCE((SELECT COUNT(*) FROM vehicle_trips WHERE created_at >= $1 AND created_at < $2), 0)::double precision,
+			COALESCE((SELECT SUM(CASE WHEN quantity != 0 THEN quantity ELSE qty END) FROM inventory_inbound WHERE created_at >= $1 AND created_at < $2), 0)::double precision
+			+ COALESCE((SELECT SUM(CASE WHEN quantity != 0 THEN quantity ELSE qty END) FROM inventory_outbound WHERE created_at >= $1 AND created_at < $2), 0)::double precision,
+			COALESCE((SELECT SUM(actual_fuel_consumed_liters) FROM equipment_fuel_logs WHERE created_at >= $1 AND created_at < $2), 0)::double precision,
+			COALESCE((SELECT COUNT(*) FROM hr_attendances WHERE created_at >= $1 AND created_at < $2), 0)::double precision,
+			(
+				COALESCE((SELECT COUNT(*) FROM alerts WHERE created_at >= $1 AND created_at < $2), 0)
+				+ COALESCE((SELECT COUNT(*) FROM quarry_alerts WHERE created_at >= $1 AND created_at < $2), 0)
+			)::double precision
+	`, start, end).Scan(
+		&snapshot.Production,
+		&snapshot.Revenue,
+		&snapshot.Cost,
+		&snapshot.Trips,
+		&snapshot.Inventory,
+		&snapshot.Fuel,
+		&snapshot.Attendance,
+		&snapshot.Alerts,
+	)
+	if err != nil {
+		return executiveMetricSnapshot{}
+	}
+	return snapshot
+}
+
+func buildExecutiveDomainSummaries(current, previous executiveMetricSnapshot) []ExecutiveDomainSummary {
+	return []ExecutiveDomainSummary{
+		newExecutiveDomainSummary("production", "Sản lượng khai thác", "Sản lượng đã ghi nhận từ các chuyến xe", "/ke-hoach-san-luong/chuoi-san-luong", "tấn", current.Production, previous.Production, false),
+		newExecutiveDomainSummary("revenue", "Doanh thu bán hàng", "Giá trị phiếu bán đã hoàn thành", "/kho/phieu-ban", "VNĐ", current.Revenue, previous.Revenue, false),
+		newExecutiveDomainSummary("cost", "Chi phí vận hành", "Chi phí sản xuất phát sinh trong kỳ", "/chi-huy-dieu-hanh?tab=cost", "VNĐ", current.Cost, previous.Cost, true),
+		newExecutiveDomainSummary("trips", "Chuyến xe", "Tổng lượt xe vận chuyển được ghi nhận", "/quan-ly-xe/gps-live", "chuyến", current.Trips, previous.Trips, false),
+		newExecutiveDomainSummary("inventory", "Luân chuyển kho", "Tổng khối lượng nhập và xuất kho", "/kho/nhap", "tấn", current.Inventory, previous.Inventory, false),
+		newExecutiveDomainSummary("fuel", "Nhiên liệu cơ giới", "Lượng nhiên liệu thiết bị đã tiêu thụ", "/khai-thac-co-gioi/co-gioi-dau-do", "lít", current.Fuel, previous.Fuel, true),
+		newExecutiveDomainSummary("attendance", "Nhân sự hiện diện", "Tổng lượt chấm công trong kỳ", "/nhan-su/cham-cong", "lượt", current.Attendance, previous.Attendance, false),
+		newExecutiveDomainSummary("alerts", "Cảnh báo phát sinh", "Cảnh báo vận hành và sai lệch phát sinh trong kỳ", "/canh-bao-lech-bi", "cảnh báo", current.Alerts, previous.Alerts, true),
+	}
+}
+
+func newExecutiveDomainSummary(key, label, description, route, unit string, current, previous float64, lowerIsBetter bool) ExecutiveDomainSummary {
+	delta := executiveDeltaPct(current, previous)
+	trend := "stable"
+	if current > previous {
+		trend = "up"
+	} else if current < previous {
+		trend = "down"
+	}
+	favorable := current >= previous
+	if lowerIsBetter {
+		favorable = current <= previous
+	}
+	if current == previous {
+		favorable = true
+	}
+	return ExecutiveDomainSummary{
+		Key: key, Label: label, Description: description, Route: route, Unit: unit,
+		CurrentValue: current, PreviousValue: previous, DeltaPct: delta, Trend: trend, Favorable: favorable,
+	}
+}
+
+func executiveDeltaPct(current, previous float64) float64 {
+	if previous == 0 {
+		if current == 0 {
+			return 0
+		}
+		return 100
+	}
+	return ((current - previous) / math.Abs(previous)) * 100
 }
 
 func ExecutiveIssues(w http.ResponseWriter, r *http.Request) {
