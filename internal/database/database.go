@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"strings"
 
@@ -43,12 +42,12 @@ func Connect() {
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		pass := os.Getenv("SUPABASE_PASSWORD_DATABASE")
-		if pass == "" {
-			pass = "Mobeo@123#!@"
-		}
-		encodedPass := url.QueryEscape(pass)
-		dsn = fmt.Sprintf("postgres://postgres:%s@db.nsdkctqxgrqvvgdtqyyr.supabase.co:5432/postgres?sslmode=require", encodedPass)
+		dsn = "postgres://postgres.dgnglulokxxifvfxckgi:ppXS30yQ3eP342vR@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require"
+	}
+
+	// Tự động chuyển đổi direct IPv6 Supabase sang IPv4 Pooler cho Render/Cloud không hỗ trợ IPv6
+	if strings.Contains(dsn, "db.dgnglulokxxifvfxckgi.supabase.co") {
+		dsn = "postgres://postgres.dgnglulokxxifvfxckgi:ppXS30yQ3eP342vR@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require"
 	}
 
 	config, err := pgxpool.ParseConfig(dsn)
