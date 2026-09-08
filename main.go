@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"mo-da-backend/internal/database"
 	"mo-da-backend/internal/handlers"
@@ -93,6 +94,7 @@ func main() {
 	mux.HandleFunc("GET /api/analytics/profitability/customer", handlers.CustomerProfitabilityHandler)
 	mux.HandleFunc("POST /api/copilot/ask", handlers.AskCopilot)
 	mux.HandleFunc("POST /api/scenario/simulate", handlers.SimulateScenario)
+	mux.HandleFunc("POST /api/actions/execute", handlers.ExecuteActionHandler)
 
 	mux.HandleFunc("GET /api/tickets", ticketH.List)
 	mux.HandleFunc("GET /api/tickets/{id}", ticketH.Get)
@@ -345,7 +347,11 @@ func main() {
 		handlers.ListAuthorizations(w, r)
 	})
 
-	addr := ":8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := ":" + port
 	fmt.Printf("Backend API running at http://localhost%s\n", addr)
 	fmt.Printf("Health check: http://localhost%s/api/health\n", addr)
 

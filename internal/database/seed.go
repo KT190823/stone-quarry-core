@@ -610,16 +610,21 @@ func Seed() {
 		('STG-04', 4, 'Tồn trữ Bãi thành phẩm', 'database', 85000, 85000, 'tấn', '0.2%', 'normal', 'Drone RTK quét địa hình tính khối lượng bãi', 'Bay quét Flycam 3D định kỳ 15 ngày/lần', 'Đang vận hành'),
 		('STG-05', 5, 'Cân điện tử & Xuất bán', 'scale', 118200, 1058000, 'tấn', '0.0% (Chuẩn)', 'success', 'Trạm cân 120T Keli + Camera AI chụp 4 góc', 'Phiếu cân điện tử mã hóa QR, ký số HĐĐT tức thì', 'Đang vận hành')`,
 
-		`INSERT INTO mining_plans (id, mine, item, annual_target, unit, q1_plan, q1_actual, q2_plan, q2_actual, q3_plan, q3_actual, q4_plan, q4_actual, ytd_actual, completion_rate, status, status_label) VALUES
-		('PLAN-01', 'Khai trường Thung Kén (Tầng 1)', 'Đá 1x2 bê tông tiêu chuẩn', 450000, 'tấn', 110000, 114500, 115000, 118200, 115000, 116400, 110000, 38200, 387300, 86.1, 'active', 'Đang thực hiện'),
-		('PLAN-02', 'Khai trường Thung Kén (Tầng 2)', 'Đá 4x6 móng công trình', 350000, 'tấn', 85000, 89200, 90000, 91500, 90000, 90800, 85000, 31200, 302700, 86.5, 'active', 'Đang thực hiện'),
-		('PLAN-03', 'Khai trường Thung Kén (Bốc phủ)', 'Cát nghiền nhân tạo (Mạt đá)', 200000, 'tấn', 50000, 52100, 50000, 51400, 50000, 50900, 50000, 17800, 172200, 86.1, 'active', 'Đang thực hiện'),
-		('PLAN-04', 'Mỏ Cẩm Khê (Vỉa Bắc)', 'Đá 1x2 bê tông tiêu chuẩn', 360000, 'tấn', 90000, 92400, 90000, 91800, 90000, 90200, 90000, 28500, 302900, 84.1, 'active', 'Đang thực hiện'),
-		('PLAN-05', 'Mỏ Cẩm Khê (Vỉa Nam)', 'Đá 2x4 móng hạ tầng', 280000, 'tấn', 70000, 71500, 70000, 70800, 70000, 69900, 70000, 24100, 236300, 84.4, 'active', 'Đang thực hiện'),
-		('PLAN-06', 'Mỏ Cẩm Khê (Moong)', 'Đá base cấp phối loại 1', 160000, 'tấn', 40000, 41200, 40000, 40500, 40000, 39800, 40000, 13900, 135400, 84.6, 'active', 'Đang thực hiện')
-		ON CONFLICT (id) DO UPDATE SET mine=EXCLUDED.mine, item=EXCLUDED.item, annual_target=EXCLUDED.annual_target, unit=EXCLUDED.unit`,
+		`DELETE FROM mining_plans WHERE id IN ('PLAN-01', 'PLAN-02', 'PLAN-03', 'PLAN-04', 'PLAN-05', 'PLAN-06', 'PLAN-TU-01', 'PLAN-TU-02', 'PLAN-HN-01', 'PLAN-HN-02')`,
+		`INSERT INTO mining_plans (id, mine, item, annual_target, unit, q1_plan, q1_actual, q2_plan, q2_actual, q3_plan, q3_actual, q4_plan, q4_actual, ytd_actual, completion_rate, status, status_label, quarry_code) VALUES
+		('PLAN-01', 'Khai trường Thung Kén (Tầng 1)', 'Đá 1x2 bê tông tiêu chuẩn', 450000, 'tấn', 110000, 114500, 115000, 118200, 115000, 116400, 110000, 38200, 387300, 86.1, 'active', 'Đang thực hiện', 'MO-PT-01'),
+		('PLAN-02', 'Khai trường Thung Kén (Tầng 2)', 'Đá 4x6 móng công trình', 350000, 'tấn', 85000, 89200, 90000, 91500, 90000, 90800, 85000, 31200, 302700, 86.5, 'active', 'Đang thực hiện', 'MO-PT-01'),
+		('PLAN-03', 'Khai trường Thung Kén (Bốc phủ)', 'Cát nghiền nhân tạo (Mạt đá)', 200000, 'tấn', 50000, 52100, 50000, 51400, 50000, 50900, 50000, 17800, 172200, 86.1, 'active', 'Đang thực hiện', 'MO-PT-01'),
+		('PLAN-04', 'Mỏ Cẩm Khê (Vỉa Bắc)', 'Đá 1x2 bê tông tiêu chuẩn', 360000, 'tấn', 90000, 92400, 90000, 91800, 90000, 90200, 90000, 28500, 302900, 84.1, 'active', 'Đang thực hiện', 'MO-PT-01'),
+		('PLAN-05', 'Mỏ Cẩm Khê (Vỉa Nam)', 'Đá 2x4 móng hạ tầng', 280000, 'tấn', 70000, 71500, 70000, 70800, 70000, 69900, 70000, 24100, 236300, 84.4, 'active', 'Đang thực hiện', 'MO-PT-01'),
+		('PLAN-06', 'Mỏ Cẩm Khê (Moong)', 'Đá base cấp phối loại 1', 160000, 'tấn', 40000, 41200, 40000, 40500, 40000, 39800, 40000, 13900, 135400, 84.6, 'active', 'Đang thực hiện', 'MO-PT-01'),
+		('PLAN-TU-01', 'Mỏ đá Tân Uyên (Khai trường Đông)', 'Sỏi nghiền bê tông 1x2 Tân Uyên', 650000, 'tấn', 160000, 162500, 165000, 166800, 165000, 164200, 160000, 58400, 551900, 84.9, 'active', 'Đang thực hiện', 'MO-TU-02'),
+		('PLAN-TU-02', 'Mỏ đá Tân Uyên (Moong mở rộng)', 'Cát đồi tuyển rửa Becamex', 450000, 'tấn', 110000, 112800, 115000, 114600, 115000, 113900, 110000, 42100, 383400, 85.2, 'active', 'Đang thực hiện', 'MO-TU-02'),
+		('PLAN-HN-01', 'Mỏ đá Kiện Khê (Núi Cả)', 'Đá 1x2 Kiện Khê chất lượng cao', 800000, 'tấn', 200000, 204500, 200000, 201200, 200000, 198900, 200000, 72500, 677100, 84.6, 'active', 'Đang thực hiện', 'MO-HN-03'),
+		('PLAN-HN-02', 'Mỏ đá Kiện Khê (Vỉa Tây)', 'Đá vôi sản xuất xi măng Xuân Thành', 600000, 'tấn', 150000, 153200, 150000, 151800, 150000, 149200, 150000, 54600, 508800, 84.8, 'active', 'Đang thực hiện', 'MO-HN-03')
+		ON CONFLICT (id) DO UPDATE SET mine=EXCLUDED.mine, item=EXCLUDED.item, annual_target=EXCLUDED.annual_target, unit=EXCLUDED.unit, quarry_code=EXCLUDED.quarry_code`,
 
-		`DELETE FROM blasting_passports WHERE id IN ('BLAST-01', 'BLAST-02', 'BLAST-03', 'BLAST-04', 'BLAST-05')`,
+		`DELETE FROM blasting_passports WHERE id IN ('BLAST-01', 'BLAST-02', 'BLAST-03', 'BLAST-04', 'BLAST-05', 'BLAST-TU-01', 'BLAST-TU-02', 'BLAST-HN-01', 'BLAST-HN-02')`,
 		`INSERT INTO blasting_passports (
 			id, code, mine_name, blast_date, blast_time, location, bench_level,
 			hole_count, hole_depth_meters, hole_diameter_mm, burden_m, spacing_m, row_spacing_m, stemming_length_m, rock_hardness_f, firing_method, delay_interval_ms,
@@ -629,7 +634,7 @@ func Seed() {
 			safety_perimeter_m, police_notified, commune_notified, notification_doc_ref, all_guards_confirmed, evacuation_confirmed, siren_alerts_completed,
 			guard_posts, materials, same_day_return_closed, return_completed_time,
 			post_blast_clearance, smoke_clearing_minutes, misfire_reported, misfire_count, misfire_details, misfire_resolution,
-			explosive_cost, drilling_cost, blasting_service_fee, guard_labor_cost, total_blast_cost, cost_per_m3_rock, cost_per_ton_rock, notes
+			explosive_cost, drilling_cost, blasting_service_fee, guard_labor_cost, total_blast_cost, cost_per_m3_rock, cost_per_ton_rock, notes, quarry_code
 		) VALUES
 		(
 			'BLAST-01', 'HC-20261028-01', 'Mỏ 1 (Thanh Ba)', '28/10/2026', '11:30', 'Tầng +45m Khai trường Tây', 'Tầng +45m',
@@ -651,7 +656,7 @@ func Seed() {
 			]'::jsonb,
 			true, '14:15',
 			true, 22, false, 0, 'Không phát hiện hiện tượng nổ sót hoặc mìn câm', 'Bãi mìn an toàn tuyệt đối',
-			78200000, 24500000, 8500000, 3600000, 114800000, 11200, 4480, 'Đợt nổ nứt dỡ đồng đều, tỷ lệ đá quá cỡ dưới 4.5%'
+			78200000, 24500000, 8500000, 3600000, 114800000, 11200, 4480, 'Đợt nổ nứt dỡ đồng đều, tỷ lệ đá quá cỡ dưới 4.5%', 'MO-PT-01'
 		),
 		(
 			'BLAST-02', 'HC-20261027-02', 'Mỏ 1 (Thanh Ba)', '27/10/2026', '11:30', 'Tầng +30m Khai trường Nam', 'Tầng +30m',
@@ -671,7 +676,7 @@ func Seed() {
 			]'::jsonb,
 			true, '15:00',
 			true, 20, false, 0, 'Bãi mìn thông thoáng, không sót mìn', 'Nghiệm thu an toàn',
-			64800000, 21200000, 7200000, 3000000, 96200000, 11238, 4495, 'Khai trường Nam hạ tầng an toàn'
+			64800000, 21200000, 7200000, 3000000, 96200000, 11238, 4495, 'Khai trường Nam hạ tầng an toàn', 'MO-PT-01'
 		),
 		(
 			'BLAST-03', 'HC-20261029-01', 'Mỏ 2 (Cẩm Khê)', '29/10/2026', '16:30', 'Tầng +60m Vỉa Bắc', 'Tầng +60m',
@@ -692,44 +697,60 @@ func Seed() {
 			]'::jsonb,
 			false, '',
 			false, 0, false, 0, '', '',
-			91200000, 29000000, 9800000, 4200000, 134200000, 11669, 4668, 'Đã nạp thuốc xong, đang chờ phát hiệu lệnh còi đợt 2'
+			91200000, 29000000, 9800000, 4200000, 134200000, 11669, 4668, 'Đã nạp thuốc xong, đang chờ phát hiệu lệnh còi đợt 2', 'MO-PT-01'
 		),
 		(
-			'BLAST-04', 'HC-20261030-01', 'Mỏ 1 (Thanh Ba)', '30/10/2026', '11:30', 'Tầng +45m Vỉa Đông', 'Tầng +45m',
-			40, 12.0, 105, 3.2, 3.5, 3.0, 3.2, 'f = 10 - 12 (Đá vôi)', 'Vi sai phi điện MS', 25,
-			3600, 420, 40, 9200, 0.436, 9450,
-			'Đã xử lý mìn câm', 'COMPLETED', 'Nguyễn Văn Hùng', 'CH-VLNCN-2024-089', '28/10/2027', 'Lê Hữu Thắng (GĐ Mỏ)', '29/10/2026 15:30',
-			'GP-118-SCT-2026', 180, 146.5, 33.5,
-			450, true, true, 'TB-20261029-UBND/CA', true, true, true,
+			'BLAST-TU-01', 'HC-20261101-TU01', 'Mỏ đá Tân Uyên (Bình Dương)', '01/11/2026', '11:30', 'Tầng +35m Khai trường Đông', 'Tầng +35m',
+			45, 12.0, 105, 3.2, 3.5, 3.0, 3.2, 'f = 11 - 13 (Đá Andesit Tân Uyên)', 'Vi sai phi điện MS', 25,
+			4100, 480, 45, 10500, 0.436, 10800,
+			'Đã nghiệm thu', 'COMPLETED', 'Phạm Văn Hùng', 'CH-VLNCN-2025-019', '15/09/2027', 'Trần Văn Long (GĐ Mỏ Tân Uyên)', '31/10/2026 16:00',
+			'GP-204-SCT-BD', 200, 155.0, 45.0,
+			450, true, true, 'TB-20261031-UBND/CA-TU', true, true, true,
 			'[
-				{"postName":"Trạm 1: Ngã 3 Đông","guardPerson":"Vũ Văn Lợi","phone":"0987123451","distanceFromPitM":450,"status":"Đã chốt chặn","checkedInAt":"11:00"},
-				{"postName":"Trạm 2: Đỉnh vách Đông","guardPerson":"Trần Đình Tuấn","phone":"0987123452","distanceFromPitM":480,"status":"Đã chốt chặn","checkedInAt":"11:05"}
+				{"postName":"Trạm 1: Cổng trạm nghiền Tân Uyên","guardPerson":"Nguyễn Văn Tâm","phone":"0987333111","distanceFromPitM":450,"status":"Đã chốt chặn","checkedInAt":"11:00"},
+				{"postName":"Trạm 2: Ranh giới ĐT 746","guardPerson":"Lê Thanh Phong","phone":"0987333222","distanceFromPitM":500,"status":"Đã chốt chặn","checkedInAt":"11:05"}
 			]'::jsonb,
 			'[
-				{"materialName":"Thuốc nổ ANFO","category":"Thuốc nổ","batchLotNo":"LOT-ANFO-MICCO-2026-10","supplier":"Tổng Công Ty MICCO","plannedQty":3600,"issuedQty":3700,"actualUsedQty":3600,"returnedQty":100,"discrepancy":0,"unit":"kg","expiryDate":"15/06/2027","returnStatus":"Đã nhập kho 15:10"},
-				{"materialName":"Thuốc nổ nhũ tương bổ sung khử mìn câm","category":"Thuốc nổ","batchLotNo":"LOT-EMU-GAET-0926","supplier":"Tổng Công Ty GAET","plannedQty":420,"issuedQty":430,"actualUsedQty":425,"returnedQty":5,"discrepancy":0,"unit":"kg","expiryDate":"20/08/2027","returnStatus":"Đã nhập kho 15:10"},
-				{"materialName":"Kíp nổ vi sai phi điện","category":"Kíp nổ","batchLotNo":"LOT-KIP-2026-441","supplier":"Hóa chất 21","plannedQty":40,"issuedQty":42,"actualUsedQty":41,"returnedQty":1,"discrepancy":0,"unit":"quả","expiryDate":"30/12/2027","returnStatus":"Đã nhập kho 15:10"}
+				{"materialName":"Thuốc nổ ANFO chịu nước","category":"Thuốc nổ","batchLotNo":"LOT-ANFO-MICCO-TU-01","supplier":"Tổng Công Ty MICCO Miền Nam","plannedQty":4100,"issuedQty":4100,"actualUsedQty":4100,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"20/09/2027","returnStatus":"Đã sử dụng hết"},
+				{"materialName":"Thuốc nổ nhũ tương mồi","category":"Thuốc nổ","batchLotNo":"LOT-EMU-GAET-TU-02","supplier":"Tổng Công Ty GAET","plannedQty":480,"issuedQty":480,"actualUsedQty":480,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"15/10/2027","returnStatus":"Đã sử dụng hết"},
+				{"materialName":"Kíp nổ vi sai phi điện","category":"Kíp nổ","batchLotNo":"LOT-KIP-TU-2026","supplier":"Hóa chất 21","plannedQty":45,"issuedQty":45,"actualUsedQty":45,"returnedQty":0,"discrepancy":0,"unit":"quả","expiryDate":"30/12/2027","returnStatus":"Đã sử dụng hết"}
 			]'::jsonb,
-			true, '15:10',
-			true, 25, true, 1, 'Phát hiện 01 lỗ mìn câm tại mép ngoài hàng số 1 (do đá nứt đứt ống dẫn tín hiệu phi điện)', 'Đã duy trì phong tỏa bán kính 450m; Chỉ huy nổ mìn tiến hành thổi rửa 1.5m bua bằng khí nén áp lực thấp, nạp bổ sung 1 thỏi mồi nhũ tương 0.2kg + 1 kíp nổ mới và kích nổ khử hủy thành công lúc 13h15. Biên bản an toàn số BB-MC-01/2026.',
-			74500000, 23800000, 8200000, 4500000, 111000000, 11746, 4698, 'Đã xử lý dứt điểm mìn câm theo quy chuẩn QCVN 01:2019/BCT, mặt bằng bãi mìn an toàn'
+			true, '14:30',
+			true, 20, false, 0, 'Bãi nổ mỏ Tân Uyên an toàn tuyệt đối', 'Đạt QCVN 01:2019/BCT',
+			84500000, 26000000, 8900000, 3800000, 123200000, 11407, 4562, 'Cung cấp đá cấp phối cho đường Vành Đai 3 TP.HCM', 'MO-TU-02'
 		),
 		(
-			'BLAST-05', 'HC-20261102-01', 'Mỏ 2 (Cẩm Khê)', '02/11/2026', '11:30', 'Tầng +50m Moong Khai thác', 'Tầng +50m',
-			50, 12.0, 115, 3.2, 3.6, 3.0, 3.2, 'f = 11 - 13 (Đá vôi hoa hóa)', 'Vi sai phi điện MS', 25,
-			4600, 500, 50, 11200, 0.435, 0,
-			'Chờ duyệt Hộ chiếu', 'WAITING_APPROVAL', 'Hoàng Minh Đức', 'CH-VLNCN-2025-045', '12/03/2028', '', '',
-			'GP-1506-SCT-2026', 150, 98.5, 51.5,
-			450, false, false, 'Dự thảo gửi UBND/CA', false, false, false,
-			'[]'::jsonb,
-			'[
-				{"materialName":"Thuốc nổ ANFO","category":"Thuốc nổ","batchLotNo":"Dự trù","supplier":"Tổng Công Ty MICCO","plannedQty":4600,"issuedQty":0,"actualUsedQty":0,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"-","returnStatus":"Chưa cấp phát"},
-				{"materialName":"Thuốc nổ nhũ tương","category":"Thuốc nổ","batchLotNo":"Dự trù","supplier":"Tổng Công Ty GAET","plannedQty":500,"issuedQty":0,"actualUsedQty":0,"returnedQty":0,"discrepancy":0,"unit":"kg","expiryDate":"-","returnStatus":"Chưa cấp phát"},
-				{"materialName":"Kíp nổ vi sai phi điện","category":"Kíp nổ","batchLotNo":"Dự trù","supplier":"Hóa chất 21","plannedQty":50,"issuedQty":0,"actualUsedQty":0,"returnedQty":0,"discrepancy":0,"unit":"quả","expiryDate":"-","returnStatus":"Chưa cấp phát"}
-			]'::jsonb,
-			false, '',
-			false, 0, false, 0, '', '',
-			92800000, 28500000, 9500000, 3800000, 134600000, 12017, 4807, 'Đã hoàn thiện hồ sơ thiết kế mạng lỗ khoan, trình GĐ phê duyệt'
+			'BLAST-TU-02', 'HC-20261025-TU02', 'Mỏ đá Tân Uyên (Bình Dương)', '25/10/2026', '11:30', 'Tầng +20m Khai trường Nam', 'Tầng +20m',
+			38, 11.5, 105, 3.0, 3.5, 3.0, 3.0, 'f = 11 - 13 (Đá Andesit)', 'Vi sai phi điện MS', 25,
+			3500, 420, 38, 8800, 0.435, 9150,
+			'Đã nghiệm thu', 'COMPLETED', 'Đặng Quốc Tuấn', 'CH-VLNCN-2024-042', '20/11/2027', 'Trần Văn Long (GĐ Mỏ Tân Uyên)', '24/10/2026 15:00',
+			'GP-204-SCT-BD', 200, 150.9, 49.1,
+			450, true, true, 'TB-20261024-UBND/CA-TU', true, true, true,
+			'[]'::jsonb, '[]'::jsonb,
+			true, '14:00', true, 20, false, 0, 'An toàn', 'Nghiệm thu thành công',
+			72000000, 22000000, 7800000, 3200000, 105000000, 11475, 4590, 'Khai thác vỉa đá cứng tầng +20m Tân Uyên', 'MO-TU-02'
+		),
+		(
+			'BLAST-HN-01', 'HC-20261026-HN01', 'Mỏ đá Kiện Khê (Hà Nam)', '26/10/2026', '11:30', 'Tầng +65m Núi Cả', 'Tầng +65m',
+			52, 13.5, 115, 3.2, 3.8, 3.2, 3.5, 'f = 12 - 14 (Đá vôi Kiện Khê rắn)', 'Vi sai phi điện MS', 25,
+			5100, 600, 52, 12800, 0.438, 13400,
+			'Đã nghiệm thu', 'COMPLETED', 'Vũ Đình Trọng', 'CH-VLNCN-2024-071', '10/08/2027', 'Đinh Tiến Dũng (GĐ Mỏ Hà Nam)', '25/10/2026 14:00',
+			'GP-089-SCT-HN', 220, 168.5, 51.5,
+			500, true, true, 'TB-20261025-UBND/CA-KK', true, true, true,
+			'[]'::jsonb, '[]'::jsonb,
+			true, '15:00', true, 25, false, 0, 'Bãi mìn an toàn', 'Nghiệm thu QCVN',
+			105000000, 32000000, 11000000, 4500000, 152500000, 11380, 4552, 'Phục vụ trạm nghiền xi măng Xuân Thành & đá 1x2', 'MO-HN-03'
+		),
+		(
+			'BLAST-HN-02', 'HC-20261031-HN02', 'Mỏ đá Kiện Khê (Hà Nam)', '31/10/2026', '16:30', 'Tầng +40m Vỉa Tây', 'Tầng +40m',
+			44, 12.0, 115, 3.2, 3.6, 3.0, 3.2, 'f = 12 - 14 (Đá vôi)', 'Vi sai phi điện MS', 25,
+			4200, 500, 44, 10200, 0.436, 10600,
+			'Đã xử lý mìn câm', 'COMPLETED', 'Lê Văn Nam', 'CH-VLNCN-2025-033', '05/06/2028', 'Đinh Tiến Dũng (GĐ Mỏ Hà Nam)', '30/10/2026 15:30',
+			'GP-089-SCT-HN', 220, 173.6, 46.4,
+			500, true, true, 'TB-20261030-UBND/CA-KK', true, true, true,
+			'[]'::jsonb, '[]'::jsonb,
+			true, '15:30', true, 20, true, 1, 'Phát hiện 01 lỗ kíp không nổ tại mép vỉa', 'Thổi rửa bua bằng áp lực khí và khử mìn an toàn',
+			86500000, 27500000, 9200000, 4000000, 127200000, 12000, 4800, 'Khai trường phía Tây moong Kiện Khê', 'MO-HN-03'
 		)
 		ON CONFLICT (id) DO UPDATE SET 
 			code = EXCLUDED.code,
@@ -800,14 +821,32 @@ func Seed() {
 		('PLANT-TU-01', 'Dây Chuyền Nghiền Sỏi Đồi & Hàm Tân Uyên TU-01 (300T/h)', 300, 2150, 2795, 1.30, '[{"productName":"Sỏi nghiền bê tông 1x2","producedTons":1075,"yieldPercent":50,"standardRate":48},{"productName":"Cát đồi tuyển rửa Becamex","producedTons":645,"yieldPercent":30,"standardRate":30},{"productName":"Đá 4x6 hạ tầng KCN","producedTons":430,"yieldPercent":20,"standardRate":22}]'::jsonb, 'MO-TU-02'),
 		('PLANT-BP-01', 'Dây Chuyền Nghiền Đá Bazan Chơn Thành BP-01 (400T/h)', 400, 2890, 3757, 1.30, '[{"productName":"Đá Bazan 1x2 thảm nhựa","producedTons":1445,"yieldPercent":50,"standardRate":48},{"productName":"Đá Base loại 1 cấp phối","producedTons":867,"yieldPercent":30,"standardRate":30},{"productName":"Cát mạt bazan lu lèn","producedTons":578,"yieldPercent":20,"standardRate":22}]'::jsonb, 'MO-BP-04')`,
 
-		`DELETE FROM equipment_fuel_logs WHERE id IN ('FUEL-01', 'FUEL-02', 'FUEL-03', 'FUEL-04', 'FUEL-05')`,
-		`INSERT INTO equipment_fuel_logs (id, equipment_code, equipment_name, category, operator_name, hours_worked_today, total_hours_meter, fuel_quota_liters_per_hour, actual_fuel_issued_liters, actual_fuel_consumed_liters, fuel_variance_liters, variance_status, location, maintenance_status, tank_capacity_liters, current_fuel_liters, last_dispense_at, next_maintenance_hours, engine_specs, fuel_dispense_logs) VALUES
-		('FUEL-01', 'EQ-EXC-01', 'Máy Xúc Bánh Xích Komatsu PC450 #01', 'Máy xúc moong', 'Nguyễn Văn Dũng', 7.5, 4820.5, 32.0, 240, 234.5, -5.5, 'Tiết kiệm (-5.5L)', 'Moong Khai Thác Tầng 3', 'Bảo dưỡng định kỳ A', 650, 480, '28/10/2026 06:15', 5000, '{"engineModel":"Komatsu SAA6D125E-5","ratedPower":"345 HP","bucketCapacity":"2.1 m³","emissionStandard":"Tier 3 / Euro III"}'::jsonb, '[{"ticketCode":"PBD-20261028-001","dispensedAt":"28/10/2026 06:15","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":240,"hourMeterAtDispense":4813.0,"operatorName":"Nguyễn Văn Dũng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu đầu ca sáng tại moong"},{"ticketCode":"PBD-20261027-002","dispensedAt":"27/10/2026 06:20","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":235,"hourMeterAtDispense":4805.5,"operatorName":"Nguyễn Văn Dũng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu ca sáng"}]'::jsonb),
-		('FUEL-02', 'EQ-EXC-02', 'Máy Xúc Bánh Xích Hitachi ZX350 #02', 'Máy xúc moong', 'Trần Văn Kiên', 8.0, 3915.0, 28.0, 224, 221.0, -3.0, 'Tiết kiệm (-3.0L)', 'Moong Khai Thác Tầng 2', 'Hoạt động tốt', 560, 410, '28/10/2026 06:30', 4200, '{"engineModel":"Isuzu AH-6HK1XYSA-01","ratedPower":"271 HP","bucketCapacity":"1.6 m³","emissionStandard":"Tier 3"}'::jsonb, '[{"ticketCode":"PBD-20261028-002","dispensedAt":"28/10/2026 06:30","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":224,"hourMeterAtDispense":3907.0,"operatorName":"Trần Văn Kiên","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu ca sáng tầng 2"}]'::jsonb),
-		('FUEL-03', 'EQ-TRK-01', 'Xe Ben Howo 371HP 8x4 #01', 'Xe ben nội bộ', 'Lê Hữu Thắng', 8.0, 5210.0, 14.5, 120, 116.0, -4.0, 'Tiết kiệm (-4.0L)', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt', 400, 284, '28/10/2026 06:45', 5500, '{"engineModel":"Sinotruk WD615.47","ratedPower":"371 HP","payload":"30 Tấn","chassisConfig":"8x4 Cầu đúc CNHTC","emissionStandard":"Euro V"}'::jsonb, '[{"ticketCode":"PBD-20261028-003","dispensedAt":"28/10/2026 06:45","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":120,"hourMeterAtDispense":5202.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu đầu ca sáng đầy bình"},{"ticketCode":"PBD-20261027-011","dispensedAt":"27/10/2026 06:30","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":115,"hourMeterAtDispense":5194.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu ca sáng"},{"ticketCode":"PBD-20261026-008","dispensedAt":"26/10/2026 06:35","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":118,"hourMeterAtDispense":5186.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Nguyễn Văn Bình","fuelBatch":"Lô DO 0.05S Petrolimex #43","notes":"Cấp lưu động tại bãi xúc moong"}]'::jsonb),
-		('FUEL-04', 'EQ-TRK-02', 'Xe Ben Howo 371HP 8x4 #02', 'Xe ben nội bộ', 'Hoàng Minh Đức', 8.0, 4980.0, 14.5, 120, 118.5, -1.5, 'Đạt định mức', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt', 400, 260, '28/10/2026 06:55', 5200, '{"engineModel":"Sinotruk WD615.47","ratedPower":"371 HP","payload":"30 Tấn","chassisConfig":"8x4 Cầu đúc CNHTC","emissionStandard":"Euro V"}'::jsonb, '[{"ticketCode":"PBD-20261028-004","dispensedAt":"28/10/2026 06:55","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":120,"hourMeterAtDispense":4972.0,"operatorName":"Hoàng Minh Đức","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu ca sáng đầy bình"}]'::jsonb),
-		('FUEL-05', 'EQ-DRL-01', 'Dàn Khoan Thủy Lực Furukawa D45', 'Máy khoan tự hành', 'Phạm Văn Nam', 6.5, 2150.0, 22.0, 145, 142.0, -3.0, 'Tiết kiệm (-3.0L)', 'Tầng +45m Khai trường Tây', 'Hoạt động tốt', 450, 310, '28/10/2026 07:10', 2500, '{"engineModel":"Caterpillar C7.1 ACERT","ratedPower":"225 HP","holeDiameter":"90-115 mm","drillDepthMax":"25 m"}'::jsonb, '[{"ticketCode":"PBD-20261028-005","dispensedAt":"28/10/2026 07:10","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":145,"hourMeterAtDispense":2143.5,"operatorName":"Phạm Văn Nam","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu khoan tầng +45m"}]'::jsonb)
-		ON CONFLICT (id) DO NOTHING`,
+		`DELETE FROM equipment_fuel_logs WHERE id IN ('FUEL-01', 'FUEL-02', 'FUEL-03', 'FUEL-04', 'FUEL-05', 'FUEL-TU-01', 'FUEL-TU-02', 'FUEL-HN-01', 'FUEL-HN-02')`,
+		`INSERT INTO equipment_fuel_logs (id, equipment_code, equipment_name, category, operator_name, hours_worked_today, total_hours_meter, fuel_quota_liters_per_hour, actual_fuel_issued_liters, actual_fuel_consumed_liters, fuel_variance_liters, variance_status, location, maintenance_status, tank_capacity_liters, current_fuel_liters, last_dispense_at, next_maintenance_hours, engine_specs, fuel_dispense_logs, quarry_code) VALUES
+		('FUEL-01', 'EQ-EXC-01', 'Máy Xúc Bánh Xích Komatsu PC450 #01', 'Máy xúc moong', 'Nguyễn Văn Dũng', 7.5, 4820.5, 32.0, 240, 234.5, -5.5, 'Tiết kiệm (-5.5L)', 'Moong Khai Thác Tầng 3', 'Bảo dưỡng định kỳ A', 650, 480, '28/10/2026 06:15', 5000, '{"engineModel":"Komatsu SAA6D125E-5","ratedPower":"345 HP","bucketCapacity":"2.1 m³","emissionStandard":"Tier 3 / Euro III"}'::jsonb, '[{"ticketCode":"PBD-20261028-001","dispensedAt":"28/10/2026 06:15","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":240,"hourMeterAtDispense":4813.0,"operatorName":"Nguyễn Văn Dũng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu đầu ca sáng tại moong"},{"ticketCode":"PBD-20261027-002","dispensedAt":"27/10/2026 06:20","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":235,"hourMeterAtDispense":4805.5,"operatorName":"Nguyễn Văn Dũng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu ca sáng"}]'::jsonb, 'MO-PT-01'),
+		('FUEL-02', 'EQ-EXC-02', 'Máy Xúc Bánh Xích Hitachi ZX350 #02', 'Máy xúc moong', 'Trần Văn Kiên', 8.0, 3915.0, 28.0, 224, 221.0, -3.0, 'Tiết kiệm (-3.0L)', 'Moong Khai Thác Tầng 2', 'Hoạt động tốt', 560, 410, '28/10/2026 06:30', 4200, '{"engineModel":"Isuzu AH-6HK1XYSA-01","ratedPower":"271 HP","bucketCapacity":"1.6 m³","emissionStandard":"Tier 3"}'::jsonb, '[{"ticketCode":"PBD-20261028-002","dispensedAt":"28/10/2026 06:30","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":224,"hourMeterAtDispense":3907.0,"operatorName":"Trần Văn Kiên","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu ca sáng tầng 2"}]'::jsonb, 'MO-PT-01'),
+		('FUEL-03', 'EQ-TRK-01', 'Xe Ben Howo 371HP 8x4 #01', 'Xe ben nội bộ', 'Lê Hữu Thắng', 8.0, 5210.0, 14.5, 120, 116.0, -4.0, 'Tiết kiệm (-4.0L)', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt', 400, 284, '28/10/2026 06:45', 5500, '{"engineModel":"Sinotruk WD615.47","ratedPower":"371 HP","payload":"30 Tấn","chassisConfig":"8x4 Cầu đúc CNHTC","emissionStandard":"Euro V"}'::jsonb, '[{"ticketCode":"PBD-20261028-003","dispensedAt":"28/10/2026 06:45","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":120,"hourMeterAtDispense":5202.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu đầu ca sáng đầy bình"},{"ticketCode":"PBD-20261027-011","dispensedAt":"27/10/2026 06:30","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":115,"hourMeterAtDispense":5194.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu ca sáng"},{"ticketCode":"PBD-20261026-008","dispensedAt":"26/10/2026 06:35","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":118,"hourMeterAtDispense":5186.0,"operatorName":"Lê Hữu Thắng","officerInCharge":"Nguyễn Văn Bình","fuelBatch":"Lô DO 0.05S Petrolimex #43","notes":"Cấp lưu động tại bãi xúc moong"}]'::jsonb, 'MO-PT-01'),
+		('FUEL-04', 'EQ-TRK-02', 'Xe Ben Howo 371HP 8x4 #02', 'Xe ben nội bộ', 'Hoàng Minh Đức', 8.0, 4980.0, 14.5, 120, 118.5, -1.5, 'Đạt định mức', 'Tuyến Moong ➔ Trạm Nghiền', 'Hoạt động tốt', 400, 260, '28/10/2026 06:55', 5200, '{"engineModel":"Sinotruk WD615.47","ratedPower":"371 HP","payload":"30 Tấn","chassisConfig":"8x4 Cầu đúc CNHTC","emissionStandard":"Euro V"}'::jsonb, '[{"ticketCode":"PBD-20261028-004","dispensedAt":"28/10/2026 06:55","dispenserStation":"Cột bơm điện tử thông minh Số 01","liters":120,"hourMeterAtDispense":4972.0,"operatorName":"Hoàng Minh Đức","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S Petrolimex #44","notes":"Cấp dầu ca sáng đầy bình"}]'::jsonb, 'MO-PT-01'),
+		('FUEL-05', 'EQ-DRL-01', 'Dàn Khoan Thủy Lực Furukawa D45', 'Máy khoan tự hành', 'Phạm Văn Nam', 6.5, 2150.0, 22.0, 145, 142.0, -3.0, 'Tiết kiệm (-3.0L)', 'Tầng +45m Khai trường Tây', 'Hoạt động tốt', 450, 310, '28/10/2026 07:10', 2500, '{"engineModel":"Caterpillar C7.1 ACERT","ratedPower":"225 HP","holeDiameter":"90-115 mm","drillDepthMax":"25 m"}'::jsonb, '[{"ticketCode":"PBD-20261028-005","dispensedAt":"28/10/2026 07:10","dispenserStation":"Xe bồn cấp phát lưu động 15m³","liters":145,"hourMeterAtDispense":2143.5,"operatorName":"Phạm Văn Nam","officerInCharge":"Phạm Quốc Tuấn","fuelBatch":"Lô DO 0.05S #44","notes":"Cấp dầu khoan tầng +45m"}]'::jsonb, 'MO-PT-01'),
+		('FUEL-TU-01', 'EQ-TU-EX01', 'Máy Xúc Bánh Xích Komatsu PC800 (Mỏ Tân Uyên)', 'Máy xúc moong', 'Trần Văn Tấn', 8.5, 3420.0, 38.0, 320, 314.0, -6.0, 'Tiết kiệm (-6.0L)', 'Moong Khai Thác Tân Uyên Tầng 2', 'Hoạt động tốt', 800, 620, '28/10/2026 06:20', 4000, '{"engineModel":"Komatsu SAA6D140E-5","ratedPower":"487 HP","bucketCapacity":"3.5 m³"}'::jsonb, '[]'::jsonb, 'MO-TU-02'),
+		('FUEL-TU-02', 'EQ-TU-TR01', 'Xe Ben Scania G460 61C-882.19 (Mỏ Tân Uyên)', 'Xe ben nội bộ', 'Lê Hữu Nghĩa', 8.0, 2980.0, 16.0, 130, 126.5, -3.5, 'Tiết kiệm (-3.5L)', 'Tuyến Nội Bộ Tân Uyên ➔ Trạm Sỏi', 'Hoạt động tốt', 450, 330, '28/10/2026 06:40', 3500, '{"engineModel":"Scania DC13 115","ratedPower":"460 HP","payload":"35 Tấn"}'::jsonb, '[]'::jsonb, 'MO-TU-02'),
+		('FUEL-HN-01', 'EQ-HN-EX01', 'Máy Xúc Bánh Xích Komatsu PC1250 (Mỏ Kiện Khê)', 'Máy xúc moong', 'Đinh Văn Long', 8.5, 4120.0, 48.0, 410, 402.0, -8.0, 'Tiết kiệm (-8.0L)', 'Moong Núi Cả - Kiện Khê Hà Nam', 'Hoạt động tốt', 1100, 850, '28/10/2026 06:15', 4500, '{"engineModel":"Komatsu SAA6D170E-5","ratedPower":"672 HP","bucketCapacity":"5.0 m³"}'::jsonb, '[]'::jsonb, 'MO-HN-03'),
+		('FUEL-HN-02', 'EQ-HN-TR01', 'Xe Ben Shacman X3000 90C-112.44 (Mỏ Hà Nam)', 'Xe ben nội bộ', 'Nguyễn Tiến Hưng', 8.0, 3650.0, 15.0, 120, 118.0, -2.0, 'Đạt định mức', 'Tuyến Núi Cả ➔ Trạm Nghiền Côn', 'Hoạt động tốt', 400, 290, '28/10/2026 06:30', 4000, '{"engineModel":"Weichai WP12.375E50","ratedPower":"375 HP","payload":"32 Tấn"}'::jsonb, '[]'::jsonb, 'MO-HN-03')
+		ON CONFLICT (id) DO UPDATE SET
+			equipment_code = EXCLUDED.equipment_code,
+			equipment_name = EXCLUDED.equipment_name,
+			category = EXCLUDED.category,
+			operator_name = EXCLUDED.operator_name,
+			hours_worked_today = EXCLUDED.hours_worked_today,
+			fuel_quota_liters_per_hour = EXCLUDED.fuel_quota_liters_per_hour,
+			actual_fuel_issued_liters = EXCLUDED.actual_fuel_issued_liters,
+			actual_fuel_consumed_liters = EXCLUDED.actual_fuel_consumed_liters,
+			variance_status = EXCLUDED.variance_status,
+			location = EXCLUDED.location,
+			maintenance_status = EXCLUDED.maintenance_status,
+			tank_capacity_liters = EXCLUDED.tank_capacity_liters,
+			current_fuel_liters = EXCLUDED.current_fuel_liters,
+			quarry_code = EXCLUDED.quarry_code`,
 
 
 		`INSERT INTO mining_permits (id, code, title, mine_name, category, category_label, issuer, license_number, issue_date, expiry_date, capacity, approved_reserve, mined_so_far, mined_percent, depth_level, area, coordinates, status, status_label, days_remaining, files, notes) VALUES

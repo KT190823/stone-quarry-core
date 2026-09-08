@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"mo-da-backend/internal/database"
+	"mo-da-backend/internal/services"
 )
 
 type BusinessIssue struct {
@@ -581,4 +583,71 @@ func formatVNDText(v float64) string {
 		return fmt.Sprintf("%.1f Triệu VNĐ", v/1_000_000)
 	}
 	return fmt.Sprintf("%.0f VNĐ", v)
+}
+
+type ExecuteActionRequest struct {
+	Action        string  `json:"action"`
+	TargetType    string  `json:"targetType"`
+	TargetID      string  `json:"targetId"`
+	Note          *string `json:"note,omitempty"`
+	SignatureData *string `json:"signatureData,omitempty"`
+}
+
+type ExecuteActionResult struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+func ExecuteActionHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req ExecuteActionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	noteStr := ""
+	if req.Note != nil {
+		noteStr = *req.Note
+	}
+
+	switch req.TargetType {
+	case "esign":
+		esignSvc := &services.EsignService{}
+		switch req.Action {
+		case "approve":
+			sigData := "LEADER_STORED_DIGITAL_SIGNATURE"
+			if req.SignatureData != nil && *req.SignatureData != "" {
+				sigData = *req.SignatureData
+			}
+			_, err := esignSvc.SignDocument(req.TargetID, "admin", sigData, noteStr)
+			if err != nil {
+				JSON(w, ExecuteActionResult{Success: false, Message: err.Error()})
+				return
+			}
+		case "reject":
+			_, err := esignSvc.RejectDocument(req.TargetID, noteStr)
+			if err != nil {
+				JSON(w, ExecuteActionResult{Success: false, Message: err.Error()})
+				return
+			}
+		case "delegate":
+			_, err := esignSvc.DelegateDocument(req.TargetID, "admin", "thuynt", noteStr)
+			if err != nil {
+				JSON(w, ExecuteActionResult{Success: false, Message: err.Error()})
+				return
+			}
+		}
+	case "alert":
+		_, _ = database.Pool.Exec(ctx, `UPDATE alerts SET status='resolved', resolution_note=$1 WHERE id=$2`, noteStr, req.TargetID)
+	}
+
+	JSON(w, ExecuteActionResult{
+		Success: true,
+		Message: fmt.Sprintf("Thao tác %s thành công cho %s", req.Action, req.TargetID),
+	})
 }

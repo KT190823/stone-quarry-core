@@ -365,6 +365,30 @@ func (s *EsignService) DelegateDocument(docIDOrCode, fromSignerID, toSignerID, r
 	return out, nil
 }
 
+func (s *EsignService) RejectDocument(docIDOrCode, reason string) (map[string]interface{}, error) {
+	ctx := context.Background()
+	now := time.Now().Format("02/01/2006 15:04")
+
+	var docID string
+	err := database.Pool.QueryRow(ctx,
+		`SELECT id FROM hr_esign_documents WHERE id=$1 OR code=$1 LIMIT 1`, docIDOrCode).Scan(&docID)
+	if err != nil {
+		docID = docIDOrCode
+	}
+
+	_, _ = database.Pool.Exec(ctx,
+		`UPDATE hr_esign_signers SET sign_status='tu_choi', sign_date=$1, sign_note=$2 WHERE document_id=$3 AND sign_status='cho_ky'`,
+		now, reason, docID)
+
+	_, _ = database.Pool.Exec(ctx, `UPDATE hr_esign_documents SET status='tu_choi' WHERE id=$1`, docID)
+
+	var data []byte
+	_ = database.Pool.QueryRow(ctx, `SELECT row_to_json(t) FROM (SELECT * FROM hr_esign_documents WHERE id=$1) t`, docID).Scan(&data)
+	var out map[string]interface{}
+	jsonUnmarshal(data, &out)
+	return out, nil
+}
+
 // ---------------------- Insurance ----------------------
 
 type InsuranceService struct{}

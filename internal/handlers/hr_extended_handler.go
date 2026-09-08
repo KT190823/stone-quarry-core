@@ -245,6 +245,7 @@ func (h *HrExtendedHandler) Register(mux *http.ServeMux) {
 	reg("GET /api/hr-ext/esign-documents/{id}", G(h.esignDocSvc))
 	reg("POST /api/hr-ext/esign-documents", h.EsignCreate)
 	reg("POST /api/hr-ext/esign-documents/{id}/sign", h.EsignDocSign)
+	reg("POST /api/hr-ext/esign-documents/{id}/reject", h.EsignDocReject)
 	reg("POST /api/hr-ext/esign-documents/{id}/delegate", h.EsignDocDelegate)
 	reg("GET /api/hr-ext/esign-signers", L(h.esignSignerSvc))
 	reg("PATCH /api/hr-ext/esign-signers/{id}", h.EsignSign)
@@ -438,6 +439,21 @@ func (h *HrExtendedHandler) EsignDocDelegate(w http.ResponseWriter, r *http.Requ
 	reason, _ := data["reason"].(string)
 
 	result, err := h.esignSrv.DelegateDocument(id, fromSignerID, toSignerID, reason)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	JSON(w, result)
+}
+
+func (h *HrExtendedHandler) EsignDocReject(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	data, _ := readJSON(r)
+	reason, _ := data["reason"].(string)
+	if reason == "" {
+		reason, _ = data["note"].(string)
+	}
+	result, err := h.esignSrv.RejectDocument(id, reason)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
