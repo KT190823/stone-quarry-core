@@ -2057,5 +2057,8 @@ func seedTradeAndWarehouse(ctx context.Context) {
 			WHERE bien_so = '19C-128.45';
 		`)
 	}
+
+	// Seed comprehensive monthly quarry tickets, trips, vouchers, costs, fuel, attendances & alerts
+	SeedMonthlyQuarryData()
 }
 

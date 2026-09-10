@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,11 +13,34 @@ import (
 )
 
 func main() {
+	seedOnly := flag.Bool("seed", false, "Chỉ chạy seed dữ liệu rồi kết thúc")
+	withSeed := flag.Bool("with-seed", false, "Chạy seed dữ liệu trước khi khởi động API server")
+	flag.Parse()
+
+	// Hỗ trợ cả kiểu lệnh subcommand: `go run . seed` hoặc biến môi trường SEED=true
+	if len(os.Args) > 1 && os.Args[1] == "seed" {
+		*seedOnly = true
+	}
+	if os.Getenv("SEED") == "true" {
+		*withSeed = true
+	}
+
 	database.Connect()
 	defer database.Close()
 
 	database.Migrate()
-	database.Seed()
+
+	if *seedOnly {
+		log.Println("🌱 Bắt đầu nạp dữ liệu mẫu (Database Seed)...")
+		database.Seed()
+		log.Println("✅ Hoàn tất nạp dữ liệu mẫu thành công!")
+		return
+	}
+
+	if *withSeed {
+		log.Println("🌱 Nạp dữ liệu mẫu trước khi khởi động máy chủ...")
+		database.Seed()
+	}
 
 	mux := http.NewServeMux()
 
