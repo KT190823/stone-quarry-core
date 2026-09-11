@@ -619,22 +619,71 @@ func Seed() {
 				('28/10/2026 09:30', 'kientv', 'kientv', 'Trần Văn Kiên', 'Lập hộ chiếu nổ mìn Moong tầng 3', 'PASSPORT-BLAST-1026-01', '192.168.1.105', 'Thành công'),
 			('28/10/2026 09:15', 'admin', 'admin', 'Nguyễn Đức Trường', 'Duyệt kế hoạch khai thác tháng 10', 'PLAN-Q4-2026-01', '192.168.1.10', 'Thành công'),
 			('28/10/2026 08:45', 'thuynt', 'thuynt', 'Nguyễn Thị Thủy', 'Xuất hóa đơn điện tử VAT', 'INV-20261028-0082', '192.168.1.50', 'Thành công');
-
-			INSERT INTO reports (id, name, item, type, period, plan, actual, diff, unit, status) VALUES
-			('REP-01', 'Báo cáo sản lượng khai thác đá nguyên khai', 'Đá nguyên khai', 'Sản xuất', 'Tháng 10/2026', 120000, 128500, '+7.1%', 'tấn', 'Hoàn thành'),
-			('REP-02', 'Báo cáo nghiền sàng đá thành phẩm', 'Đá 1x2, 4x6, Base', 'Chế biến', 'Tháng 10/2026', 95000, 98200, '+3.4%', 'tấn', 'Hoàn thành'),
-			('REP-03', 'Báo cáo tiêu hao nhiên liệu cơ giới', 'Dầu DO 0.05S', 'Nhiên liệu', 'Tháng 10/2026', 42000, 44850, '+6.8%', 'Lít', 'Cần kiểm tra'),
-			('REP-04', 'Báo cáo xuất bán & đối soát công nợ', 'Doanh thu xuất mỏ', 'Tài chính', 'Tháng 10/2026', 28500000000, 29800000000, '+4.6%', 'VNĐ', 'Hoàn thành')
-			ON CONFLICT (id) DO UPDATE SET plan = EXCLUDED.plan, actual = EXCLUDED.actual, diff = EXCLUDED.diff, unit = EXCLUDED.unit;
-
-			INSERT INTO settings (code, key, name, val, scope, status) VALUES
-			('SET-01', 'WEIGH_TOLERANCE_KG', 'Dung sai bì trạm cân cho phép (kg)', '50', 'Trạm Cân', 'Hoạt động'),
-			('SET-02', 'GEOFENCE_RADIUS_METERS', 'Bán kính Geofence trạm bãi xe (mét)', '20', 'Định Vị GPS', 'Hoạt động'),
-			('SET-03', 'FUEL_THEFT_THRESHOLD_LITERS', 'Ngưỡng cảnh báo sụt dầu bất thường (lít)', '5.0', 'Nhiên Liệu', 'Hoạt động'),
-			('SET-04', 'OCR_ANPR_CONFIDENCE_MIN', 'Độ tin cậy nhận diện biển số AI OCR (%)', '92', 'Camera AI', 'Hoạt động')
-			ON CONFLICT (code) DO NOTHING;
 		`)
 	}
+
+	// Unconditional Seed for Reports (All 4 Quarries & TTC-ALL)
+	Pool.Exec(ctx, `
+		DELETE FROM reports WHERE id IN ('REP-01', 'REP-02', 'REP-03', 'REP-04');
+
+		INSERT INTO reports (id, name, item, type, period, plan, actual, diff, unit, status, quarry_code, quarry_name) VALUES
+		-- Mỏ đá Phú Thọ (MO-PT-01)
+		('REP-PT-01', 'Báo cáo sản lượng khai thác đá nguyên khai', 'Đá nguyên khai', 'Sản xuất', 'Tháng 10/2026', 120000, 128500, '+7.1%', 'tấn', 'Hoàn thành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('REP-PT-02', 'Báo cáo nghiền sàng đá thành phẩm', 'Đá 1x2, 4x6, Base', 'Chế biến', 'Tháng 10/2026', 95000, 98200, '+3.4%', 'tấn', 'Hoàn thành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('REP-PT-03', 'Báo cáo tiêu hao nhiên liệu cơ giới & trạm nghiền', 'Dầu DO 0.05S', 'Nhiên liệu', 'Tháng 10/2026', 42000, 44850, '+6.8%', 'Lít', 'Cần kiểm tra', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('REP-PT-04', 'Báo cáo xuất bán & đối soát doanh thu trạm cân', 'Doanh thu xuất mỏ', 'Tài chính', 'Tháng 10/2026', 28500000000, 29800000000, '+4.6%', 'VNĐ', 'Hoàn thành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('REP-PT-05', 'Báo cáo thuế tài nguyên & phí BVMT tỉnh Phú Thọ', 'Thuế tài nguyên', 'Pháp lý', 'Tháng 10/2026', 1850000000, 1820000000, '-1.6%', 'VNĐ', 'Đã chốt số', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('REP-PT-06', 'Báo cáo kiểm định & dung sai bàn cân điện tử', 'Hiệu chuẩn loadcell', 'Kỹ thuật', 'Tháng 10/2026', 2, 2, '0.0%', 'Trạm', 'Đạt chuẩn', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('REP-PT-07', 'Báo cáo sản lượng khai thác đá nguyên khai', 'Đá nguyên khai', 'Sản xuất', 'Tháng 09/2026', 115000, 118900, '+3.4%', 'tấn', 'Hoàn thành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('REP-PT-08', 'Báo cáo nghiền sàng đá thành phẩm', 'Đá 1x2, 4x6, Base', 'Chế biến', 'Tháng 09/2026', 92000, 93400, '+1.5%', 'tấn', 'Hoàn thành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+
+		-- Mỏ đá Tân Uyên (MO-TU-02)
+		('REP-TU-01', 'Báo cáo sản lượng khai thác đá nguyên khai bazan', 'Đá bazan nguyên khai', 'Sản xuất', 'Tháng 10/2026', 85000, 89200, '+4.9%', 'tấn', 'Hoàn thành', 'MO-TU-02', 'Mỏ đá Tân Uyên (Mỏ TTC 02)'),
+		('REP-TU-02', 'Báo cáo nghiền sàng đá xây dựng & cát nhân tạo', 'Đá 1x2, Cát nghiền', 'Chế biến', 'Tháng 10/2026', 70000, 72400, '+3.4%', 'tấn', 'Hoàn thành', 'MO-TU-02', 'Mỏ đá Tân Uyên (Mỏ TTC 02)'),
+		('REP-TU-03', 'Báo cáo tiêu hao nhiên liệu đoàn xe vận tải', 'Dầu DO 0.05S', 'Nhiên liệu', 'Tháng 10/2026', 31000, 30500, '-1.6%', 'Lít', 'Tiết kiệm', 'MO-TU-02', 'Mỏ đá Tân Uyên (Mỏ TTC 02)'),
+		('REP-TU-04', 'Báo cáo xuất bán trạm cân thương mại Tân Uyên', 'Doanh thu thương mại', 'Tài chính', 'Tháng 10/2026', 19200000000, 20100000000, '+4.7%', 'VNĐ', 'Hoàn thành', 'MO-TU-02', 'Mỏ đá Tân Uyên (Mỏ TTC 02)'),
+		('REP-TU-05', 'Báo cáo quyết toán thuế tài nguyên Bình Dương', 'Thuế tài nguyên', 'Pháp lý', 'Tháng 10/2026', 1420000000, 1400000000, '-1.4%', 'VNĐ', 'Đã chốt số', 'MO-TU-02', 'Mỏ đá Tân Uyên (Mỏ TTC 02)'),
+		('REP-TU-06', 'Báo cáo kiểm tra hiệu chuẩn loadcell trạm cân', 'Hiệu chuẩn định kỳ', 'Kỹ thuật', 'Tháng 10/2026', 1, 1, '0.0%', 'Trạm', 'Đạt chuẩn', 'MO-TU-02', 'Mỏ đá Tân Uyên (Mỏ TTC 02)'),
+
+		-- Mỏ đá Hà Nam (MO-HN-03)
+		('REP-HN-01', 'Báo cáo sản lượng khai thác đá vôi xi măng', 'Đá vôi xi măng', 'Sản xuất', 'Tháng 10/2026', 150000, 156800, '+4.5%', 'tấn', 'Hoàn thành', 'MO-HN-03', 'Mỏ đá Hà Nam (Mỏ TTC 03)'),
+		('REP-HN-02', 'Báo cáo nghiền sàng cấp phối đá dăm Base cao tốc', 'Cấp phối Base & Sub-base', 'Chế biến', 'Tháng 10/2026', 110000, 114200, '+3.8%', 'tấn', 'Hoàn thành', 'MO-HN-03', 'Mỏ đá Hà Nam (Mỏ TTC 03)'),
+		('REP-HN-03', 'Báo cáo tiêu hao dầu DO máy xúc thủy lực & xe tải', 'Dầu DO 0.05S', 'Nhiên liệu', 'Tháng 10/2026', 52000, 51300, '-1.3%', 'Lít', 'Tiết kiệm', 'MO-HN-03', 'Mỏ đá Hà Nam (Mỏ TTC 03)'),
+		('REP-HN-04', 'Báo cáo doanh thu xuất bán các dự án trọng điểm', 'Doanh thu dự án', 'Tài chính', 'Tháng 10/2026', 34000000000, 35600000000, '+4.7%', 'VNĐ', 'Hoàn thành', 'MO-HN-03', 'Mỏ đá Hà Nam (Mỏ TTC 03)'),
+		('REP-HN-05', 'Báo cáo thuế tài nguyên và phí BVMT tỉnh Hà Nam', 'Thuế tài nguyên', 'Pháp lý', 'Tháng 10/2026', 2350000000, 2300000000, '-2.1%', 'VNĐ', 'Đã chốt số', 'MO-HN-03', 'Mỏ đá Hà Nam (Mỏ TTC 03)'),
+		('REP-HN-06', 'Báo cáo sản lượng khai thác đá vôi xi măng', 'Đá vôi xi măng', 'Sản xuất', 'Tháng 09/2026', 145000, 148200, '+2.2%', 'tấn', 'Hoàn thành', 'MO-HN-03', 'Mỏ đá Hà Nam (Mỏ TTC 03)'),
+
+		-- Mỏ đá Bình Phước (MO-BP-04)
+		('REP-BP-01', 'Báo cáo bóc tầng phủ & mở moong khai thác mới', 'Đất đá bóc phủ', 'Sản xuất', 'Tháng 10/2026', 60000, 62100, '+3.5%', 'tấn', 'Hoàn thành', 'MO-BP-04', 'Mỏ đá Bình Phước (Mỏ TTC 04)'),
+		('REP-BP-02', 'Báo cáo chế biến đá mi bụi, mi sàng & đá 1x2', 'Đá mi bụi, mi sàng', 'Chế biến', 'Tháng 10/2026', 45000, 44800, '-0.4%', 'tấn', 'Hoàn thành', 'MO-BP-04', 'Mỏ đá Bình Phước (Mỏ TTC 04)'),
+		('REP-BP-03', 'Báo cáo tiêu hao dầu máy đào gầu nghịch & xe ben', 'Dầu DO 0.05S', 'Nhiên liệu', 'Tháng 10/2026', 22000, 21800, '-0.9%', 'Lít', 'Tiết kiệm', 'MO-BP-04', 'Mỏ đá Bình Phước (Mỏ TTC 04)'),
+		('REP-BP-04', 'Báo cáo doanh thu cung ứng bê tông đúc sẵn', 'Doanh thu thương phẩm', 'Tài chính', 'Tháng 10/2026', 11500000000, 11200000000, '-2.6%', 'VNĐ', 'Hoàn thành', 'MO-BP-04', 'Mỏ đá Bình Phước (Mỏ TTC 04)'),
+		('REP-BP-05', 'Báo cáo giám sát môi trường và hoàn thổ định kỳ', 'Quan trắc môi trường', 'Môi trường', 'Tháng 10/2026', 1, 1, '0.0%', 'Đợt', 'Đạt chuẩn', 'MO-BP-04', 'Mỏ đá Bình Phước (Mỏ TTC 04)'),
+
+		-- Báo cáo Hợp nhất Tập đoàn (Toàn hệ thống TTC)
+		('REP-ALL-01', 'Báo cáo tổng hợp sản lượng khai thác 4 mỏ TTC', 'Toàn bộ chủng loại đá', 'Sản xuất', 'Tháng 10/2026', 415000, 436600, '+5.2%', 'tấn', 'Hoàn thành', 'TTC-ALL', 'Tất cả các mỏ (Toàn hệ thống TTC)'),
+		('REP-ALL-02', 'Báo cáo doanh thu xuất mỏ hợp nhất tập đoàn', 'Tổng doanh thu', 'Tài chính', 'Tháng 10/2026', 93200000000, 96700000000, '+3.8%', 'VNĐ', 'Hoàn thành', 'TTC-ALL', 'Tất cả các mỏ (Toàn hệ thống TTC)'),
+		('REP-ALL-03', 'Báo cáo đối soát tiêu thụ nhiên liệu toàn đội cơ giới', 'Dầu DO 0.05S', 'Nhiên liệu', 'Tháng 10/2026', 147000, 148450, '+1.0%', 'Lít', 'Đạt định mức', 'TTC-ALL', 'Tất cả các mỏ (Toàn hệ thống TTC)')
+		ON CONFLICT (id) DO UPDATE SET 
+			name = EXCLUDED.name, 
+			item = EXCLUDED.item, 
+			type = EXCLUDED.type, 
+			period = EXCLUDED.period, 
+			plan = EXCLUDED.plan, 
+			actual = EXCLUDED.actual, 
+			diff = EXCLUDED.diff, 
+			unit = EXCLUDED.unit, 
+			status = EXCLUDED.status,
+			quarry_code = EXCLUDED.quarry_code,
+			quarry_name = EXCLUDED.quarry_name;
+
+		INSERT INTO settings (code, key, name, val, scope, status) VALUES
+		('SET-01', 'WEIGH_TOLERANCE_KG', 'Dung sai bì trạm cân cho phép (kg)', '50', 'Trạm Cân', 'Hoạt động'),
+		('SET-02', 'GEOFENCE_RADIUS_METERS', 'Bán kính Geofence trạm bãi xe (mét)', '20', 'Định Vị GPS', 'Hoạt động'),
+		('SET-03', 'FUEL_THEFT_THRESHOLD_LITERS', 'Ngưỡng cảnh báo sụt dầu bất thường (lít)', '5.0', 'Nhiên Liệu', 'Hoạt động'),
+		('SET-04', 'OCR_ANPR_CONFIDENCE_MIN', 'Độ tin cậy nhận diện biển số AI OCR (%)', '92', 'Camera AI', 'Hoạt động')
+		ON CONFLICT (code) DO NOTHING;
+	`)
 
 	// Backfill a default demo password (admin) for any accounts missing one.
 	Pool.Exec(ctx, `UPDATE users SET password_hash = 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35' WHERE password_hash IS NULL OR password_hash = ''`)
@@ -1252,17 +1301,23 @@ func Seed() {
 			ID, Title, BS, Note, Time, Date, Status, Severity, Phieu, Cam string
 			BiDangKy, BiThucTe, LechBi                                        float64
 		}{
-			{"ALT-2026-001", "Lệch bì +380 kg (Vượt ngưỡng)", "19H-056.22", "Bùn đất dính dày dưới gầm thùng xe sau mưa moong", "13:59 28/10", "28/10/2026", "Đang xử lý hiện trường", "danger", "TK-20261028-002", "Trạm Cân Cổng 01 - Phú Thọ", 26450, 26830, 380},
-			{"ALT-2026-002", "Lệch bì -140 kg (Trong dung sai nhưng bất thường)", "88H-042.27", "Trừ bì lệch do dư lượng thùng sau bốc hàng", "11:20 28/10", "28/10/2026", "Đã phê duyệt xử lý xong", "warning", "TK-20261028-001", "Trạm Cân Cổng 01 - Phú Thọ", 15420, 15280, 140},
-			{"ALT-2026-003", "Nhận diện biển số Camera AI thấp", "90C-123.45", "Camera ANPR độ tin cậy 82% do mưa lớn", "14:56 28/10", "28/10/2026", "Chuyển Thanh tra mỏ", "warning", "TK-20261028-004", "Trạm Cân Cổng 02 - Phú Thọ", 18500, 18500, 0},
-			{"ALT-2026-004", "Bảng giá đơn giá bất thường so với hợp đồng", "19C-098.76", "Kiểm tra sai lệch đơn giá áp dụng so với hợp đồng", "09:45 27/10", "27/10/2026", "Chờ xử lý", "info", "TK-20261027-009", "Trạm Cân Cổng 01 - Phú Thọ", 11200, 11200, 0},
+			{"ALT-2026-001", "Lệch bì +0.38 Tấn (Vượt ngưỡng)", "19H-056.22", "Bùn đất dính dày dưới gầm thùng xe sau mưa moong", "13:59 28/10", "28/10/2026", "Đang xử lý hiện trường", "danger", "TK-20261028-002", "Trạm Cân Cổng 01 - Phú Thọ", 14.80, 15.18, 0.38},
+			{"ALT-2026-002", "Lệch bì -0.14 Tấn (Trong dung sai)", "88H-042.27", "Trừ bì lệch do dư lượng thùng sau bốc hàng", "11:20 28/10", "28/10/2026", "Đã phê duyệt xử lý xong", "warning", "TK-20261028-001", "Trạm Cân Cổng 01 - Phú Thọ", 15.42, 15.28, -0.14},
+			{"ALT-2026-003", "Nhận diện biển số Camera AI thấp", "90C-123.45", "Camera ANPR độ tin cậy 82% do mưa lớn", "14:56 28/10", "28/10/2026", "Chuyển Thanh tra mỏ", "warning", "TK-20261028-004", "Trạm Cân Cổng 02 - Phú Thọ", 18.50, 18.50, 0},
+			{"ALT-2026-004", "Bảng giá đơn giá bất thường so với hợp đồng", "19C-098.76", "Kiểm tra sai lệch đơn giá áp dụng so với hợp đồng", "09:45 27/10", "27/10/2026", "Chờ xử lý", "info", "TK-20261027-009", "Trạm Cân Cổng 01 - Phú Thọ", 11.20, 11.20, 0},
 		}
 
 		for _, a := range alerts {
 			Pool.Exec(ctx, `
 				INSERT INTO alerts (id, title, bs, note, time, date, status, severity, phieu, cam, bi_dang_ky, bi_thuc_te, lech_bi)
 				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-				ON CONFLICT (id) DO NOTHING
+				ON CONFLICT (id) DO UPDATE SET
+					title = EXCLUDED.title,
+					bs = EXCLUDED.bs,
+					note = EXCLUDED.note,
+					bi_dang_ky = EXCLUDED.bi_dang_ky,
+					bi_thuc_te = EXCLUDED.bi_thuc_te,
+					lech_bi = EXCLUDED.lech_bi
 			`, a.ID, a.Title, a.BS, a.Note, a.Time, a.Date, a.Status, a.Severity, a.Phieu, a.Cam, a.BiDangKy, a.BiThucTe, a.LechBi)
 		}
 	}

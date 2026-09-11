@@ -1936,6 +1936,8 @@ func Migrate() {
 		`ALTER TABLE blasting_passports ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE alerts ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE reports ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE reports ADD COLUMN IF NOT EXISTS quarry_name TEXT DEFAULT 'Công ty CP TTC - Mỏ đá Phú Thọ'`,
 
 		// Vehicle physical specifications (Dựa trên thông số xe tải Trọng Tấn)
 		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS dai DOUBLE PRECISION DEFAULT 9.2`,

@@ -167,16 +167,44 @@ func storeExecOverviewCacheLocked(key string, data ExecutiveOverviewResponse) {
 	}
 }
 
+// resolveQuarryCode normalizes input (UUID, short name, or code) to canonical quarry code:
+// MO-PT-01, MO-TU-02, MO-HN-03, MO-BP-04 or empty string (all quarries).
+func resolveQuarryCode(ctx context.Context, input string) string {
+	raw := strings.TrimSpace(input)
+	if raw == "" || strings.EqualFold(raw, "all") || strings.EqualFold(raw, "ttc-all") {
+		return ""
+	}
+	upper := strings.ToUpper(raw)
+	lower := strings.ToLower(raw)
+	switch {
+	case strings.Contains(upper, "BP") || strings.Contains(lower, "bình phước") || strings.Contains(lower, "chon thanh") || strings.Contains(lower, "chơn thành"):
+		return "MO-BP-04"
+	case strings.Contains(upper, "PT") || strings.Contains(lower, "phú thọ") || strings.Contains(lower, "thanh ba"):
+		return "MO-PT-01"
+	case strings.Contains(upper, "TU") || strings.Contains(lower, "tân uyên") || strings.Contains(lower, "bình dương"):
+		return "MO-TU-02"
+	case strings.Contains(upper, "HN") || strings.Contains(lower, "hà nam") || strings.Contains(lower, "kiện khê"):
+		return "MO-HN-03"
+	}
+
+	if database.Pool != nil {
+		var code string
+		err := database.Pool.QueryRow(ctx, "SELECT code FROM quarries WHERE id::text = $1 OR code ILIKE $1 LIMIT 1", raw).Scan(&code)
+		if err == nil && code != "" {
+			return strings.ToUpper(strings.TrimSpace(code))
+		}
+	}
+	return raw
+}
+
 func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	db := database.Pool
-	quarryID := strings.TrimSpace(r.URL.Query().Get("quarry_id"))
-	if quarryID == "" {
-		quarryID = strings.TrimSpace(r.URL.Query().Get("quarryCode"))
+	rawQuarry := strings.TrimSpace(r.URL.Query().Get("quarry_id"))
+	if rawQuarry == "" {
+		rawQuarry = strings.TrimSpace(r.URL.Query().Get("quarryCode"))
 	}
-	if strings.EqualFold(quarryID, "all") || strings.EqualFold(quarryID, "TTC-ALL") {
-		quarryID = ""
-	}
+	quarryID := resolveQuarryCode(ctx, rawQuarry)
 	period := normalizeExecutivePeriod(r.URL.Query().Get("period"))
 
 	// Check 60s in-memory cache for instant responses (<1ms)
@@ -226,7 +254,7 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 		if rev == 0 {
 			rev = 1450000000
 			if quarryID != "" {
-				rev *= 0.38
+				rev *= quarryShareRatio(quarryID)
 			}
 		}
 		monthRev = rev
@@ -265,7 +293,7 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 		if cost == 0 {
 			cost = 815000000
 			if quarryID != "" {
-				cost *= 0.35
+				cost *= quarryShareRatio(quarryID)
 			}
 		}
 		monthCost = cost
@@ -287,7 +315,7 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 		if cost == 0 {
 			cost = 785000000
 			if quarryID != "" {
-				cost *= 0.35
+				cost *= quarryShareRatio(quarryID)
 			}
 		}
 		prevMonthCost = cost
@@ -345,8 +373,8 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	// Detect issues filtered by quarry
 	allIssues := detectIssues(ctx, quarryID)
 
-	var redIssues []BusinessIssue
-	var yellowWarnings []BusinessIssue
+	redIssues := make([]BusinessIssue, 0)
+	yellowWarnings := make([]BusinessIssue, 0)
 
 	for _, issue := range allIssues {
 		if strings.EqualFold(issue.Severity, "red") {
@@ -374,7 +402,10 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 
 	greenCount := 14
 	if quarryID != "" {
-		greenCount = 8
+		greenCount = 10 - len(redIssues) - len(yellowWarnings)
+		if greenCount < 6 {
+			greenCount = 6
+		}
 	}
 
 	currSnapshot := loadExecutiveMetricSnapshot(ctx, currentStart, comparisonEnd, quarryID)
@@ -537,10 +568,11 @@ func loadExecutiveMetricSnapshot(ctx context.Context, start, end time.Time, quar
 	)
 
 	if quarryID != "" {
-		snapshot.Cost *= 0.35
-		snapshot.Inventory *= 0.35
-		snapshot.Attendance = math.Round(snapshot.Attendance * 0.30)
-		snapshot.Alerts = math.Round(snapshot.Alerts * 0.35)
+		ratio := quarryShareRatio(quarryID)
+		snapshot.Cost *= ratio
+		snapshot.Inventory *= ratio
+		snapshot.Attendance = math.Max(6, math.Round(snapshot.Attendance*ratio))
+		snapshot.Alerts = math.Max(1, math.Round(snapshot.Alerts*ratio))
 	}
 
 	return snapshot
@@ -1015,10 +1047,29 @@ func executiveDeltaPct(current, previous float64) float64 {
 	return ((current - previous) / math.Abs(previous)) * 100
 }
 
+func quarryShareRatio(quarryID string) float64 {
+	switch strings.ToUpper(strings.TrimSpace(quarryID)) {
+	case "MO-PT-01":
+		return 0.38
+	case "MO-TU-02":
+		return 0.26
+	case "MO-HN-03":
+		return 0.22
+	case "MO-BP-04":
+		return 0.14
+	default:
+		return 0.25
+	}
+}
+
 func ExecutiveIssues(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	severity := strings.ToLower(r.URL.Query().Get("severity"))
-	quarryID := strings.TrimSpace(r.URL.Query().Get("quarry_id"))
+	rawQuarry := strings.TrimSpace(r.URL.Query().Get("quarry_id"))
+	if rawQuarry == "" {
+		rawQuarry = strings.TrimSpace(r.URL.Query().Get("quarryCode"))
+	}
+	quarryID := resolveQuarryCode(ctx, rawQuarry)
 
 	issues := detectIssues(ctx, quarryID)
 	if severity == "" || severity == "all" {
@@ -1026,7 +1077,7 @@ func ExecutiveIssues(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var filtered []BusinessIssue
+	filtered := make([]BusinessIssue, 0)
 	for _, issue := range issues {
 		if strings.ToLower(issue.Severity) == severity {
 			filtered = append(filtered, issue)
@@ -1036,10 +1087,11 @@ func ExecutiveIssues(w http.ResponseWriter, r *http.Request) {
 }
 
 func detectIssues(ctx context.Context, quarryID string) []BusinessIssue {
+	quarryID = resolveQuarryCode(ctx, quarryID)
 	var issues []BusinessIssue
 	nowStr := time.Now().Format(time.RFC3339)
 
-	// Rule 1: Production drop
+	// Rule 1: Production drop (Phú Thọ)
 	metricVal1 := 2680.0
 	baseVal1 := 3150.0
 	delta1 := -14.9
@@ -1063,7 +1115,7 @@ func detectIssues(ctx context.Context, quarryID string) []BusinessIssue {
 		Status:        "open",
 	})
 
-	// Rule 2: Fleet efficiency anomaly (Xe ben ăn dầu / margin thấp)
+	// Rule 2: Fleet efficiency anomaly (Tân Uyên - HOWO 88H-042.27)
 	metricVal2 := 24.5
 	baseVal2 := 35.0
 	delta2 := -30.0
@@ -1087,7 +1139,7 @@ func detectIssues(ctx context.Context, quarryID string) []BusinessIssue {
 		Status:        "open",
 	})
 
-	// Rule 3: Cost spike (Chi phí nhiên liệu tăng)
+	// Rule 3: Cost spike (Phú Thọ - Vận chuyển moong tầng dốc)
 	metricVal3 := 210000000.0
 	baseVal3 := 180000000.0
 	delta3 := 16.7
@@ -1097,7 +1149,7 @@ func detectIssues(ctx context.Context, quarryID string) []BusinessIssue {
 		Severity:      "yellow",
 		Domain:        "cost",
 		Title:         "Chi phí nhiên liệu vượt định mức 16.7%",
-		Description:   "Giá dầu diesel thế giới điều chỉnh tăng và quãng đường vận chuyển nội bộ moong tăng 1.2km.",
+		Description:   "Giá dầu diesel thế giới điều chỉnh tăng và quãng đường vận chuyển nội bộ moong tầng dốc +45m tăng 1.2km.",
 		MetricValue:   &metricVal3,
 		BaselineValue: &baseVal3,
 		DeltaPct:      &delta3,
@@ -1105,7 +1157,7 @@ func detectIssues(ctx context.Context, quarryID string) []BusinessIssue {
 		Status:        "open",
 	})
 
-	// Rule 4: Customer debt risk
+	// Rule 4: Customer debt risk (Hà Nam - Cty Trường Sơn)
 	metricVal4 := 540000000.0
 	baseVal4 := 500000000.0
 	delta4 := 8.0
@@ -1129,7 +1181,7 @@ func detectIssues(ctx context.Context, quarryID string) []BusinessIssue {
 		Status:        "open",
 	})
 
-	// Rule 5: Inventory low (Xuất vượt Nhập)
+	// Rule 5: Inventory low (Hà Nam - Kho đá 1x2)
 	metricVal5 := 1.62
 	baseVal5 := 1.20
 	delta5 := 35.0
@@ -1147,30 +1199,113 @@ func detectIssues(ctx context.Context, quarryID string) []BusinessIssue {
 		Status:        "open",
 	})
 
-	if quarryID != "" && quarryID != "all" {
+	// Rule 6: Equipment wear (Tân Uyên - Trạm nghiền sàng 02)
+	metricVal6 := 78.0
+	baseVal6 := 65.0
+	delta6 := 20.0
+	entityType6 := "equipment"
+	entityId6 := "PLANT-TU-02"
+	entityName6 := "Trạm Nghiền Sàng Tân Uyên 02"
+	issues = append(issues, BusinessIssue{
+		ID:            6,
+		Type:          "equipment_wear",
+		Severity:      "yellow",
+		Domain:        "production",
+		EntityType:    &entityType6,
+		EntityID:      &entityId6,
+		EntityName:    &entityName6,
+		Title:         "Độ hao mòn má kẹp hàm nghiền đạt 78%",
+		Description:   "Má kẹp trạm nghiền Tân Uyên 02 hao mòn nhanh do tỷ lệ đá tảng cứng, cần bố trí đảo mặt trong kỳ bảo dưỡng.",
+		MetricValue:   &metricVal6,
+		BaselineValue: &baseVal6,
+		DeltaPct:      &delta6,
+		DetectedAt:    nowStr,
+		Status:        "open",
+	})
+
+	// Rule 7: Production Overload (Bình Phước - Dây chuyền Chơn Thành BP-01)
+	metricVal7 := 3757.0
+	baseVal7 := 2890.0
+	delta7 := 30.0
+	entityType7 := "crushing_line"
+	entityId7 := "PLANT-BP-01"
+	entityName7 := "Dây Chuyền Bazan Chơn Thành BP-01"
+	issues = append(issues, BusinessIssue{
+		ID:            7,
+		Type:          "production_overload",
+		Severity:      "red",
+		Domain:        "production",
+		EntityType:    &entityType7,
+		EntityID:      &entityId7,
+		EntityName:    &entityName7,
+		Title:         "Dây chuyền Chơn Thành BP-01 quá tải 18.2%",
+		Description:   "Sản lượng thực tế đạt 3.757 tấn/ngày vượt công suất thiết kế chuẩn 2.890 tấn, cần kiểm tra nhiệt độ motor rung.",
+		MetricValue:   &metricVal7,
+		BaselineValue: &baseVal7,
+		DeltaPct:      &delta7,
+		DetectedAt:    nowStr,
+		Status:        "open",
+	})
+
+	// Rule 8: Fleet Maintenance Due (Bình Phước - Xe ben Dongfeng 93C-114.52)
+	metricVal8 := 18.0
+	baseVal8 := 15.0
+	delta8 := 20.0
+	entityType8 := "vehicle"
+	entityId8 := "93C-114.52"
+	entityName8 := "Xe ben Dongfeng 93C-114.52"
+	issues = append(issues, BusinessIssue{
+		ID:            8,
+		Type:          "maintenance_due",
+		Severity:      "yellow",
+		Domain:        "fleet",
+		EntityType:    &entityType8,
+		EntityID:      &entityId8,
+		EntityName:    &entityName8,
+		Title:         "Xe ben 93C-114.52 cần bảo dưỡng định kỳ (trễ 3 ngày)",
+		Description:   "Xe vận tải mỏ Bình Phước vận hành liên tục 18 ca, đồng hồ ODO đạt chu kỳ thay dầu máy và kiểm tra hệ thống phanh khí.",
+		MetricValue:   &metricVal8,
+		BaselineValue: &baseVal8,
+		DeltaPct:      &delta8,
+		DetectedAt:    nowStr,
+		Status:        "open",
+	})
+
+	if quarryID != "" {
 		upperQ := strings.ToUpper(quarryID)
 		var filtered []BusinessIssue
 		for _, iss := range issues {
 			if strings.Contains(upperQ, "PT") || strings.Contains(strings.ToLower(quarryID), "phú thọ") {
-				if iss.ID == 1 || iss.ID == 3 || iss.ID == 5 {
+				if iss.ID == 1 || iss.ID == 3 {
 					filtered = append(filtered, iss)
 				}
 			} else if strings.Contains(upperQ, "TU") || strings.Contains(strings.ToLower(quarryID), "tân uyên") {
-				if iss.ID == 2 || iss.ID == 3 {
+				if iss.ID == 2 || iss.ID == 6 {
 					filtered = append(filtered, iss)
 				}
 			} else if strings.Contains(upperQ, "HN") || strings.Contains(strings.ToLower(quarryID), "hà nam") {
 				if iss.ID == 4 || iss.ID == 5 {
 					filtered = append(filtered, iss)
 				}
-			} else {
-				filtered = append(filtered, iss)
+			} else if strings.Contains(upperQ, "BP") || strings.Contains(strings.ToLower(quarryID), "bình phước") || strings.Contains(strings.ToLower(quarryID), "chơn thành") {
+				if iss.ID == 7 || iss.ID == 8 {
+					filtered = append(filtered, iss)
+				}
 			}
 		}
-		return filtered
+		if len(filtered) > 0 {
+			return filtered
+		}
 	}
 
-	return issues
+	// For all quarries (quarryID == ""), return top 5 system-wide critical issues
+	var defaultTop []BusinessIssue
+	for _, iss := range issues {
+		if iss.ID == 1 || iss.ID == 2 || iss.ID == 3 || iss.ID == 4 || iss.ID == 5 {
+			defaultTop = append(defaultTop, iss)
+		}
+	}
+	return defaultTop
 }
 
 func ternaryStr(cond bool, a, b string) string {
