@@ -5,9 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"mo-da-backend/internal/database"
 )
+
+// tableColumnsCache caches the physical column names per table so that
+// Create/Update can ignore payload keys that are not real columns instead of
+// failing the whole request with "column ... does not exist".
+var tableColumnsCache sync.Map
 
 type ListParams struct {
 	Page       int
@@ -25,6 +31,40 @@ type BaseRepo struct {
 
 func NewBaseRepo(table, idColumn string) *BaseRepo {
 	return &BaseRepo{Table: table, IDColumn: idColumn}
+}
+
+// columnSet returns the set of physical column names of the backing table.
+// It returns nil when the metadata lookup fails, in which case callers must
+// NOT filter the payload (preserve the previous behaviour).
+func (r *BaseRepo) columnSet() map[string]struct{} {
+	if cached, ok := tableColumnsCache.Load(r.Table); ok {
+		if cols, ok := cached.(map[string]struct{}); ok {
+			return cols
+		}
+	}
+
+	ctx := context.Background()
+	rows, err := database.Pool.Query(ctx,
+		`SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1`,
+		r.Table)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	cols := map[string]struct{}{}
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err == nil {
+			cols[name] = struct{}{}
+		}
+	}
+	if len(cols) == 0 {
+		return nil
+	}
+
+	tableColumnsCache.Store(r.Table, cols)
+	return cols
 }
 
 func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error) {
@@ -139,10 +179,11 @@ func (r *BaseRepo) GetByID(id string) (map[string]interface{}, error) {
 func (r *BaseRepo) Create(data map[string]interface{}) (map[string]interface{}, error) {
 	ctx := context.Background()
 
-	cols := []string{}
+	colNames := []string{}
 	vals := []interface{}{}
 	placeholders := []string{}
 	idx := 1
+	colSet := r.columnSet()
 
 	for k, v := range data {
 		if k == "id" && v == nil {
@@ -151,15 +192,25 @@ func (r *BaseRepo) Create(data map[string]interface{}) (map[string]interface{}, 
 		if k == "created_at" || k == "updated_at" {
 			continue
 		}
-		cols = append(cols, toSnakeCase(k))
+		col := toSnakeCase(k)
+		if colSet != nil {
+			if _, ok := colSet[col]; !ok {
+				continue
+			}
+		}
+		colNames = append(colNames, col)
 		vals = append(vals, toJSON(v))
 		placeholders = append(placeholders, fmt.Sprintf("$%d", idx))
 		idx++
 	}
 
+	if len(colNames) == 0 {
+		return nil, fmt.Errorf("no valid columns to insert into %s", r.Table)
+	}
+
 	query := fmt.Sprintf(
 		"WITH ins AS (INSERT INTO %s (%s) VALUES (%s) RETURNING *) SELECT row_to_json(ins) FROM ins",
-		r.Table, strings.Join(cols, ", "), strings.Join(placeholders, ", "),
+		r.Table, strings.Join(colNames, ", "), strings.Join(placeholders, ", "),
 	)
 
 	var result []byte
@@ -179,12 +230,19 @@ func (r *BaseRepo) Update(id string, data map[string]interface{}) (map[string]in
 	sets := []string{}
 	vals := []interface{}{}
 	idx := 1
+	colSet := r.columnSet()
 
 	for k, v := range data {
 		if k == r.IDColumn || k == "created_at" || k == "id" {
 			continue
 		}
-		sets = append(sets, fmt.Sprintf("%s = $%d", toSnakeCase(k), idx))
+		col := toSnakeCase(k)
+		if colSet != nil {
+			if _, ok := colSet[col]; !ok {
+				continue
+			}
+		}
+		sets = append(sets, fmt.Sprintf("%s = $%d", col, idx))
 		vals = append(vals, toJSON(v))
 		idx++
 	}

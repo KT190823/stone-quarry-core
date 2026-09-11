@@ -1935,6 +1935,7 @@ func Migrate() {
 		`ALTER TABLE inventory_outbound ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE blasting_passports ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE alerts ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE alerts ADD COLUMN IF NOT EXISTS checklist JSONB DEFAULT '[]'`,
 		`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE reports ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE reports ADD COLUMN IF NOT EXISTS quarry_name TEXT DEFAULT 'Công ty CP TTC - Mỏ đá Phú Thọ'`,
