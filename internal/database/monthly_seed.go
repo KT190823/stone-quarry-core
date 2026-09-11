@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -93,343 +92,170 @@ var customerCatalog = []customerSpec{
 }
 
 type fleetSpec struct {
-	Plate  string
-	Truck  string
-	Driver string
-	Phone  string
-	Tare   float64
+	Plate      string
+	Truck      string
+	Driver     string
+	Phone      string
+	Tare       float64
+	MaxPayload float64
+	BaseNet    float64
+	Axles      string
 }
 
 var fleetCatalog = []fleetSpec{
-	{"19H-056.22", "Xe ben Chenglong 4 chân", "Nguyễn Văn Mạnh", "0982.145.882", 14.80},
-	{"88H-042.27", "Xe ben Sinotruk Howo 4 chân", "Trần Đình Trọng", "0984.112.334", 16.20},
-	{"29C-345.67", "Xe ben 4 chân Sinotruk", "Trần Văn Kiên", "0988.341.992", 16.42},
-	{"29H-882.19", "Xe bồn trộn 12m3", "Lê Văn Tuấn", "0912.445.667", 16.23},
-	{"60C-312.78", "Xe đầu kéo mooc ben Howo", "Trương Văn Nam", "0938.667.129", 17.80},
-	{"61C-445.89", "Xe ben 4 chân Shacman", "Lê Quốc Bảo", "0903.551.234", 16.30},
-	{"90C-128.45", "Xe đầu kéo mooc ben", "Đinh Văn Toàn", "0915.223.789", 17.10},
-	{"90C-054.67", "Xe bồn trộn bê tông", "Nguyễn Hoàng Long", "0981.332.654", 15.90},
-	{"93C-114.28", "Xe tải ben 4 chân Howo", "Vũ Quốc Đạt", "0978.556.223", 16.50},
-	{"93C-098.52", "Xe đầu kéo mooc ben", "Bùi Đức Thịnh", "0972.441.902", 17.20},
+	{"19H-056.22", "Xe ben Chenglong 4 chân (8x4)", "Nguyễn Văn Toàn", "0912.888.999", 14.80, 17.90, 17.20, "4 chân (8x4)"},
+	{"88H-042.27", "Xe ben HOWO Sinotruk 4 chân (8x4)", "Trần Đình Khang", "0904.112.334", 15.42, 17.50, 17.10, "4 chân (8x4)"},
+	{"19C-128.45", "Xe ben Howo 371HP 4 chân (8x4)", "Lê Hữu Thắng", "0983.234.567", 15.20, 17.80, 17.40, "4 chân (8x4)"},
+	{"29C-781.90", "Xe ben Shacman 4 chân X3000 (8x4)", "Tô Quốc Huy", "0977.890.123", 15.10, 17.20, 16.90, "4 chân (8x4)"},
+	{"29C-345.67", "Xe ben 4 chân Sinotruk (8x4)", "Trần Văn Kiên", "0988.341.992", 15.60, 17.40, 17.00, "4 chân (8x4)"},
+	{"36C-789.12", "Xe ben Howo 8x4 371HP", "Lê Văn Cường", "0972.113.445", 15.80, 17.20, 16.80, "4 chân (8x4)"},
+	{"19C-098.76", "Xe tải ben 15 tấn 3 chân Hino 500 FL", "Vũ Quốc Đạt", "0978.556.223", 10.80, 14.50, 14.20, "3 chân (6x4)"},
+	{"90C-054.67", "Xe ben 15 tấn 3 chân Howo (6x4)", "Nguyễn Hoàng Long", "0981.332.654", 11.20, 15.00, 14.60, "3 chân (6x4)"},
+	{"24C-222.11", "Xe tải 12 tấn 2 dí 1 cầu Chenglong", "Trương Văn Nam", "0938.667.129", 9.80, 12.00, 11.80, "3 trục (2 dí)"},
+	{"14B-567.89", "Xe tải ben 20 tấn 5 chân Howo A7", "Bùi Đức Thịnh", "0972.441.902", 16.80, 20.00, 19.50, "5 chân (10x4)"},
+	{"29H-882.19", "Xe bồn trộn bê tông 12m3 Howo", "Hoàng Minh Đức", "0977.456.123", 16.10, 16.00, 15.80, "3 trục (6x4)"},
+	{"61C-445.89", "Xe ben 4 chân Shacman 380HP", "Lê Quốc Bảo", "0903.551.234", 15.30, 17.50, 17.10, "4 chân (8x4)"},
 }
 
 // SeedMonthlyQuarryData seeds comprehensive ticket, trip, voucher, cost, fuel, and attendance data
-// for all 4 quarries across all months of 2026 (Jan to Sep 2026), including today (10/09/2026) and yesterday (09/09/2026).
+// for all 4 quarries across August and September 2026 with realistic, balanced financial ratios (Gross Margin ~36.5%).
 func SeedMonthlyQuarryData() {
 	if Pool == nil {
 		return
 	}
 	ctx := context.Background()
-
-	var checkCount int
-	_ = Pool.QueryRow(ctx, "SELECT COUNT(*) FROM tickets WHERE id LIKE 'TK-%-2026%'").Scan(&checkCount)
-	if checkCount >= 180 {
-		fmt.Printf("✅ Monthly quarry data already exists (%d tickets). Refreshing today & yesterday...\n", checkCount)
-	} else {
-		fmt.Println("🌱 Seeding Comprehensive Monthly Quarry Tickets (Jan - Sep 2026, 4 Quarries)...")
-	}
-
 	ict := time.FixedZone("ICT", 7*60*60)
-	now := time.Now().In(ict) // 2026-09-10
+	now := time.Now().In(ict)
 
-	var wg sync.WaitGroup
+	fmt.Println("🌱 Seeding Comprehensive Balanced Quarry Data (Aug & Sep 2026, 4 Quarries)...")
 
-	// Concurrently seed each quarry's tickets & related vouchers
-	for _, qSpec := range quarrySpecs {
-		wg.Add(1)
-		go func(q quarrySeedSpec) {
-			defer wg.Done()
-			rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// 1. Thoroughly clean old 2026 data to ensure 100% coherence and prevent double counting
+	_, _ = Pool.Exec(ctx, "DELETE FROM tickets WHERE id LIKE 'TK-%-2026%'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM vehicle_trips WHERE camera_id = 'CAM-GATE-01' AND check_in_time >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM sales_vouchers WHERE code LIKE 'PB-TK-%'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM production_costs WHERE created_at >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM equipment_fuel_logs WHERE created_at >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM hr_attendances WHERE created_at >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM inventory_inbound WHERE created_at >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM inventory_outbound WHERE created_at >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM alerts WHERE created_at >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "UPDATE tickets SET kl_hang = '30.00', kl_tinh_tien = '30.00', thanh_tien = '7.200.000 đ' WHERE id = 'NA181026-2031'")
 
-			if checkCount < 180 {
-				// Months 1 to 8 (Jan to Aug 2026): 5-6 tickets per month
-				for m := 1; m <= 8; m++ {
-					ticketCount := 5 + (m % 3)
-					for i := 1; i <= ticketCount; i++ {
-						day := 4 + (i * 4)
-						hour := 7 + (i % 9)
-						minute := 10 + ((i * 7) % 45)
-						tDate := time.Date(2026, time.Month(m), day, hour, minute, 0, 0, ict)
-						insertSingleQuarryTicket(ctx, q, tDate, i, rnd)
-					}
-				}
-
-				// Month 9 (September 2026)
-				// Early Sept: Sept 2, 4
-				for i := 1; i <= 2; i++ {
-					tDate := time.Date(2026, time.September, i*2, 8+i, 20, 0, 0, ict)
-					insertSingleQuarryTicket(ctx, q, tDate, 10+i, rnd)
-				}
-
-				// This week: Sept 7, 8
-				insertSingleQuarryTicket(ctx, q, time.Date(2026, time.September, 7, 9, 30, 0, 0, ict), 21, rnd)
-				insertSingleQuarryTicket(ctx, q, time.Date(2026, time.September, 7, 14, 15, 0, 0, ict), 22, rnd)
-				insertSingleQuarryTicket(ctx, q, time.Date(2026, time.September, 8, 9, 45, 0, 0, ict), 25, rnd)
-				insertSingleQuarryTicket(ctx, q, time.Date(2026, time.September, 8, 15, 00, 0, 0, ict), 26, rnd)
-			}
-
-			// Yesterday (Sept 9): 5 tickets throughout the day
-			yesterdayHours := []int{7, 9, 11, 14, 16}
-			for i, h := range yesterdayHours {
-				yDate := time.Date(2026, time.September, 9, h, 15+i*8, 0, 0, ict)
-				insertSingleQuarryTicket(ctx, q, yDate, 30+i, rnd)
-			}
-
-			// Today (Sept 10): 6 tickets throughout morning/afternoon
-			todayHours := []int{7, 8, 9, 10, 11, 12}
-			for i, h := range todayHours {
-				tDate := time.Date(2026, time.September, 10, h, 10+i*7, 0, 0, ict)
-				insertSingleQuarryTicket(ctx, q, tDate, 40+i, rnd)
-			}
-		}(qSpec)
-	}
-
-	wg.Wait()
-
-	// Seed monthly production costs
-	seedProductionCostsForAllQuarries(ctx, now)
-
-	// Seed equipment fuel logs
-	seedFuelLogsForAllQuarries(ctx, now)
-
-	// Seed attendances
-	seedAttendancesForAllQuarries(ctx, now)
-
-	// Seed inventory movements
-	seedInventoryMovementsForAllQuarries(ctx, now)
-
-	// Seed alerts
-	seedAlertsForAllQuarries(ctx, now)
-
-	fmt.Println("✅ Comprehensive monthly quarry data seed completed successfully!")
-}
-
-func insertSingleQuarryTicket(ctx context.Context, q quarrySeedSpec, ticketDate time.Time, seq int, rnd *rand.Rand) {
-	ticketID := fmt.Sprintf("TK-%s-%s-%03d", q.Prefix, ticketDate.Format("20060102"), seq)
-
-	mat := materialCatalog[(seq+int(ticketDate.Month()))%len(materialCatalog)]
-	cust := customerCatalog[(seq+int(ticketDate.Day()))%len(customerCatalog)]
-	flt := fleetCatalog[(seq)%len(fleetCatalog)]
-
-	netWeight := 28.50 + float64(rnd.Intn(550))/100.0
-	tareWeight := flt.Tare
-	grossWeight := tareWeight + netWeight
-	unitPrice := mat.Price
-	totalPrice := netWeight * unitPrice
-
-	time1Str := ticketDate.Add(-25 * time.Minute).Format("15:04")
-	time2Str := ticketDate.Format("15:04")
-	dateStr := ticketDate.Format("02/01/2006")
-	doCode := fmt.Sprintf("DO-%s-%03d", q.Prefix, 100+seq)
-	formattedPrice := fmt.Sprintf("%.0f đ", totalPrice)
-
-	// 1. Insert into tickets
-	_, err := Pool.Exec(ctx, `
-		INSERT INTO tickets (
-			id, stt, ben_ban, ben_mua, bien_so, loai_xe, lai_xe, sdt_lai_xe, rfid,
-			loai, stage, stage_label, can_l1, kl1, can_l2, kl2, kl_hang, kl_tap_chat,
-			kl_tinh_tien, don_gia, thanh_tien, time1, time2, date, nguoi_can1, nguoi_can2,
-			mat_hang, quy_cach, do_code, tram_can, cong_can, ghi_chu, hoa_don_so,
-			quarry_code, created_at, updated_at, cameras, chatter
-		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9,
-			$10, $11, $12, $13, $14, $15, $16, $17, $18,
-			$19, $20, $21, $22, $23, $24, $25, $26,
-			$27, $28, $29, $30, $31, $32, $33,
-			$34, $35, $36, $37, $38
-		)
-		ON CONFLICT (id) DO UPDATE SET
-			created_at = EXCLUDED.created_at,
-			date = EXCLUDED.date,
-			kl_hang = EXCLUDED.kl_hang,
-			don_gia = EXCLUDED.don_gia,
-			thanh_tien = EXCLUDED.thanh_tien,
-			quarry_code = EXCLUDED.quarry_code
-	`,
-		ticketID, seq, q.Name, cust.Name, flt.Plate, flt.Truck, flt.Driver, flt.Phone, "RFID-"+flt.Plate,
-		"Cân bán hàng", "confirmed", "Đã chốt số", tareWeight, fmt.Sprintf("%.2f", tareWeight),
-		grossWeight, fmt.Sprintf("%.2f", grossWeight), fmt.Sprintf("%.2f", netWeight), 0.0,
-		fmt.Sprintf("%.2f", netWeight), unitPrice, formattedPrice, time1Str, time2Str, dateStr,
-		"Nguyễn Văn Dũng", "Lê Văn Cân 02",
-		mat.Name, mat.Standard, doCode, q.Scale, q.Gate, "Xuất mỏ đủ tải", "HD-2026-"+ticketID,
-		q.Code, ticketDate, ticketDate,
-		fmt.Sprintf(`{"front":{"camera":"Camera 01 ANPR","time":"%s %s"},"rear":{"camera":"Camera 02 Thùng","time":"%s %s"}}`, dateStr, time1Str, dateStr, time2Str),
-		fmt.Sprintf(`[{"author":"Hệ thống Cân AI","content":"Xe %s hoàn tất cân tự động %s tại %s.","time":"%s %s"}]`, flt.Plate, mat.Name, q.Scale, dateStr, time2Str),
-	)
-	if err != nil {
-		return
-	}
-
-	// 2. Insert corresponding vehicle_trip
-	Pool.Exec(ctx, `
-		INSERT INTO vehicle_trips (
-			vehicle_id, license_plate, driver_name, camera_id, direction,
-			check_in_time, check_out_time, trip_number, estimated_quantity, actual_quantity,
-			status, created_at, updated_at
-		) VALUES (
-			$1, $2, $3, 'CAM-GATE-01', 'outbound',
-			$4, $5, $6, $7, $8,
-			'completed', $9, $10
-		)
-		ON CONFLICT DO NOTHING
-	`,
-		flt.Plate, flt.Plate, flt.Driver,
-		ticketDate.Add(-25*time.Minute), ticketDate, seq,
-		netWeight, netWeight,
-		ticketDate, ticketDate,
-	)
-
-	// 3. Insert corresponding sales_voucher
-	voucherCode := "PB-" + ticketID
-	Pool.Exec(ctx, `
-		INSERT INTO sales_vouchers (
-			code, customer_code, customer_name, date, warehouse_loc, license_plate,
-			ticket_code, total_amount, vat_amount, grand_total, paid_amount, debt_amount,
-			payment_status, status, created_by, notes, created_at, updated_at
-		) VALUES (
-			$1, $2, $3, $4, $5, $6,
-			$7, $8, $9, $10, $11, 0,
-			'paid', 'completed', 'Nguyễn Văn Dũng', $12, $13, $14
-		)
-		ON CONFLICT (code) DO UPDATE SET total_amount = EXCLUDED.total_amount
-	`,
-		voucherCode, cust.Code, cust.Name, ticketDate.Format("2006-01-02"), q.Location, flt.Plate,
-		ticketID, totalPrice, totalPrice*0.1, totalPrice*1.1, totalPrice*1.1,
-		"Xuất hàng trạm cân "+q.Scale, ticketDate, ticketDate,
-	)
-}
-
-func seedProductionCostsForAllQuarries(ctx context.Context, now time.Time) {
-	var count int
-	_ = Pool.QueryRow(ctx, "SELECT COUNT(*) FROM production_costs WHERE mine_area LIKE '%MO-PT-01%' AND period = '2026-09' AND created_at >= '2026-09-07'").Scan(&count)
-	if count >= 10 {
-		return
-	}
-
-	// Clean out any old/sparse 2026 production cost rows so we have a completely consistent, rich timeline
-	_, _ = Pool.Exec(ctx, "DELETE FROM production_costs WHERE period LIKE '2026-%' OR mine_area IN ('Moong Tầng 3 (+45m)', 'Toàn mỏ', 'Tuyến nội bộ', 'Trạm nghiền 01', 'Văn phòng & An toàn')")
-
-	categories := []struct {
-		CostType    string
-		Category    string
-		MonthlyNorm float64
-		DailyShare  float64
-		Desc        string
-	}{
-		{"Sản xuất", "Chi phí sản xuất & nổ mìn", 230000000, 0.28, "Chi phí nổ mìn, phụ kiện nổ và vận hành nghiền sàng"},
-		{"Nhiên liệu", "Nhiên liệu diesel cơ giới", 185000000, 0.32, "Dầu diesel máy xúc PC450, xúc lật và xe tải moong"},
-		{"Nhân công", "Nhân công & Tiền lương ca", 155000000, 0.20, "Tiền lương ca mỏ, thợ máy, tài xế và trạm cân"},
-		{"Khấu hao", "Khấu hao trạm nghiền sàng", 75000000, 0.10, "Khấu hao tài sản thiết bị dây chuyền nghiền sàng"},
-		{"Vận chuyển", "Vận chuyển nội bộ moong", 95000000, 0.06, "Cước vận chuyển nội bộ từ đáy moong lên trạm nghiền"},
-		{"Khác", "Bảo hộ ATLĐ & Môi trường", 32000000, 0.04, "Bảo hộ lao động, quan trắc bụi mỏ và phun sương dập bụi"},
-	}
-
+	rnd := rand.New(rand.NewSource(20260910))
 	batch := &pgx.Batch{}
 
-	// 1. Seed historical months 1 to 8 (January to August 2026)
-	for _, q := range quarrySpecs {
-		mineArea := fmt.Sprintf("%s (%s)", q.Name, q.Code)
-		for m := 1; m <= 8; m++ {
-			periodStr := fmt.Sprintf("2026-%02d", m)
-			// Spread across 4 weeks of the month (days 7, 14, 21, 28)
-			for w := 1; w <= 4; w++ {
-				day := w * 7
-				entryDate := time.Date(2026, time.Month(m), day, 11, 30, 0, 0, now.Location())
-				for _, c := range categories {
-					norm := (c.MonthlyNorm * q.Ratio) / 4.0
-					actual := norm * (0.95 + float64((m*7+w+len(q.Code))%12)/100.0)
+	// Helper for inserting ticket + vehicle_trip + sales_voucher
+	insertTicket := func(b *pgx.Batch, q quarrySeedSpec, tDate time.Time, seq int) (float64, float64) {
+		ticketID := fmt.Sprintf("TK-%s-%s-%03d", q.Prefix, tDate.Format("20060102"), seq)
+		mat := materialCatalog[(seq+int(tDate.Month())+int(tDate.Day()))%len(materialCatalog)]
+		cust := customerCatalog[(seq+int(tDate.Day()))%len(customerCatalog)]
+		flt := fleetCatalog[(seq+int(tDate.Month()))%len(fleetCatalog)]
 
-					batch.Queue(`
-						INSERT INTO production_costs (
-							cost_type, cost_category, norm_value, norm_unit, actual_value, actual_unit,
-							period, mine_area, description, created_at
-						) VALUES (
-							$1, $2, $3, 'VNĐ', $4, 'VNĐ',
-							$5, $6, $7, $8
-						)
-					`, c.CostType, c.Category, norm, actual, periodStr, mineArea, c.Desc, entryDate)
-				}
-			}
-		}
+		// Tải trọng hàng thực tế chuẩn 10 - 20 tấn theo thông số xe Trọng Tấn
+		netWeight := flt.BaseNet + float64(rnd.Intn(90))/100.0 - 0.40 // Dao động nhẹ quanh tải trọng chuẩn
+		tareWeight := flt.Tare
+		grossWeight := tareWeight + netWeight
+		unitPrice := mat.Price
+		totalPrice := netWeight * unitPrice
+
+		time1Str := tDate.Add(-25 * time.Minute).Format("15:04")
+		time2Str := tDate.Format("15:04")
+		dateStr := tDate.Format("02/01/2006")
+		doCode := fmt.Sprintf("DO-%s-%03d", q.Prefix, 100+seq)
+		formattedPrice := fmt.Sprintf("%.0f đ", totalPrice)
+
+		b.Queue(`
+			INSERT INTO tickets (
+				id, stt, ben_ban, ben_mua, bien_so, loai_xe, lai_xe, sdt_lai_xe, rfid,
+				loai, stage, stage_label, can_l1, kl1, can_l2, kl2, kl_hang, kl_tap_chat,
+				kl_tinh_tien, don_gia, thanh_tien, time1, time2, date, nguoi_can1, nguoi_can2,
+				mat_hang, quy_cach, do_code, tram_can, cong_can, ghi_chu, hoa_don_so,
+				quarry_code, created_at, updated_at, cameras, chatter
+			) VALUES (
+				$1, $2, $3, $4, $5, $6, $7, $8, $9,
+				$10, $11, $12, $13, $14, $15, $16, $17, $18,
+				$19, $20, $21, $22, $23, $24, $25, $26,
+				$27, $28, $29, $30, $31, $32, $33,
+				$34, $35, $36, $37, $38
+			)
+			ON CONFLICT (id) DO UPDATE SET
+				kl_hang = EXCLUDED.kl_hang,
+				don_gia = EXCLUDED.don_gia,
+				thanh_tien = EXCLUDED.thanh_tien
+		`,
+			ticketID, seq, q.Name, cust.Name, flt.Plate, flt.Truck, flt.Driver, flt.Phone, "RFID-"+flt.Plate,
+			"Cân bán hàng", "confirmed", "Đã chốt số", tareWeight, fmt.Sprintf("%.2f", tareWeight),
+			grossWeight, fmt.Sprintf("%.2f", grossWeight), fmt.Sprintf("%.2f", netWeight), 0.0,
+			fmt.Sprintf("%.2f", netWeight), unitPrice, formattedPrice, time1Str, time2Str, dateStr,
+			"Nguyễn Văn Dũng", "Lê Văn Cân 02",
+			mat.Name, mat.Standard, doCode, q.Scale, q.Gate, "Xuất mỏ đủ tải", "HD-2026-"+ticketID,
+			q.Code, tDate, tDate,
+			fmt.Sprintf(`{"front":{"camera":"Camera 01 ANPR","time":"%s %s"},"rear":{"camera":"Camera 02 Thùng","time":"%s %s"}}`, dateStr, time1Str, dateStr, time2Str),
+			fmt.Sprintf(`[{"author":"Hệ thống Cân AI","content":"Xe %s hoàn tất cân tự động %s tại %s.","time":"%s %s"}]`, flt.Plate, mat.Name, q.Scale, dateStr, time2Str),
+		)
+
+		b.Queue(`
+			INSERT INTO vehicle_trips (
+				vehicle_id, license_plate, driver_name, camera_id, direction,
+				check_in_time, check_out_time, trip_number, estimated_quantity, actual_quantity,
+				status, created_at, updated_at
+			) VALUES (
+				$1, $2, $3, 'CAM-GATE-01', 'outbound',
+				$4, $5, $6, $7, $8,
+				'completed', $9, $10
+			)
+			ON CONFLICT DO NOTHING
+		`,
+			flt.Plate, flt.Plate, flt.Driver,
+			tDate.Add(-25*time.Minute), tDate, seq,
+			netWeight, netWeight,
+			tDate, tDate,
+		)
+
+		voucherCode := "PB-" + ticketID
+		b.Queue(`
+			INSERT INTO sales_vouchers (
+				code, customer_code, customer_name, date, warehouse_loc, license_plate,
+				ticket_code, total_amount, vat_amount, grand_total, paid_amount, debt_amount,
+				payment_status, status, created_by, notes, created_at, updated_at
+			) VALUES (
+				$1, $2, $3, $4, $5, $6,
+				$7, $8, $9, $10, $11, 0,
+				'paid', 'completed', 'Nguyễn Văn Dũng', $12, $13, $14
+			)
+			ON CONFLICT (code) DO UPDATE SET total_amount = EXCLUDED.total_amount
+		`,
+			voucherCode, cust.Code, cust.Name, tDate.Format("2006-01-02"), q.Location, flt.Plate,
+			ticketID, totalPrice, totalPrice*0.1, totalPrice*1.1, totalPrice*1.1,
+			"Xuất hàng trạm cân "+q.Scale, tDate, tDate,
+		)
+
+		return netWeight, totalPrice
 	}
 
-	// 2. Seed Month 9 (September 2026) - Current month
-	periodSep := "2026-09"
-	for _, q := range quarrySpecs {
+	// Helper to insert production costs strictly calibrated to 63.5% of ticket revenue (Margin ~36.5%)
+	insertDailyCost := func(b *pgx.Batch, q quarrySeedSpec, entryDate time.Time, dayRevenue float64) {
 		mineArea := fmt.Sprintf("%s (%s)", q.Name, q.Code)
-
-		// 2A. Week 1 (Tuần trước: 01/09 - 06/09/2026) - daily operating costs
-		for day := 1; day <= 5; day++ {
-			entryDate := time.Date(2026, time.September, day, 15, 30, 0, 0, now.Location())
-			for _, c := range categories {
-				norm := (c.MonthlyNorm * q.Ratio) / 26.0
-				actual := norm * (0.94 + float64((day*3+len(q.Code))%13)/100.0)
-
-				batch.Queue(`
-					INSERT INTO production_costs (
-						cost_type, cost_category, norm_value, norm_unit, actual_value, actual_unit,
-						period, mine_area, description, created_at
-					) VALUES (
-						$1, $2, $3, 'VNĐ', $4, 'VNĐ',
-						$5, $6, $7, $8
-					)
-				`, c.CostType, c.Category, norm, actual, periodSep, mineArea, c.Desc, entryDate)
-			}
-		}
-
-		// 2B. Week 2 (Tuần này):
-		// - 07/09 (Thứ 2)
-		// - 08/09 (Thứ 3)
-		// - 09/09 (Thứ 4 - Hôm qua)
-		weekdays := []struct {
-			Day  int
-			Hour int
-		}{
-			{7, 16},
-			{8, 15},
-			{9, 14},
-		}
-		for _, wd := range weekdays {
-			entryDate := time.Date(2026, time.September, wd.Day, wd.Hour, 0, 0, 0, now.Location())
-			for _, c := range categories {
-				norm := (c.MonthlyNorm * q.Ratio) / 26.0
-				actual := norm * (0.97 + float64((wd.Day*5+len(q.Code))%11)/100.0)
-
-				batch.Queue(`
-					INSERT INTO production_costs (
-						cost_type, cost_category, norm_value, norm_unit, actual_value, actual_unit,
-						period, mine_area, description, created_at
-					) VALUES (
-						$1, $2, $3, 'VNĐ', $4, 'VNĐ',
-						$5, $6, $7, $8
-					)
-				`, c.CostType, c.Category, norm, actual, periodSep, mineArea, c.Desc, entryDate)
-			}
-		}
-
-		// 2C. Today (10/09/2026 - Thứ 5) - hourly shift cost entries
-		todayShifts := []struct {
-			Hour     int
-			Minute   int
+		periodStr := entryDate.Format("2006-01")
+		totalCost := dayRevenue * 0.635
+		categories := []struct {
 			CostType string
 			Category string
-			BaseVal  float64
+			Share    float64
 			Desc     string
 		}{
-			{8, 0, "Sản xuất", "Chi phí sản xuất & nổ mìn", 24500000, "Ca 1: Khoan nổ mìn tầng 3 và điện cấp liệu trạm nghiền"},
-			{10, 0, "Nhiên liệu", "Nhiên liệu diesel cơ giới", 21800000, "Cấp phát dầu diesel ca sáng máy xúc PC450 & xe tải moong"},
-			{12, 0, "Nhân công", "Nhân công & Tiền lương ca", 16500000, "Tiền công thợ vận hành, phụ cấp ca độc hại và bữa ăn ca"},
-			{14, 0, "Vận chuyển", "Vận chuyển nội bộ moong", 11200000, "Cước vận chuyển đá hộc nội bộ moong lên bãi sơ chế"},
-			{14, 30, "Khấu hao", "Khấu hao trạm nghiền sàng", 8500000, "Khấu hao máy nghiền côn và sàng rung 3 tầng"},
-			{15, 0, "Khác", "Bảo hộ ATLĐ & Môi trường", 3800000, "Phun sương dập bụi tuyến đường mỏ và bảo hộ lao động"},
+			{"Sản xuất", "Chi phí sản xuất & nổ mìn", 0.30, "Khoan nổ mìn tầng khai thác và điện cấp liệu trạm nghiền"},
+			{"Nhiên liệu", "Nhiên liệu diesel cơ giới", 0.28, "Dầu diesel máy xúc PC450 và xe ben nội bộ"},
+			{"Nhân công", "Nhân công & Tiền lương ca", 0.22, "Tiền lương ca vận hành mỏ, trạm cân và cơ giới"},
+			{"Khấu hao", "Khấu hao trạm nghiền sàng", 0.10, "Khấu hao thiết bị nghiền sàng và băng tải"},
+			{"Vận chuyển", "Vận chuyển nội bộ moong", 0.06, "Cước vận chuyển đá hộc đáy moong lên trạm nghiền"},
+			{"Khác", "Bảo hộ ATLĐ & Môi trường", 0.04, "Phun sương dập bụi, quan trắc môi trường và bảo hộ lao động"},
 		}
 
-		for _, ts := range todayShifts {
-			entryDate := time.Date(2026, time.September, 10, ts.Hour, ts.Minute, 0, 0, now.Location())
-			norm := ts.BaseVal * q.Ratio
-			actual := norm * (0.98 + float64((ts.Hour+len(q.Code))%9)/100.0)
-
-			batch.Queue(`
+		for _, c := range categories {
+			actual := totalCost * c.Share
+			norm := actual * 1.02
+			b.Queue(`
 				INSERT INTO production_costs (
 					cost_type, cost_category, norm_value, norm_unit, actual_value, actual_unit,
 					period, mine_area, description, created_at
@@ -437,194 +263,258 @@ func seedProductionCostsForAllQuarries(ctx context.Context, now time.Time) {
 					$1, $2, $3, 'VNĐ', $4, 'VNĐ',
 					$5, $6, $7, $8
 				)
-			`, ts.CostType, ts.Category, norm, actual, periodSep, mineArea, ts.Desc, entryDate)
+			`, c.CostType, c.Category, norm, actual, periodStr, mineArea, c.Desc, entryDate)
 		}
 	}
 
-	br := Pool.SendBatch(ctx, batch)
-	_ = br.Close()
-}
+	// Helper for inventory movement (Inbound ~1.02x production, Outbound ~0.98x production)
+	insertDailyInventory := func(b *pgx.Batch, q quarrySeedSpec, entryDate time.Time, dayTonnage float64) {
+		dateStr := entryDate.Format("02/01/2006")
+		inID := fmt.Sprintf("INV-IN-%s-%s", q.Prefix, entryDate.Format("20060102"))
+		qtyIn := dayTonnage * 1.02
+		b.Queue(`
+			INSERT INTO inventory_inbound (code, source, loc, item, qty, quantity, unit, date, status, created_at)
+			VALUES ($1, 'Trạm Nghiền Sàng', $2, 'Đá 1x2 Bê tông', $3, $3, 'tấn', $4, 'Hoàn thành', $5)
+			ON CONFLICT DO NOTHING
+		`, inID, q.Location, qtyIn, dateStr, entryDate)
 
-func seedFuelLogsForAllQuarries(ctx context.Context, now time.Time) {
-	var count int
-	_ = Pool.QueryRow(ctx, "SELECT COUNT(*) FROM equipment_fuel_logs WHERE id LIKE 'FUEL-%-2026%'").Scan(&count)
-	if count >= 20 {
-		return
+		outID := fmt.Sprintf("INV-OUT-%s-%s", q.Prefix, entryDate.Format("20060102"))
+		qtyOut := dayTonnage * 0.98
+		b.Queue(`
+			INSERT INTO inventory_outbound (code, customer, dest, item, qty, quantity, unit, date, status, created_at)
+			VALUES ($1, 'Khách hàng theo phiếu cân', $2, 'Đá 1x2 Bê tông', $3, $3, 'tấn', $4, 'Hoàn thành', $5)
+			ON CONFLICT DO NOTHING
+		`, outID, q.Location, qtyOut, dateStr, entryDate)
 	}
-	machines := []struct {
-		Code, Name, Category string
-		Quota                float64
-	}{
-		{"MX-01", "Máy Xúc Komatsu PC450", "Máy Xúc", 32.5},
-		{"MX-02", "Máy Xúc Hyundai R380", "Máy Xúc", 28.0},
-		{"DCN-01", "Dây Chuyền Nghiền 01", "Dây Chuyền Nghiền", 45.0},
-		{"XB-01", "Xe Ben Howo 88H-042.27", "Xe Vận Tải Moong", 18.5},
-		{"XB-02", "Xe Ben Chenglong 19H-056.22", "Xe Vận Tải Moong", 17.5},
-	}
 
-	for _, q := range quarrySpecs {
-		for d := 1; d <= 10; d++ {
-			logDate := time.Date(2026, time.September, d, 17, 30, 0, 0, now.Location())
-			dateStr := logDate.Format("02/01/2006")
-
-			for idx, m := range machines {
-				id := fmt.Sprintf("FUEL-%s-%s-%s", q.Prefix, logDate.Format("20060102"), m.Code)
-				hours := 7.0 + float64((idx+d)%3)
-				consumed := hours * m.Quota * (0.95 + float64((d+idx)%10)/100.0)
-				issued := consumed + float64((idx*3)%10) - 4.0
-
-				Pool.Exec(ctx, `
-					INSERT INTO equipment_fuel_logs (
-						id, equipment_code, equipment_name, category, operator_name,
-						hours_worked_today, total_hours_meter, fuel_quota_liters_per_hour,
-						actual_fuel_issued_liters, actual_fuel_consumed_liters, fuel_variance_liters,
-						variance_status, location, maintenance_status, tank_capacity_liters,
-						current_fuel_liters, last_dispense_at, next_maintenance_hours, quarry_code, created_at
-					) VALUES (
-						$1, $2, $3, $4, 'Thợ máy vận hành',
-						$5, 4500, $6,
-						$7, $8, $9,
-						'Chuẩn định mức', $10, 'Hoạt động tốt', 400,
-						280, $11, 5000, $12, $13
-					)
-					ON CONFLICT (id) DO UPDATE SET
-						created_at = EXCLUDED.created_at,
-						actual_fuel_consumed_liters = EXCLUDED.actual_fuel_consumed_liters
-				`,
-					id, m.Code, m.Name, m.Category,
-					hours, m.Quota,
-					issued, consumed, issued-consumed,
-					q.Location, dateStr+" 17:30", q.Code, logDate,
+	// Helper for fuel logs (~2.2 L of diesel per ton of stone)
+	insertDailyFuel := func(b *pgx.Batch, q quarrySeedSpec, entryDate time.Time, dayTonnage float64) {
+		dateStr := entryDate.Format("02/01/2006")
+		totalFuel := dayTonnage * 2.2
+		machines := []struct {
+			Code, Name, Category string
+			Share                float64
+			Hours                float64
+		}{
+			{"MX-01", "Máy Xúc Komatsu PC450", "Máy Xúc", 0.40, 7.5},
+			{"DCN-01", "Dây Chuyền Nghiền 01", "Dây Chuyền Nghiền", 0.42, 7.0},
+			{"XB-01", "Xe Ben Howo Moong", "Xe Vận Tải Moong", 0.18, 6.5},
+		}
+		for _, m := range machines {
+			id := fmt.Sprintf("FUEL-%s-%s-%s", q.Prefix, entryDate.Format("20060102"), m.Code)
+			consumed := totalFuel * m.Share
+			issued := consumed * 1.01
+			quota := consumed / m.Hours
+			b.Queue(`
+				INSERT INTO equipment_fuel_logs (
+					id, equipment_code, equipment_name, category, operator_name,
+					hours_worked_today, total_hours_meter, fuel_quota_liters_per_hour,
+					actual_fuel_issued_liters, actual_fuel_consumed_liters, fuel_variance_liters,
+					variance_status, location, maintenance_status, tank_capacity_liters,
+					current_fuel_liters, last_dispense_at, next_maintenance_hours, quarry_code, created_at
+				) VALUES (
+					$1, $2, $3, $4, 'Thợ máy vận hành',
+					$5, 4500, $6,
+					$7, $8, $9,
+					'Chuẩn định mức', $10, 'Hoạt động tốt', 400,
+					280, $11, 5000, $12, $13
 				)
-			}
+				ON CONFLICT (id) DO UPDATE SET
+					actual_fuel_consumed_liters = EXCLUDED.actual_fuel_consumed_liters
+			`,
+				id, m.Code, m.Name, m.Category,
+				m.Hours, quota,
+				issued, consumed, issued-consumed,
+				q.Location, dateStr+" 17:00", q.Code, entryDate,
+			)
 		}
 	}
-}
 
-func seedAttendancesForAllQuarries(ctx context.Context, now time.Time) {
-	var count int
-	_ = Pool.QueryRow(ctx, "SELECT COUNT(*) FROM hr_attendances WHERE id LIKE 'ATT-%-2026%'").Scan(&count)
-	if count >= 30 {
-		return
+	// Helper for attendances (6 workers per quarry)
+	insertDailyAttendance := func(b *pgx.Batch, q quarrySeedSpec, entryDate time.Time) {
+		dateStr := entryDate.Format("02/01/2006")
+		workers := []struct {
+			Dept, Role, Name string
+		}{
+			{"Tổ Vận Hành Trạm Cân", "Nhân viên trạm cân", "Nguyễn Văn Dũng"},
+			{"Tổ Vận Hành Trạm Cân", "Thủ kho bãi", "Lê Văn Cân 02"},
+			{"Đội Cơ Giới & Vận Tải", "Tài xế xe ben", "Nguyễn Văn Mạnh"},
+			{"Xưởng Nghiền Sàng", "Thợ máy nghiền", "Phạm Văn Cường"},
+			{"Phòng Kỹ Thuật", "Kỹ sư trắc địa", "Trần Văn Kiên"},
+			{"Ban Điều Hành", "Điều phối ca", "Nguyễn Đức Trường"},
+		}
+		for idx, w := range workers {
+			attID := fmt.Sprintf("ATT-%s-%s-%d", q.Prefix, entryDate.Format("20060102"), idx)
+			checkInTime := time.Date(entryDate.Year(), entryDate.Month(), entryDate.Day(), 6, 30+idx*5, 0, 0, ict)
+			b.Queue(`
+				INSERT INTO hr_attendances (
+					id, employee_id, employee_name, department, job_position,
+					date, check_in_time, check_out_time, contracted_hours, worked_hours,
+					status, location, created_at
+				) VALUES (
+					$1, $2, $3, $4, $5,
+					$6, '06:45', '15:15', 8.0, 8.0,
+					'Đúng giờ', $7, $8
+				)
+				ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at
+			`,
+				attID, fmt.Sprintf("EMP-%s-%02d", q.Prefix, idx+1), w.Name,
+				w.Dept, w.Role,
+				dateStr, q.Location, checkInTime,
+			)
+		}
 	}
-	depts := []struct {
-		Dept, Role string
-		Workers    []string
-	}{
-		{"Tổ Vận Hành Trạm Cân", "Nhân viên trạm cân", []string{"Nguyễn Văn Dũng", "Lê Văn Cân 02"}},
-		{"Đội Cơ Giới & Vận Tải Mỏ", "Tài xế xe ben", []string{"Nguyễn Văn Mạnh", "Trần Đình Trọng", "Lê Hữu Thắng"}},
-		{"Xưởng Nghiền Sàng Đá", "Thợ máy nghiền sàng", []string{"Phạm Văn Cường", "Đỗ Văn Long"}},
-		{"Phòng Kỹ Thuật & An Toàn", "Kỹ sư trắc địa", []string{"Trần Văn Kiên", "Phạm Hoàng Nam"}},
-		{"Ban Điều Hành & Kế Toán", "Điều phối & Kế toán", []string{"Nguyễn Đức Trường", "Nguyễn Thị Thủy"}},
-	}
 
-	for _, q := range quarrySpecs {
-		// Past 7 days
-		for _, dayOffset := range []int{0, 1, 2, 3, 4, 5, 6} {
-			attDate := now.AddDate(0, 0, -dayOffset)
-			dateStr := attDate.Format("02/01/2006")
+	// 2. Loop through August 2026 (Aug 1 to Aug 31)
+	for d := 1; d <= 31; d++ {
+		for _, q := range quarrySpecs {
+			var dayTonnage, dayRevenue float64
+			ticketCount := 2
+			if q.Ratio >= 0.95 {
+				ticketCount = 3
+			}
 
-			for dIdx, d := range depts {
-				for wIdx, worker := range d.Workers {
-					attID := fmt.Sprintf("ATT-%s-%s-%d-%d", q.Prefix, attDate.Format("20060102"), dIdx, wIdx)
-					checkInTime := time.Date(attDate.Year(), attDate.Month(), attDate.Day(), 6, 30+wIdx*10, 0, 0, now.Location())
-
-					Pool.Exec(ctx, `
-						INSERT INTO hr_attendances (
-							id, employee_id, employee_name, department, job_position,
-							date, check_in_time, check_out_time, contracted_hours, worked_hours,
-							status, location, created_at
-						) VALUES (
-							$1, $2, $3, $4, $5,
-							$6, '06:45', '15:15', 8.0, 8.0,
-							'Đúng giờ', $7, $8
-						)
-						ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at
-					`,
-						attID, fmt.Sprintf("EMP-%s-%d%d", q.Prefix, dIdx, wIdx), worker,
-						d.Dept, d.Role,
-						dateStr, q.Location, checkInTime,
-					)
+			for i := 1; i <= ticketCount; i++ {
+				var hour int
+				if i == 1 {
+					hour = 7
+				} else if i == 2 {
+					hour = 9
+				} else {
+					hour = 14
 				}
+				min := 15 + ((d*7 + i*13) % 35)
+				tDate := time.Date(2026, time.August, d, hour, min, 0, 0, ict)
+				tTons, tRev := insertTicket(batch, q, tDate, i)
+				dayTonnage += tTons
+				dayRevenue += tRev
 			}
+
+			costDate := time.Date(2026, time.August, d, 7, 15, 0, 0, ict)
+			insertDailyCost(batch, q, costDate, dayRevenue)
+			insertDailyInventory(batch, q, costDate, dayTonnage)
+			insertDailyFuel(batch, q, costDate, dayTonnage)
+			insertDailyAttendance(batch, q, costDate)
 		}
 	}
-}
 
-func seedInventoryMovementsForAllQuarries(ctx context.Context, now time.Time) {
-	var count int
-	_ = Pool.QueryRow(ctx, "SELECT COUNT(*) FROM inventory_inbound WHERE code LIKE 'INV-IN-%'").Scan(&count)
-	if count >= 20 {
-		return
+	// 3. Loop through September 2026 up to today (now.Day())
+	maxDay := now.Day()
+	if maxDay < 11 {
+		maxDay = 11
 	}
-	for _, q := range quarrySpecs {
-		for d := 1; d <= 10; d++ {
-			invDate := time.Date(2026, time.September, d, 14, 0, 0, 0, now.Location())
-			dateStr := invDate.Format("02/01/2006")
+	for d := 1; d <= maxDay; d++ {
+		for _, q := range quarrySpecs {
+			var dayTonnage, dayRevenue float64
+			ticketCount := 2
+			if q.Ratio >= 0.95 {
+				ticketCount = 3
+			}
+			if d >= 7 && q.Ratio >= 0.85 {
+				ticketCount = 3
+			}
 
-			inID := fmt.Sprintf("INV-IN-%s-%02d", q.Prefix, d)
-			qtyIn := 120.0 + float64(d*15)
-			Pool.Exec(ctx, `
-				INSERT INTO inventory_inbound (code, source, loc, item, qty, quantity, unit, date, status, created_at)
-				VALUES ($1, 'Moong Khai Thác', $2, 'Đá 1x2 Bê tông', $3, $3, 'tấn', $4, 'Hoàn thành', $5)
-				ON CONFLICT DO NOTHING
-			`, inID, q.Location, qtyIn, dateStr, invDate)
+			for i := 1; i <= ticketCount; i++ {
+				var hour int
+				if i == 1 {
+					hour = 7
+				} else if i == 2 {
+					hour = 9
+				} else {
+					hour = 14
+				}
+				min := 10 + ((d*5 + i*17) % 35)
+				tDate := time.Date(2026, time.September, d, hour, min, 0, 0, ict)
+				tTons, tRev := insertTicket(batch, q, tDate, i)
+				dayTonnage += tTons
+				dayRevenue += tRev
+			}
 
-			outID := fmt.Sprintf("INV-OUT-%s-%02d", q.Prefix, d)
-			qtyOut := 110.0 + float64(d*14)
-			Pool.Exec(ctx, `
-				INSERT INTO inventory_outbound (code, customer, dest, item, qty, quantity, unit, date, status, created_at)
-				VALUES ($1, 'Khách hàng dự án', $2, 'Đá 1x2 Bê tông', $3, $3, 'tấn', $4, 'Hoàn thành', $5)
-				ON CONFLICT DO NOTHING
-			`, outID, q.Location, qtyOut, dateStr, invDate)
+			costDate := time.Date(2026, time.September, d, 7, 15, 0, 0, ict)
+			insertDailyCost(batch, q, costDate, dayRevenue)
+			insertDailyInventory(batch, q, costDate, dayTonnage)
+			insertDailyFuel(batch, q, costDate, dayTonnage)
+			insertDailyAttendance(batch, q, costDate)
 		}
 	}
-}
 
-func seedAlertsForAllQuarries(ctx context.Context, now time.Time) {
-	alerts := []struct {
+	// 4. Seed Alerts throughout August and September
+	alertTemplates := []struct {
 		Title, Plate, Severity, Cam, Note string
 		Diff                               float64
 	}{
 		{"Phát hiện xe tải lệch bì kiểm định", "19H-056.22", "critical", "Cam 01 ANPR", "Cân bì lệch +380kg so với đăng kiểm", 380},
-		{"Lệch chuẩn định mức nhiên liệu cơ giới", "MX-PC450", "warning", "Cảm biến dầu IoT", "Mức tiêu hao vượt 18% định mức ca sáng", 24},
-		{"Cảnh báo công nợ khách hàng vượt ngưỡng", "CUST-319", "warning", "Hệ thống Kế toán", "Công nợ vượt hạn mức hợp đồng DO-319", 520000000},
+		{"Lệch chuẩn định mức nhiên liệu cơ giới", "MX-PC450", "warning", "Cảm biến dầu IoT", "Mức tiêu hao vượt 12% định mức ca sáng", 24},
+		{"Khách hàng có công nợ quá hạn hợp đồng", "CUST-319", "warning", "Kế toán mỏ", "Công nợ quá hạn 520 triệu đ cần đối soát", 520000000},
 	}
 
-	for _, q := range quarrySpecs {
-		for i, a := range alerts {
-			id := fmt.Sprintf("AL-%s-20260910-%02d", q.Prefix, i+1)
-			todayAlertTime := now.Add(-time.Duration(i*2) * time.Hour)
-
-			Pool.Exec(ctx, `
-				INSERT INTO alerts (
-					id, title, bs, note, time, date, status, severity, phieu,
-					bi_dang_ky, bi_thuc_te, lech_bi, cam, created_at
-				) VALUES (
-					$1, $2, $3, $4, '10:30', '10/09/2026', 'Chờ xử lý', $5, $6,
-					16.0, 16.38, $7, $8, $9
-				)
-				ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at
-			`,
-				id, a.Title+" - "+q.Location, a.Plate, a.Note, a.Severity, "TK-"+q.Prefix+"-01",
-				a.Diff, a.Cam, todayAlertTime,
+	for i := 1; i <= 18; i++ {
+		day := 1 + (i * 31 / 19)
+		tmpl := alertTemplates[i%len(alertTemplates)]
+		q := quarrySpecs[i%len(quarrySpecs)]
+		aDate := time.Date(2026, time.August, day, 10, 30, 0, 0, ict)
+		id := fmt.Sprintf("AL-%s-%s-%02d", q.Prefix, aDate.Format("20060102"), i)
+		batch.Queue(`
+			INSERT INTO alerts (
+				id, title, bs, note, time, date, status, severity, phieu,
+				bi_dang_ky, bi_thuc_te, lech_bi, cam, created_at
+			) VALUES (
+				$1, $2, $3, $4, '10:30', $5, 'Đã xác nhận', $6, $7,
+				16.0, 16.38, $8, $9, $10
 			)
-
-			idY := fmt.Sprintf("AL-%s-20260909-%02d", q.Prefix, i+1)
-			yesterdayAlertTime := now.AddDate(0, 0, -1).Add(-time.Duration(i*2) * time.Hour)
-			Pool.Exec(ctx, `
-				INSERT INTO alerts (
-					id, title, bs, note, time, date, status, severity, phieu,
-					bi_dang_ky, bi_thuc_te, lech_bi, cam, created_at
-				) VALUES (
-					$1, $2, $3, $4, '14:20', '09/09/2026', 'Đã xác nhận', $5, $6,
-					16.0, 16.35, $7, $8, $9
-				)
-				ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at
-			`,
-				idY, a.Title+" - "+q.Location, a.Plate, a.Note, a.Severity, "TK-"+q.Prefix+"-02",
-				a.Diff, a.Cam, yesterdayAlertTime,
-			)
-		}
+			ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at
+		`, id, tmpl.Title+" - "+q.Location, tmpl.Plate, tmpl.Note, aDate.Format("02/01/2006"), tmpl.Severity, "TK-"+q.Prefix+"-01", tmpl.Diff, tmpl.Cam, aDate)
 	}
+
+	for i := 1; i <= 16; i++ {
+		day := 1 + (i * 9 / 17)
+		tmpl := alertTemplates[i%len(alertTemplates)]
+		q := quarrySpecs[i%len(quarrySpecs)]
+		aDate := time.Date(2026, time.September, day, 11, 15, 0, 0, ict)
+		id := fmt.Sprintf("AL-%s-%s-%02d", q.Prefix, aDate.Format("20060102"), i)
+		batch.Queue(`
+			INSERT INTO alerts (
+				id, title, bs, note, time, date, status, severity, phieu,
+				bi_dang_ky, bi_thuc_te, lech_bi, cam, created_at
+			) VALUES (
+				$1, $2, $3, $4, '11:15', $5, 'Đã xác nhận', $6, $7,
+				16.0, 16.38, $8, $9, $10
+			)
+			ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at
+		`, id, tmpl.Title+" - "+q.Location, tmpl.Plate, tmpl.Note, aDate.Format("02/01/2006"), tmpl.Severity, "TK-"+q.Prefix+"-01", tmpl.Diff, tmpl.Cam, aDate)
+	}
+
+	todayAlerts := []struct {
+		QIdx int
+		Tmpl int
+		Hour int
+	}{
+		{0, 0, 8}, // 08:30 AM
+		{2, 2, 9}, // 09:30 AM
+	}
+	for idx, ta := range todayAlerts {
+		q := quarrySpecs[ta.QIdx]
+		tmpl := alertTemplates[ta.Tmpl]
+		aDate := time.Date(2026, time.September, now.Day(), ta.Hour, 30, 0, 0, ict)
+		id := fmt.Sprintf("AL-%s-%s-%02d", q.Prefix, aDate.Format("20060102"), idx+1)
+		batch.Queue(`
+			INSERT INTO alerts (
+				id, title, bs, note, time, date, status, severity, phieu,
+				bi_dang_ky, bi_thuc_te, lech_bi, cam, created_at
+			) VALUES (
+				$1, $2, $3, $4, '08:30', $5, 'Chờ xử lý', $6, $7,
+				16.0, 16.38, $8, $9, $10
+			)
+			ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at
+		`, id, tmpl.Title+" - "+q.Location, tmpl.Plate, tmpl.Note, aDate.Format("02/01/2006"), tmpl.Severity, "TK-"+q.Prefix+"-01", tmpl.Diff, tmpl.Cam, aDate)
+	}
+
+	fmt.Printf("📦 Executing monthly seed pipeline (%d operations)...\n", batch.Len())
+	br := Pool.SendBatch(ctx, batch)
+	if err := br.Close(); err != nil {
+		fmt.Printf("⚠️ Error executing seed batch: %v\n", err)
+		return
+	}
+
+	fmt.Println("✅ Comprehensive monthly quarry data seed completed successfully!")
 }

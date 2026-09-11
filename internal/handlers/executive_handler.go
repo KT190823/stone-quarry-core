@@ -14,6 +14,29 @@ import (
 	"mo-da-backend/internal/services"
 )
 
+const (
+	sqlTicketTonnageExpr = `CASE 
+		WHEN NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision > 500 
+			THEN NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision / 1000.0
+		ELSE NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision 
+	END`
+
+	sqlTicketRevenueExpr = `CASE 
+		WHEN NULLIF(regexp_replace(thanh_tien, '[^0-9]', '', 'g'), '') IS NOT NULL 
+		     AND regexp_replace(thanh_tien, '[^0-9]', '', 'g')::double precision > 0
+			THEN regexp_replace(thanh_tien, '[^0-9]', '', 'g')::double precision
+		WHEN don_gia > 0 AND NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '') IS NOT NULL
+			THEN don_gia * (
+				CASE 
+					WHEN regexp_replace(kl_hang, '[^0-9.]', '', 'g')::double precision > 500 
+						THEN regexp_replace(kl_hang, '[^0-9.]', '', 'g')::double precision / 1000.0
+					ELSE regexp_replace(kl_hang, '[^0-9.]', '', 'g')::double precision 
+				END
+			)
+		ELSE 0 
+	END`
+)
+
 type BusinessIssue struct {
 	ID            int      `json:"id"`
 	Type          string   `json:"type"`
@@ -95,10 +118,54 @@ type cachedOverviewEntry struct {
 	expiresAt time.Time
 }
 
+const (
+	// TTL ngắn để dashboard phản ánh dữ liệu mới gần như tức thời.
+	execOverviewCacheTTL = 15 * time.Second
+	// Giới hạn số entry tối đa để tránh map phình vô hạn (memory leak).
+	execOverviewCacheMaxEntries = 128
+)
+
 var (
 	execOverviewCacheMutex sync.RWMutex
 	execOverviewCache      = make(map[string]cachedOverviewEntry)
 )
+
+// InvalidateExecutiveOverviewCache xoá toàn bộ cache tổng quan điều hành.
+// Gọi sau mỗi thao tác ghi dữ liệu ảnh hưởng tới chỉ số (phiếu cân, cảnh báo...).
+func InvalidateExecutiveOverviewCache() {
+	execOverviewCacheMutex.Lock()
+	if len(execOverviewCache) > 0 {
+		execOverviewCache = make(map[string]cachedOverviewEntry)
+	}
+	execOverviewCacheMutex.Unlock()
+}
+
+// storeExecOverviewCacheLocked lưu entry mới, dọn entry hết hạn và giới hạn kích thước map.
+// Phải gọi khi đang giữ execOverviewCacheMutex ở chế độ Lock.
+func storeExecOverviewCacheLocked(key string, data ExecutiveOverviewResponse) {
+	now := time.Now()
+	for k, entry := range execOverviewCache {
+		if now.After(entry.expiresAt) {
+			delete(execOverviewCache, k)
+		}
+	}
+	if _, exists := execOverviewCache[key]; !exists && len(execOverviewCache) >= execOverviewCacheMaxEntries {
+		var oldestKey string
+		var oldestExpiry time.Time
+		for k, entry := range execOverviewCache {
+			if oldestKey == "" || entry.expiresAt.Before(oldestExpiry) {
+				oldestKey, oldestExpiry = k, entry.expiresAt
+			}
+		}
+		if oldestKey != "" {
+			delete(execOverviewCache, oldestKey)
+		}
+	}
+	execOverviewCache[key] = cachedOverviewEntry{
+		data:      data,
+		expiresAt: now.Add(execOverviewCacheTTL),
+	}
+}
 
 func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -150,17 +217,12 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 
 	run(func() {
 		var rev float64
-		_ = db.QueryRow(ctx, `
-			SELECT COALESCE(SUM(
-				CASE 
-					WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric
-					ELSE 0 
-				END
-			), 0)
+		_ = db.QueryRow(ctx, fmt.Sprintf(`
+			SELECT COALESCE(SUM(%s), 0)
 			FROM tickets
 			WHERE created_at >= $1 AND created_at < $2
 			  AND ($3 = '' OR quarry_code = $3)
-		`, currMonthStart, currMonthEnd, quarryID).Scan(&rev)
+		`, sqlTicketRevenueExpr), currMonthStart, currMonthEnd, quarryID).Scan(&rev)
 		if rev == 0 {
 			rev = 1450000000
 			if quarryID != "" {
@@ -175,17 +237,12 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 		var rev float64
 		todayDayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		todayDayEnd := todayDayStart.AddDate(0, 0, 1)
-		_ = db.QueryRow(ctx, `
-			SELECT COALESCE(SUM(
-				CASE 
-					WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric
-					ELSE 0 
-				END
-			), 0)
+		_ = db.QueryRow(ctx, fmt.Sprintf(`
+			SELECT COALESCE(SUM(%s), 0)
 			FROM tickets
 			WHERE created_at >= $1 AND created_at < $2
 			  AND ($3 = '' OR quarry_code = $3)
-		`, todayDayStart, todayDayEnd, quarryID).Scan(&rev)
+		`, sqlTicketRevenueExpr), todayDayStart, todayDayEnd, quarryID).Scan(&rev)
 		if rev == 0 {
 			rev = monthRev / 26.0
 		}
@@ -256,17 +313,12 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 
 	// Prev month revenue
-	_ = db.QueryRow(ctx, `
-		SELECT COALESCE(SUM(
-			CASE 
-				WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric
-				ELSE 0 
-			END
-		), 0)
+	_ = db.QueryRow(ctx, fmt.Sprintf(`
+		SELECT COALESCE(SUM(%s), 0)
 		FROM tickets
 		WHERE created_at >= $1 AND created_at < $2
 		  AND ($3 = '' OR quarry_code = $3)
-	`, prevMonthStart, prevMonthEnd, quarryID).Scan(&prevMonthRev)
+	`, sqlTicketRevenueExpr), prevMonthStart, prevMonthEnd, quarryID).Scan(&prevMonthRev)
 	if prevMonthRev == 0 {
 		prevMonthRev = monthRev * 0.94
 	}
@@ -358,10 +410,7 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	execOverviewCacheMutex.Lock()
-	execOverviewCache[cacheKey] = cachedOverviewEntry{
-		data:      resp,
-		expiresAt: time.Now().Add(60 * time.Second),
-	}
+	storeExecOverviewCacheLocked(cacheKey, resp)
 	execOverviewCacheMutex.Unlock()
 
 	JSON(w, resp)
@@ -426,21 +475,21 @@ func executivePeriodBounds(now time.Time, period string) (time.Time, time.Time, 
 
 func loadExecutiveMetricSnapshot(ctx context.Context, start, end time.Time, quarryID string) executiveMetricSnapshot {
 	var snapshot executiveMetricSnapshot
-	_ = database.Pool.QueryRow(ctx, `
+	_ = database.Pool.QueryRow(ctx, fmt.Sprintf(`
 		SELECT
 			COALESCE((
-				SELECT SUM(NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision)
+				SELECT SUM(%s)
 				FROM tickets
 				WHERE created_at >= $1 AND created_at < $2
 				  AND ($3 = '' OR quarry_code = $3)
 			), 0)::double precision,
 			COALESCE((
-				SELECT SUM(CASE WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric ELSE 0 END)
+				SELECT SUM(%s)
 				FROM tickets
 				WHERE created_at >= $1 AND created_at < $2
 				  AND ($3 = '' OR quarry_code = $3)
 			), 0)::double precision,
-			COALESCE((
+			COALESCE((`, sqlTicketTonnageExpr, sqlTicketRevenueExpr) + `
 				SELECT SUM(actual_value)
 				FROM production_costs
 				WHERE created_at >= $1 AND created_at < $2
@@ -615,19 +664,19 @@ func buildMetricHistory(ctx context.Context, key string, period string, start, e
 		var val float64
 		switch key {
 		case "production":
-			_ = database.Pool.QueryRow(ctx, `
-				SELECT COALESCE(SUM(NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision), 0)
+			_ = database.Pool.QueryRow(ctx, fmt.Sprintf(`
+				SELECT COALESCE(SUM(%s), 0)
 				FROM tickets
 				WHERE created_at >= $1 AND created_at < $2
 				  AND ($3 = '' OR quarry_code = $3)
-			`, sl.From, sl.To, quarryID).Scan(&val)
+			`, sqlTicketTonnageExpr), sl.From, sl.To, quarryID).Scan(&val)
 		case "revenue":
-			_ = database.Pool.QueryRow(ctx, `
-				SELECT COALESCE(SUM(CASE WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric ELSE 0 END), 0)::double precision
+			_ = database.Pool.QueryRow(ctx, fmt.Sprintf(`
+				SELECT COALESCE(SUM(%s), 0)::double precision
 				FROM tickets
 				WHERE created_at >= $1 AND created_at < $2
 				  AND ($3 = '' OR quarry_code = $3)
-			`, sl.From, sl.To, quarryID).Scan(&val)
+			`, sqlTicketRevenueExpr), sl.From, sl.To, quarryID).Scan(&val)
 		case "cost":
 			_ = database.Pool.QueryRow(ctx, `
 				SELECT COALESCE(SUM(actual_value), 0)::double precision
@@ -717,17 +766,17 @@ func buildMetricBreakdown(ctx context.Context, key string, start, end time.Time,
 			var val float64
 			switch key {
 			case "production":
-				_ = database.Pool.QueryRow(ctx, `
-					SELECT COALESCE(SUM(NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision), 0)
+				_ = database.Pool.QueryRow(ctx, fmt.Sprintf(`
+					SELECT COALESCE(SUM(%s), 0)
 					FROM tickets
 					WHERE created_at >= $1 AND created_at < $2 AND quarry_code = $3
-				`, start, end, q.Code).Scan(&val)
+				`, sqlTicketTonnageExpr), start, end, q.Code).Scan(&val)
 			case "revenue":
-				_ = database.Pool.QueryRow(ctx, `
-					SELECT COALESCE(SUM(CASE WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric ELSE 0 END), 0)::double precision
+				_ = database.Pool.QueryRow(ctx, fmt.Sprintf(`
+					SELECT COALESCE(SUM(%s), 0)::double precision
 					FROM tickets
 					WHERE created_at >= $1 AND created_at < $2 AND quarry_code = $3
-				`, start, end, q.Code).Scan(&val)
+				`, sqlTicketRevenueExpr), start, end, q.Code).Scan(&val)
 			case "trips":
 				_ = database.Pool.QueryRow(ctx, `
 					SELECT COUNT(*)::double precision
@@ -769,17 +818,17 @@ func buildMetricBreakdown(ctx context.Context, key string, start, end time.Time,
 
 	switch key {
 	case "production", "revenue":
-		rows, err := database.Pool.Query(ctx, `
+		rows, err := database.Pool.Query(ctx, fmt.Sprintf(`
 			SELECT mat_hang,
 				CASE WHEN $4 = 'revenue' 
-					THEN COALESCE(SUM(CASE WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric ELSE 0 END), 0)::double precision
-					ELSE COALESCE(SUM(NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision), 0)
+					THEN COALESCE(SUM(%s), 0)::double precision
+					ELSE COALESCE(SUM(%s), 0)::double precision
 				END AS val
 			FROM tickets
 			WHERE created_at >= $1 AND created_at < $2 AND quarry_code = $3
 			GROUP BY mat_hang
 			ORDER BY val DESC
-		`, start, end, quarryID, key)
+		`, sqlTicketRevenueExpr, sqlTicketTonnageExpr), start, end, quarryID, key)
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {

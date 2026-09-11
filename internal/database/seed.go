@@ -254,32 +254,116 @@ func Seed() {
 			END
 	`)
 
-	// 3. Seed Vehicles
-	// 3. Seed Vehicles
-	fmt.Println("🌱 Seeding Fleet Vehicles...")
+	// 3. Seed Vehicles (Chuẩn hóa thông số xe tải 10 - 20 Tấn theo Trọng Tấn)
+	fmt.Println("🌱 Seeding Fleet Vehicles (Chuẩn kỹ thuật 10 - 20 Tấn Trọng Tấn)...")
 	vehicles := []struct {
-		BS, Loai, RFID, Status, HanDangKiem, Date, ChuXe, Unit string
-		Bi, TaiTrong                                          float64
-		Count                                                 int
+		BS, Loai, RFID, Status, HanDangKiem, Date, ChuXe, Unit, SoTruc, DongCo, HangSX string
+		Bi, TaiTrong, TongTai, Dai, Rong, Cao, TheTich, DinhMucCoTai, DinhMucKhongTai float64
+		NamSX, Count                                                                    int
 	}{
-		{"88H-042.27", "Xe ben 4 chân HOWO", "RFID-88H-042", "Hoạt động", "15/12/2026", "28/10/2026", "Công ty CP Đầu Tư Xây Dựng 319", "tấn", 15.42, 30.0, 142},
-		{"19H-056.22", "Xe ben Chenglong", "RFID-19H-056", "Hoạt động", "20/01/2027", "28/10/2026", "Tổng Công Ty XD Trường Sơn", "tấn", 14.80, 30.0, 98},
-		{"76C-102.34", "Xe đầu kéo mooc ben FAW", "RFID-76C-102", "Hoạt động", "20/08/2027", "28/10/2026", "Tổng Cty Công Nghiệp Mỏ", "tấn", 19.50, 30.0, 89},
-		{"29C-345.67", "Xe ben 4 chân Sinotruk", "RFID-29C-345", "Hoạt động", "01/06/2027", "28/10/2026", "Cty CP Vận Tải Quang Trung", "tấn", 16.20, 20.0, 82},
-		{"29H-882.19", "Xe bồn trộn bê tông", "RFID-29H-882", "Hoạt động", "10/11/2026", "28/10/2026", "Công ty Bê Tông Việt Trì", "tấn", 16.10, 25.0, 76},
-		{"90C-123.45", "Xe đầu kéo Mooc ben", "RFID-90C-123", "Hoạt động", "05/03/2027", "28/10/2026", "Công ty CP Tập Đoàn Đèo Cả", "tấn", 18.50, 45.0, 64},
-		{"36C-789.12", "Xe ben Howo 8x4", "RFID-36C-789", "Hoạt động", "15/03/2027", "28/10/2026", "HTX Vận Tải Ngọc Sơn", "tấn", 15.80, 19.0, 64},
-		{"14B-567.89", "Xe ben 6 chân Shacman", "RFID-14B-567", "Hoạt động", "10/01/2028", "28/10/2026", "Cty TNHH Vật Liệu Xây Dựng Hà Giang", "tấn", 17.00, 22.0, 53},
-		{"24C-222.11", "Xe ben 4 chân CAMC", "RFID-24C-222", "Hoạt động", "05/05/2027", "28/10/2026", "Cty CP Đá Nguyên Khối", "tấn", 14.50, 16.0, 41},
-		{"19C-098.76", "Xe tải ben 3 chân", "RFID-19C-098", "Bảo dưỡng", "28/10/2026", "28/10/2026", "Hợp tác xã Vận tải Hùng Vương", "tấn", 11.20, 20.0, 35},
+		{
+			BS: "19H-056.22", Loai: "Xe ben Chenglong Hải Âu 385HP (8x4)", RFID: "RFID-19H-056", Status: "Hoạt động",
+			HanDangKiem: "20/01/2027", Date: "28/10/2026", ChuXe: "Tổng Công Ty XD Trường Sơn", Unit: "tấn",
+			Bi: 14.80, TaiTrong: 17.90, TongTai: 32.70, Dai: 9.2, Rong: 2.35, Cao: 2.15, TheTich: 46.5,
+			SoTruc: "4 chân (8x4)", DongCo: "YC6MK385-50 (385 HP)", HangSX: "Chenglong Hải Âu",
+			DinhMucCoTai: 38.5, DinhMucKhongTai: 26.0, NamSX: 2023, Count: 98,
+		},
+		{
+			BS: "88H-042.27", Loai: "Xe ben HOWO Sinotruk 371HP (8x4)", RFID: "RFID-88H-042", Status: "Hoạt động",
+			HanDangKiem: "15/12/2026", Date: "28/10/2026", ChuXe: "Công ty CP Đầu Tư Xây Dựng 319", Unit: "tấn",
+			Bi: 15.42, TaiTrong: 17.50, TongTai: 32.92, Dai: 9.2, Rong: 2.35, Cao: 2.15, TheTich: 46.5,
+			SoTruc: "4 chân (8x4)", DongCo: "D10.38-50 (380 HP)", HangSX: "CNHTC HOWO",
+			DinhMucCoTai: 39.0, DinhMucKhongTai: 26.5, NamSX: 2023, Count: 142,
+		},
+		{
+			BS: "19C-128.45", Loai: "Xe ben Howo 371HP 4 chân (8x4)", RFID: "RFID-19C-128", Status: "Hoạt động",
+			HanDangKiem: "18/05/2027", Date: "28/10/2026", ChuXe: "Công ty Cổ phần Mỏ Đá TTC", Unit: "tấn",
+			Bi: 15.20, TaiTrong: 17.80, TongTai: 33.00, Dai: 9.2, Rong: 2.35, Cao: 2.15, TheTich: 46.5,
+			SoTruc: "4 chân (8x4)", DongCo: "Sinotruk WD615.47 (371 HP)", HangSX: "CNHTC HOWO",
+			DinhMucCoTai: 39.0, DinhMucKhongTai: 26.5, NamSX: 2022, Count: 115,
+		},
+		{
+			BS: "29C-781.90", Loai: "Xe ben Shacman X3000 Weichai 380HP (8x4)", RFID: "RFID-29C-781", Status: "Hoạt động",
+			HanDangKiem: "10/09/2027", Date: "28/10/2026", ChuXe: "Công ty Cổ phần Mỏ Đá TTC", Unit: "tấn",
+			Bi: 15.10, TaiTrong: 17.20, TongTai: 32.30, Dai: 9.2, Rong: 2.35, Cao: 2.15, TheTich: 46.5,
+			SoTruc: "4 chân (8x4)", DongCo: "Weichai WP10H380E50 (380 HP)", HangSX: "Shacman",
+			DinhMucCoTai: 39.5, DinhMucKhongTai: 27.0, NamSX: 2023, Count: 104,
+		},
+		{
+			BS: "29C-345.67", Loai: "Xe ben 4 chân Sinotruk (8x4)", RFID: "RFID-29C-345", Status: "Hoạt động",
+			HanDangKiem: "01/06/2027", Date: "28/10/2026", ChuXe: "Cty CP Vận Tải Quang Trung", Unit: "tấn",
+			Bi: 15.60, TaiTrong: 17.40, TongTai: 33.00, Dai: 9.2, Rong: 2.35, Cao: 2.15, TheTich: 46.5,
+			SoTruc: "4 chân (8x4)", DongCo: "Sinotruk 371HP", HangSX: "CNHTC HOWO",
+			DinhMucCoTai: 39.0, DinhMucKhongTai: 26.5, NamSX: 2022, Count: 82,
+		},
+		{
+			BS: "36C-789.12", Loai: "Xe ben Howo 8x4 371HP", RFID: "RFID-36C-789", Status: "Hoạt động",
+			HanDangKiem: "15/03/2027", Date: "28/10/2026", ChuXe: "HTX Vận Tải Ngọc Sơn", Unit: "tấn",
+			Bi: 15.80, TaiTrong: 17.20, TongTai: 33.00, Dai: 9.2, Rong: 2.35, Cao: 2.15, TheTich: 46.5,
+			SoTruc: "4 chân (8x4)", DongCo: "Sinotruk 371HP", HangSX: "CNHTC HOWO",
+			DinhMucCoTai: 39.2, DinhMucKhongTai: 26.8, NamSX: 2021, Count: 64,
+		},
+		{
+			BS: "19C-098.76", Loai: "Xe tải ben 15 tấn 3 chân Hino 500 FL (6x4)", RFID: "RFID-19C-098", Status: "Bảo dưỡng",
+			HanDangKiem: "28/10/2026", Date: "28/10/2026", ChuXe: "Hợp tác xã Vận tải Hùng Vương", Unit: "tấn",
+			Bi: 10.80, TaiTrong: 14.50, TongTai: 25.30, Dai: 7.8, Rong: 2.35, Cao: 2.15, TheTich: 39.4,
+			SoTruc: "3 chân (6x4)", DongCo: "Hino J08E-WD (280 HP)", HangSX: "Hino Motors",
+			DinhMucCoTai: 32.0, DinhMucKhongTai: 22.0, NamSX: 2022, Count: 35,
+		},
+		{
+			BS: "90C-054.67", Loai: "Xe ben 15 tấn 3 chân Howo (6x4)", RFID: "RFID-90C-054", Status: "Hoạt động",
+			HanDangKiem: "12/04/2027", Date: "28/10/2026", ChuXe: "Cty TNHH Bê Tông Kiện Khê Hà Nam", Unit: "tấn",
+			Bi: 11.20, TaiTrong: 15.00, TongTai: 26.20, Dai: 7.8, Rong: 2.35, Cao: 2.15, TheTich: 39.4,
+			SoTruc: "3 chân (6x4)", DongCo: "WD615.47 (371 HP)", HangSX: "CNHTC HOWO",
+			DinhMucCoTai: 33.5, DinhMucKhongTai: 22.5, NamSX: 2022, Count: 48,
+		},
+		{
+			BS: "24C-222.11", Loai: "Xe tải 12 tấn 2 dí 1 cầu Chenglong (6x2)", RFID: "RFID-24C-222", Status: "Hoạt động",
+			HanDangKiem: "05/05/2027", Date: "28/10/2026", ChuXe: "Cty CP Đá Nguyên Khối", Unit: "tấn",
+			Bi: 9.80, TaiTrong: 12.00, TongTai: 21.80, Dai: 9.2, Rong: 2.35, Cao: 2.15, TheTich: 46.5,
+			SoTruc: "3 trục (2 dí 1 cầu)", DongCo: "Yuchai YC6J240-50 (240 HP)", HangSX: "Chenglong Hải Âu",
+			DinhMucCoTai: 28.5, DinhMucKhongTai: 19.5, NamSX: 2021, Count: 41,
+		},
+		{
+			BS: "14B-567.89", Loai: "Xe tải ben 20 tấn 5 chân Howo A7 (10x4)", RFID: "RFID-14B-567", Status: "Hoạt động",
+			HanDangKiem: "10/01/2028", Date: "28/10/2026", ChuXe: "Cty TNHH Vật Liệu Xây Dựng Hà Giang", Unit: "tấn",
+			Bi: 16.80, TaiTrong: 20.00, TongTai: 36.80, Dai: 9.8, Rong: 2.35, Cao: 2.40, TheTich: 55.3,
+			SoTruc: "5 chân (10x4)", DongCo: "D10.38 (380 HP)", HangSX: "CNHTC HOWO",
+			DinhMucCoTai: 42.5, DinhMucKhongTai: 28.0, NamSX: 2023, Count: 53,
+		},
+		{
+			BS: "29H-882.19", Loai: "Xe bồn trộn bê tông 12m3 Howo (6x4)", RFID: "RFID-29H-882", Status: "Hoạt động",
+			HanDangKiem: "10/11/2026", Date: "28/10/2026", ChuXe: "Công ty Bê Tông Việt Trì", Unit: "tấn",
+			Bi: 16.10, TaiTrong: 16.00, TongTai: 32.10, Dai: 8.8, Rong: 2.35, Cao: 2.60, TheTich: 12.0,
+			SoTruc: "3 trục (6x4)", DongCo: "WD615.69 (336 HP)", HangSX: "CNHTC HOWO",
+			DinhMucCoTai: 36.0, DinhMucKhongTai: 24.0, NamSX: 2022, Count: 76,
+		},
+		{
+			BS: "76C-102.34", Loai: "Xe đầu kéo mooc ben FAW (6 trục)", RFID: "RFID-76C-102", Status: "Hoạt động",
+			HanDangKiem: "20/08/2027", Date: "28/10/2026", ChuXe: "Tổng Cty Công Nghiệp Mỏ", Unit: "tấn",
+			Bi: 18.50, TaiTrong: 29.50, TongTai: 48.00, Dai: 9.5, Rong: 2.35, Cao: 1.80, TheTich: 40.2,
+			SoTruc: "Đầu kéo 6 trục", DongCo: "FAWDE CA6DM2 (420 HP)", HangSX: "FAW Group",
+			DinhMucCoTai: 46.0, DinhMucKhongTai: 30.0, NamSX: 2023, Count: 89,
+		},
 	}
 
 	for _, v := range vehicles {
 		Pool.Exec(ctx, `
-			INSERT INTO vehicles (bs, loai, bi, rfid, tai_trong, unit, status, count, han_dang_kiem, date, chu_xe)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-			ON CONFLICT (bs) DO UPDATE SET bi = EXCLUDED.bi, tai_trong = EXCLUDED.tai_trong, unit = EXCLUDED.unit, loai = EXCLUDED.loai, status = EXCLUDED.status, count = EXCLUDED.count, han_dang_kiem = EXCLUDED.han_dang_kiem, chu_xe = EXCLUDED.chu_xe
-		`, v.BS, v.Loai, v.Bi, v.RFID, v.TaiTrong, v.Unit, v.Status, v.Count, v.HanDangKiem, v.Date, v.ChuXe)
+			INSERT INTO vehicles (
+				bs, loai, bi, rfid, tai_trong, unit, status, count, han_dang_kiem, date, chu_xe,
+				dai, rong, cao, the_tich, so_truc, tong_tai, dong_co, dinh_muc_co_tai, dinh_muc_khong_tai, hang_sx, nam_sx
+			) VALUES (
+				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+				$12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+			)
+			ON CONFLICT (bs) DO UPDATE SET 
+				bi = EXCLUDED.bi, tai_trong = EXCLUDED.tai_trong, unit = EXCLUDED.unit, loai = EXCLUDED.loai,
+				status = EXCLUDED.status, count = EXCLUDED.count, han_dang_kiem = EXCLUDED.han_dang_kiem, chu_xe = EXCLUDED.chu_xe,
+				dai = EXCLUDED.dai, rong = EXCLUDED.rong, cao = EXCLUDED.cao, the_tich = EXCLUDED.the_tich, so_truc = EXCLUDED.so_truc,
+				tong_tai = EXCLUDED.tong_tai, dong_co = EXCLUDED.dong_co, dinh_muc_co_tai = EXCLUDED.dinh_muc_co_tai,
+				dinh_muc_khong_tai = EXCLUDED.dinh_muc_khong_tai, hang_sx = EXCLUDED.hang_sx, nam_sx = EXCLUDED.nam_sx
+		`, v.BS, v.Loai, v.Bi, v.RFID, v.TaiTrong, v.Unit, v.Status, v.Count, v.HanDangKiem, v.Date, v.ChuXe,
+			v.Dai, v.Rong, v.Cao, v.TheTich, v.SoTruc, v.TongTai, v.DongCo, v.DinhMucCoTai, v.DinhMucKhongTai, v.HangSX, v.NamSX)
 	}
 
 	// 4. Seed Materials Catalog
@@ -566,13 +650,25 @@ func Seed() {
 			('TT-03', 'Phiếu Cân Trung Chuyển Nội Bộ', 'Phiếu Cân Nội Bộ', 'Nội bộ', 'Cân vận chuyển đá từ moong về trạm nghiền', 'Hoạt động')
 			ON CONFLICT (code) DO NOTHING;
 
-			INSERT INTO vehicle_catalogs (code, name, loai, tai_trong, unit, so_truc, status) VALUES
-			('VC-01', 'Xe ben HOWO 371HP 4 Chân', 'Xe ben 4 chân', 30.0, 'tấn', '4 trục', 'Hoạt động'),
-			('VC-02', 'Xe ben Chenglong Hải Âu 385HP', 'Xe ben 4 chân', 30.0, 'tấn', '4 trục', 'Hoạt động'),
-			('VC-03', 'Xe ben Shacman X3000', 'Xe ben 4 chân', 30.0, 'tấn', '4 trục', 'Hoạt động'),
-			('VC-04', 'Xe đầu kéo Howo Mooc Ben', 'Xe đầu kéo', 45.0, 'tấn', '6 trục', 'Hoạt động'),
-			('VC-05', 'Xe bồn bê tông trộn 12m3', 'Xe bồn trộn', 25.0, 'tấn', '3 trục', 'Hoạt động')
-			ON CONFLICT (code) DO UPDATE SET tai_trong = EXCLUDED.tai_trong, unit = EXCLUDED.unit;
+			INSERT INTO vehicle_catalogs (
+				code, name, loai, tai_trong, unit, so_truc, status,
+				dai, rong, cao, the_tich, tong_tai, bi, hang_sx, dong_co, dinh_muc_co_tai, dinh_muc_khong_tai
+			) VALUES
+			('VC-01', 'Xe tải 10 tấn Dongfeng Hoàng Huy (2 chân)', 'Xe tải 2 chân', 10.2, 'tấn', '2 trục (4x2)', 'Hoạt động', 8.5, 2.35, 2.15, 43.0, 19.4, 9.2, 'Dongfeng', 'Cummins ISB180 (180 HP)', 26.5, 18.0),
+			('VC-02', 'Xe tải 12 tấn Chenglong (2 dí 1 cầu)', 'Xe tải 2 dí', 12.0, 'tấn', '3 trục (2 dí 1 cầu)', 'Hoạt động', 9.2, 2.35, 2.15, 46.5, 21.8, 9.8, 'Chenglong Hải Âu', 'Yuchai YC6J240 (240 HP)', 28.5, 19.5),
+			('VC-03', 'Xe tải ben 15 tấn 3 chân Hino 500 FL (6x4)', 'Xe ben 3 chân', 14.5, 'tấn', '3 trục (6x4)', 'Hoạt động', 7.8, 2.35, 2.15, 39.4, 25.3, 10.8, 'Hino Motors', 'Hino J08E-WD (280 HP)', 32.0, 22.0),
+			('VC-04', 'Xe ben 15 tấn 3 chân HOWO 371HP (6x4)', 'Xe ben 3 chân', 15.0, 'tấn', '3 trục (6x4)', 'Hoạt động', 7.8, 2.35, 2.15, 39.4, 26.2, 11.2, 'CNHTC HOWO', 'WD615.47 (371 HP)', 33.5, 22.5),
+			('VC-05', 'Xe ben 18 tấn 4 chân HOWO Sinotruk (8x4)', 'Xe ben 4 chân', 17.5, 'tấn', '4 trục (8x4)', 'Hoạt động', 9.2, 2.35, 2.15, 46.5, 32.9, 15.4, 'CNHTC HOWO', 'D10.38-50 (380 HP)', 39.0, 26.5),
+			('VC-06', 'Xe ben 18 tấn 4 chân Chenglong Hải Âu (8x4)', 'Xe ben 4 chân', 17.9, 'tấn', '4 trục (8x4)', 'Hoạt động', 9.2, 2.35, 2.15, 46.5, 32.7, 14.8, 'Chenglong Hải Âu', 'YC6MK385-50 (385 HP)', 38.5, 26.0),
+			('VC-07', 'Xe ben 18 tấn 4 chân Shacman X3000 (8x4)', 'Xe ben 4 chân', 17.2, 'tấn', '4 trục (8x4)', 'Hoạt động', 9.2, 2.35, 2.15, 46.5, 32.3, 15.1, 'Shacman', 'Weichai WP10H380 (380 HP)', 39.5, 27.0),
+			('VC-08', 'Xe tải ben 20 tấn 5 chân Howo A7 (10x4)', 'Xe ben 5 chân', 20.0, 'tấn', '5 trục (10x4)', 'Hoạt động', 9.8, 2.35, 2.40, 55.3, 36.8, 16.8, 'CNHTC HOWO', 'D10.38 (380 HP)', 42.5, 28.0),
+			('VC-09', 'Xe bồn bê tông 12m3 Howo (6x4)', 'Xe bồn trộn', 16.0, 'tấn', '3 trục (6x4)', 'Hoạt động', 8.8, 2.35, 2.60, 12.0, 32.1, 16.1, 'CNHTC HOWO', 'WD615.69 (336 HP)', 36.0, 24.0),
+			('VC-10', 'Xe đầu kéo Howo T7H Mooc ben (6 trục)', 'Xe đầu kéo', 29.5, 'tấn', 'Đầu kéo 6 trục', 'Hoạt động', 9.5, 2.35, 1.80, 40.2, 48.0, 18.5, 'Howo Sinotruk', 'MC11.44-50 (440 HP)', 46.0, 30.0)
+			ON CONFLICT (code) DO UPDATE SET 
+				name = EXCLUDED.name, loai = EXCLUDED.loai, tai_trong = EXCLUDED.tai_trong, unit = EXCLUDED.unit,
+				so_truc = EXCLUDED.so_truc, dai = EXCLUDED.dai, rong = EXCLUDED.rong, cao = EXCLUDED.cao,
+				the_tich = EXCLUDED.the_tich, tong_tai = EXCLUDED.tong_tai, bi = EXCLUDED.bi, hang_sx = EXCLUDED.hang_sx,
+				dong_co = EXCLUDED.dong_co, dinh_muc_co_tai = EXCLUDED.dinh_muc_co_tai, dinh_muc_khong_tai = EXCLUDED.dinh_muc_khong_tai;
 
 			INSERT INTO stations (code, name, ten, location, ip, capacity, type, status) VALUES
 			('ST-01', 'Trạm Cân Điện Tử Cổng 01 (100T)', 'Trạm Cân 01', 'Cổng số 1 - Khai trường mỏ', '192.168.1.100', '100 Tấn', 'Cân bàn thép 18x3m', 'Online Live'),
@@ -861,18 +957,18 @@ func Seed() {
 		ON CONFLICT (id) DO NOTHING`,
 
 		`DELETE FROM inventory_inbound`,
-		`INSERT INTO inventory_inbound (code, source, loc, item, qty, quantity, unit, date, status) VALUES
-		('NK-281025-01', 'Moong Khai Thác Tầng 3', 'Bãi Đá Hộc & Nguyên Khai', 'Đá hộc khai thác tầng', 450.00, 450.00, 'tấn', '28/10/2026', 'Đã nhập bãi'),
-		('NK-281025-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá Thành Phẩm 01', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã nhập bãi'),
-		('NK-281025-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá 4x6 Kè Móng', 'Đá 4x6 móng công trình', 320.00, 320.00, 'tấn', '27/10/2026', 'Đã nhập bãi'),
-		('NK-281025-04', 'Dây Chuyền Nghiền Sàng 02', 'Kho Cát Nghiền Mái Che', 'Cát nghiền nhân tạo (Mạt đá)', 280.50, 280.50, 'tấn', '27/10/2026', 'Đã nhập bãi')`,
+		`INSERT INTO inventory_inbound (code, source, loc, item, qty, quantity, unit, date, status, created_at) VALUES
+		('NK-281025-01', 'Moong Khai Thác Tầng 3', 'Bãi Đá Hộc & Nguyên Khai', 'Đá hộc khai thác tầng', 450.00, 450.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 08:30:00+07'),
+		('NK-281025-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá Thành Phẩm 01', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 09:15:00+07'),
+		('NK-281025-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá 4x6 Kè Móng', 'Đá 4x6 móng công trình', 320.00, 320.00, 'tấn', '27/10/2026', 'Đã nhập bãi', '2026-10-27 10:00:00+07'),
+		('NK-281025-04', 'Dây Chuyền Nghiền Sàng 02', 'Kho Cát Nghiền Mái Che', 'Cát nghiền nhân tạo (Mạt đá)', 280.50, 280.50, 'tấn', '27/10/2026', 'Đã nhập bãi', '2026-10-27 14:30:00+07')`,
 
 		`DELETE FROM inventory_outbound`,
-		`INSERT INTO inventory_outbound (code, customer, dest, item, qty, quantity, unit, date, status) VALUES
-		('XK-281025-01', 'Công ty CP Đầu Tư Xây Dựng 319', 'Dự án KCN Phú Hà', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã xuất bãi'),
-		('XK-281025-02', 'Tập Đoàn CIENCO 4 (Cao Tốc)', 'Gói thầu XL-02 Cao tốc', 'Đá 4x6 móng công trình', 290.00, 290.00, 'tấn', '28/10/2026', 'Đã xuất bãi'),
-		('XK-281025-03', 'Công ty Bê Tông Việt Trì', 'Trạm trộn Bê tông Việt Trì', 'Đá 1x2 bê tông mác 350', 180.00, 180.00, 'tấn', '27/10/2026', 'Đã xuất bãi'),
-		('XK-281025-04', 'Tổng Công Ty XD Trường Sơn', 'Dự án Cầu Phong Châu mới', 'Đá base cấp phối loại 1', 140.00, 140.00, 'tấn', '27/10/2026', 'Đã xuất bãi')`,
+		`INSERT INTO inventory_outbound (code, customer, dest, item, qty, quantity, unit, date, status, created_at) VALUES
+		('XK-281025-01', 'Công ty CP Đầu Tư Xây Dựng 319', 'Dự án KCN Phú Hà', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 09:00:00+07'),
+		('XK-281025-02', 'Tập Đoàn CIENCO 4 (Cao Tốc)', 'Gói thầu XL-02 Cao tốc', 'Đá 4x6 móng công trình', 290.00, 290.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 10:30:00+07'),
+		('XK-281025-03', 'Công ty Bê Tông Việt Trì', 'Trạm trộn Bê tông Việt Trì', 'Đá 1x2 bê tông mác 350', 180.00, 180.00, 'tấn', '27/10/2026', 'Đã xuất bãi', '2026-10-27 11:15:00+07'),
+		('XK-281025-04', 'Tổng Công Ty XD Trường Sơn', 'Dự án Cầu Phong Châu mới', 'Đá base cấp phối loại 1', 140.00, 140.00, 'tấn', '27/10/2026', 'Đã xuất bãi', '2026-10-27 15:45:00+07')`,
 
 		`DELETE FROM inventory_stocktake`,
 		`INSERT INTO inventory_stocktake (code, zone, item, volume, survey, erp, book, actual, diff, quantity, unit, date, status) VALUES

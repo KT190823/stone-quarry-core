@@ -379,6 +379,18 @@ func main() {
 	fmt.Printf("Backend API running at http://localhost%s\n", addr)
 	fmt.Printf("Health check: http://localhost%s/api/health\n", addr)
 
-	handler := middleware.Logger(middleware.CORS(mux))
+	// Invalidate executive overview cache on any write request so the dashboard
+	// never serves stale metrics after data changes (tickets, alerts, fuel, HR...).
+	invalidateCacheOnWrite := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r)
+			switch r.Method {
+			case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+				handlers.InvalidateExecutiveOverviewCache()
+			}
+		})
+	}
+
+	handler := middleware.Logger(middleware.CORS(invalidateCacheOnWrite(mux)))
 	log.Fatal(http.ListenAndServe(addr, handler))
 }

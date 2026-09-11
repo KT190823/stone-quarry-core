@@ -62,8 +62,9 @@ func SimulateScenario(w http.ResponseWriter, r *http.Request) {
 	_ = db.QueryRow(ctx, `
 		SELECT COALESCE(SUM(
 			CASE 
-				WHEN kl_hang ~ '^[0-9.]+$' THEN kl_hang::numeric
-				ELSE 0 
+				WHEN NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision > 500 
+					THEN NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision / 1000.0
+				ELSE NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '')::double precision 
 			END
 		), 0)
 		FROM tickets
@@ -78,7 +79,17 @@ func SimulateScenario(w http.ResponseWriter, r *http.Request) {
 	_ = db.QueryRow(ctx, `
 		SELECT COALESCE(SUM(
 			CASE 
-				WHEN don_gia > 0 AND (kl_hang ~ '^[0-9.]+$') THEN don_gia * kl_hang::numeric
+				WHEN NULLIF(regexp_replace(thanh_tien, '[^0-9]', '', 'g'), '') IS NOT NULL 
+				     AND regexp_replace(thanh_tien, '[^0-9]', '', 'g')::double precision > 0
+					THEN regexp_replace(thanh_tien, '[^0-9]', '', 'g')::double precision
+				WHEN don_gia > 0 AND NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '') IS NOT NULL
+					THEN don_gia * (
+						CASE 
+							WHEN regexp_replace(kl_hang, '[^0-9.]', '', 'g')::double precision > 500 
+								THEN regexp_replace(kl_hang, '[^0-9.]', '', 'g')::double precision / 1000.0
+							ELSE regexp_replace(kl_hang, '[^0-9.]', '', 'g')::double precision 
+						END
+					)
 				ELSE 0 
 			END
 		), 0)
