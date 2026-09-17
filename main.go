@@ -150,9 +150,13 @@ func main() {
 	mux.HandleFunc("GET /api/catalog/equipment", catalogH.ListEquipment)
 
 	mux.HandleFunc("GET /api/inventory/inbound", inventoryH.ListInbound)
+	mux.HandleFunc("GET /api/inventory/inbound/{id}", inventoryH.GetInbound)
 	mux.HandleFunc("GET /api/inventory/outbound", inventoryH.ListOutbound)
+	mux.HandleFunc("GET /api/inventory/outbound/{id}", inventoryH.GetOutbound)
 	mux.HandleFunc("GET /api/inventory/stocktake", inventoryH.ListStocktake)
+	mux.HandleFunc("GET /api/inventory/stocktake/{id}", inventoryH.GetStocktake)
 	mux.HandleFunc("GET /api/inventory/movement", inventoryH.ListMovements)
+	mux.HandleFunc("GET /api/inventory/movement/{id}", inventoryH.GetMovement)
 
 	// Inventory Products (Master Data)
 	mux.HandleFunc("GET /api/inventory/products", productH.ListProducts)
@@ -206,7 +210,9 @@ func main() {
 	mux.HandleFunc("PUT /api/users/{id}", userH.UpdateUser)
 	mux.HandleFunc("DELETE /api/users/{id}", userH.DeleteUser)
 	mux.HandleFunc("GET /api/users/roles", userH.ListRoles)
+	mux.HandleFunc("GET /api/users/roles/{id}", userH.GetRole)
 	mux.HandleFunc("GET /api/users/logs", userH.ListLogs)
+	mux.HandleFunc("GET /api/users/logs/{id}", userH.GetLog)
 
 	mux.HandleFunc("GET /api/reports", userH.ListReports)
 	mux.HandleFunc("GET /api/reports/{id}", userH.GetReport)

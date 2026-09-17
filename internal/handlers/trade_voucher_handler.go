@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"mo-da-backend/internal/database"
@@ -90,12 +91,13 @@ func (h *TradeVoucherHandler) GetPurchase(w http.ResponseWriter, r *http.Request
 
 	// Fetch items
 	itemRows, itemErr := database.Pool.Query(ctx, `
-		SELECT id, voucher_id, voucher_code, COALESCE(product_code, ''), COALESCE(product_name, ''),
+		SELECT id, COALESCE(voucher_id, 0), COALESCE(voucher_code, ''), COALESCE(product_code, ''), COALESCE(product_name, ''),
 		       COALESCE(unit, 'm³'), COALESCE(density, 1.5), COALESCE(unit_price, 0),
 		       COALESCE(quantity, 0), COALESCE(total_amount, 0), COALESCE(weight_ton, 0),
-		       COALESCE(standard, ''), COALESCE(storage_loc, ''), COALESCE(notes, '')
+		       COALESCE(standard, ''), COALESCE(storage_loc, ''), COALESCE(notes, ''),
+		       COALESCE(vat_rate, 10)
 		FROM purchase_voucher_items
-		WHERE voucher_id = $1 OR voucher_code = $2
+		WHERE (voucher_id > 0 AND voucher_id = $1) OR voucher_code = $2
 		ORDER BY id ASC
 	`, pv.ID, pv.Code)
 
@@ -103,7 +105,7 @@ func (h *TradeVoucherHandler) GetPurchase(w http.ResponseWriter, r *http.Request
 		defer itemRows.Close()
 		for itemRows.Next() {
 			var itm models.PurchaseItem
-			if err := itemRows.Scan(&itm.ID, &itm.VoucherID, &itm.VoucherCode, &itm.ProductCode, &itm.ProductName, &itm.Unit, &itm.Density, &itm.UnitPrice, &itm.Quantity, &itm.TotalAmount, &itm.WeightTon, &itm.Standard, &itm.StorageLoc, &itm.Notes); err == nil {
+			if err := itemRows.Scan(&itm.ID, &itm.VoucherID, &itm.VoucherCode, &itm.ProductCode, &itm.ProductName, &itm.Unit, &itm.Density, &itm.UnitPrice, &itm.Quantity, &itm.TotalAmount, &itm.WeightTon, &itm.Standard, &itm.StorageLoc, &itm.Notes, &itm.VatRate); err == nil {
 				pv.Items = append(pv.Items, itm)
 			}
 		}
@@ -146,10 +148,14 @@ func (h *TradeVoucherHandler) CreatePurchase(w http.ResponseWriter, r *http.Requ
 
 	for _, itm := range pv.Items {
 		Pool := database.Pool
+		vatRate := itm.VatRate
+		if vatRate == 0 {
+			vatRate = 10
+		}
 		Pool.Exec(ctx, `
-			INSERT INTO purchase_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-		`, pv.ID, pv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes)
+			INSERT INTO purchase_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes, vat_rate)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		`, pv.ID, pv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes, vatRate)
 	}
 
 	JSON(w, pv)
@@ -186,10 +192,14 @@ func (h *TradeVoucherHandler) UpdatePurchase(w http.ResponseWriter, r *http.Requ
 	if len(pv.Items) > 0 {
 		database.Pool.Exec(ctx, `DELETE FROM purchase_voucher_items WHERE voucher_code = $1 OR voucher_id = $2`, idOrCode, numID)
 		for _, itm := range pv.Items {
+			vatRate := itm.VatRate
+			if vatRate == 0 {
+				vatRate = 10
+			}
 			database.Pool.Exec(ctx, `
-				INSERT INTO purchase_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-			`, pv.ID, pv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes)
+				INSERT INTO purchase_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes, vat_rate)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+			`, pv.ID, pv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes, vatRate)
 		}
 	}
 
@@ -287,12 +297,13 @@ func (h *TradeVoucherHandler) GetSales(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch items
 	itemRows, itemErr := database.Pool.Query(ctx, `
-		SELECT id, voucher_id, voucher_code, COALESCE(product_code, ''), COALESCE(product_name, ''),
+		SELECT id, COALESCE(voucher_id, 0), COALESCE(voucher_code, ''), COALESCE(product_code, ''), COALESCE(product_name, ''),
 		       COALESCE(unit, 'm³'), COALESCE(density, 1.5), COALESCE(unit_price, 0),
 		       COALESCE(quantity, 0), COALESCE(total_amount, 0), COALESCE(weight_ton, 0),
-		       COALESCE(standard, ''), COALESCE(storage_loc, ''), COALESCE(notes, '')
+		       COALESCE(standard, ''), COALESCE(storage_loc, ''), COALESCE(notes, ''),
+		       COALESCE(vat_rate, 10)
 		FROM sales_voucher_items
-		WHERE voucher_id = $1 OR voucher_code = $2
+		WHERE (voucher_id > 0 AND voucher_id = $1) OR voucher_code = $2
 		ORDER BY id ASC
 	`, sv.ID, sv.Code)
 
@@ -300,9 +311,84 @@ func (h *TradeVoucherHandler) GetSales(w http.ResponseWriter, r *http.Request) {
 		defer itemRows.Close()
 		for itemRows.Next() {
 			var itm models.SalesItem
-			if err := itemRows.Scan(&itm.ID, &itm.VoucherID, &itm.VoucherCode, &itm.ProductCode, &itm.ProductName, &itm.Unit, &itm.Density, &itm.UnitPrice, &itm.Quantity, &itm.TotalAmount, &itm.WeightTon, &itm.Standard, &itm.StorageLoc, &itm.Notes); err == nil {
+			if err := itemRows.Scan(&itm.ID, &itm.VoucherID, &itm.VoucherCode, &itm.ProductCode, &itm.ProductName, &itm.Unit, &itm.Density, &itm.UnitPrice, &itm.Quantity, &itm.TotalAmount, &itm.WeightTon, &itm.Standard, &itm.StorageLoc, &itm.Notes, &itm.VatRate); err == nil {
 				sv.Items = append(sv.Items, itm)
 			}
+		}
+	}
+	if len(sv.Items) == 0 && (sv.TicketCode != "" || strings.HasPrefix(sv.Code, "PB-TK-")) {
+		ticketID := sv.TicketCode
+		if ticketID == "" && strings.HasPrefix(sv.Code, "PB-TK-") {
+			ticketID = strings.TrimPrefix(sv.Code, "PB-")
+		}
+		var matHang, quyCach, klStr, tramCan string
+		var donGia float64
+		tErr := database.Pool.QueryRow(ctx, `
+			SELECT COALESCE(mat_hang, ''), COALESCE(quy_cach, ''), COALESCE(kl_tinh_tien::text, '0'),
+			       COALESCE(don_gia, 0), COALESCE(tram_can, '')
+			FROM tickets WHERE id = $1
+		`, ticketID).Scan(&matHang, &quyCach, &klStr, &donGia, &tramCan)
+		if tErr == nil && matHang != "" {
+			qty, _ := strconv.ParseFloat(strings.TrimSpace(klStr), 64)
+			if qty <= 0 && donGia > 0 {
+				qty = sv.TotalAmount / donGia
+			}
+			if qty <= 0 {
+				qty = 1
+			}
+			unitPrice := donGia
+			if unitPrice <= 0 && qty > 0 {
+				unitPrice = sv.TotalAmount / qty
+			}
+			itmTotal := sv.TotalAmount
+			if itmTotal <= 0 {
+				itmTotal = qty * unitPrice
+			}
+			prodCode := "SP-DA-01"
+			switch {
+			case strings.Contains(matHang, "1x2"):
+				prodCode = "SP-DA-1X2"
+			case strings.Contains(matHang, "Base") || strings.Contains(matHang, "BASE"):
+				prodCode = "SP-DA-BASE"
+			case strings.Contains(matHang, "Cát") || strings.Contains(matHang, "VSI"):
+				prodCode = "SP-CAT-VSI"
+			case strings.Contains(matHang, "2x4"):
+				prodCode = "SP-DA-2X4"
+			case strings.Contains(matHang, "4x6"):
+				prodCode = "SP-DA-4X6"
+			case strings.Contains(matHang, "Mi Bụi") || strings.Contains(matHang, "MIBUI"):
+				prodCode = "SP-DA-MIBUI"
+			}
+			storageLoc := sv.WarehouseLoc
+			if storageLoc == "" {
+				storageLoc = tramCan
+			}
+			var prodVatRate float64 = 10
+			_ = database.Pool.QueryRow(ctx, `SELECT COALESCE(vat_rate, 10) FROM inventory_products WHERE code = $1 OR name ILIKE $2 LIMIT 1`, prodCode, "%"+matHang+"%").Scan(&prodVatRate)
+			item := models.SalesItem{
+				VoucherID:   sv.ID,
+				VoucherCode: sv.Code,
+				ProductCode: prodCode,
+				ProductName: matHang,
+				Unit:        "tấn",
+				Density:     1.5,
+				UnitPrice:   unitPrice,
+				Quantity:    qty,
+				TotalAmount: itmTotal,
+				VatRate:     prodVatRate,
+				WeightTon:   qty,
+				Standard:    quyCach,
+				StorageLoc:  storageLoc,
+				Notes:       "Xuất kho tự động từ phiếu cân " + ticketID,
+			}
+			var newItemID int
+			_ = database.Pool.QueryRow(ctx, `
+				INSERT INTO sales_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes, vat_rate)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+				RETURNING id
+			`, sv.ID, sv.Code, item.ProductCode, item.ProductName, item.Unit, item.Density, item.UnitPrice, item.Quantity, item.TotalAmount, item.WeightTon, item.Standard, item.StorageLoc, item.Notes, item.VatRate).Scan(&newItemID)
+			item.ID = newItemID
+			sv.Items = append(sv.Items, item)
 		}
 	}
 	if sv.Items == nil {
@@ -342,10 +428,14 @@ func (h *TradeVoucherHandler) CreateSales(w http.ResponseWriter, r *http.Request
 	}
 
 	for _, itm := range sv.Items {
+		vatRate := itm.VatRate
+		if vatRate == 0 {
+			vatRate = 10
+		}
 		database.Pool.Exec(ctx, `
-			INSERT INTO sales_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-		`, sv.ID, sv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes)
+			INSERT INTO sales_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes, vat_rate)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		`, sv.ID, sv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes, vatRate)
 	}
 
 	JSON(w, sv)
@@ -383,10 +473,14 @@ func (h *TradeVoucherHandler) UpdateSales(w http.ResponseWriter, r *http.Request
 	if len(sv.Items) > 0 {
 		database.Pool.Exec(ctx, `DELETE FROM sales_voucher_items WHERE voucher_code = $1 OR voucher_id = $2`, idOrCode, numID)
 		for _, itm := range sv.Items {
+			vatRate := itm.VatRate
+			if vatRate == 0 {
+				vatRate = 10
+			}
 			database.Pool.Exec(ctx, `
-				INSERT INTO sales_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-			`, sv.ID, sv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes)
+				INSERT INTO sales_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, density, unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes, vat_rate)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+			`, sv.ID, sv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.Density, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.WeightTon, itm.Standard, itm.StorageLoc, itm.Notes, vatRate)
 		}
 	}
 
@@ -482,11 +576,11 @@ func (h *TradeVoucherHandler) GetReturn(w http.ResponseWriter, r *http.Request) 
 
 	// Fetch items
 	itemRows, itemErr := database.Pool.Query(ctx, `
-		SELECT id, voucher_id, voucher_code, COALESCE(product_code, ''), COALESCE(product_name, ''),
+		SELECT id, COALESCE(voucher_id, 0), COALESCE(voucher_code, ''), COALESCE(product_code, ''), COALESCE(product_name, ''),
 		       COALESCE(unit, 'm³'), COALESCE(unit_price, 0), COALESCE(quantity, 0),
-		       COALESCE(total_amount, 0), COALESCE(notes, '')
+		       COALESCE(total_amount, 0), COALESCE(notes, ''), COALESCE(vat_rate, 10)
 		FROM return_voucher_items
-		WHERE voucher_id = $1 OR voucher_code = $2
+		WHERE (voucher_id > 0 AND voucher_id = $1) OR voucher_code = $2
 		ORDER BY id ASC
 	`, rv.ID, rv.Code)
 
@@ -494,7 +588,7 @@ func (h *TradeVoucherHandler) GetReturn(w http.ResponseWriter, r *http.Request) 
 		defer itemRows.Close()
 		for itemRows.Next() {
 			var itm models.ReturnItem
-			if err := itemRows.Scan(&itm.ID, &itm.VoucherID, &itm.VoucherCode, &itm.ProductCode, &itm.ProductName, &itm.Unit, &itm.UnitPrice, &itm.Quantity, &itm.TotalAmount, &itm.Notes); err == nil {
+			if err := itemRows.Scan(&itm.ID, &itm.VoucherID, &itm.VoucherCode, &itm.ProductCode, &itm.ProductName, &itm.Unit, &itm.UnitPrice, &itm.Quantity, &itm.TotalAmount, &itm.Notes, &itm.VatRate); err == nil {
 				rv.Items = append(rv.Items, itm)
 			}
 		}
@@ -536,10 +630,14 @@ func (h *TradeVoucherHandler) CreateReturn(w http.ResponseWriter, r *http.Reques
 	}
 
 	for _, itm := range rv.Items {
+		vatRate := itm.VatRate
+		if vatRate == 0 {
+			vatRate = 10
+		}
 		database.Pool.Exec(ctx, `
-			INSERT INTO return_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, unit_price, quantity, total_amount, notes)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		`, rv.ID, rv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.Notes)
+			INSERT INTO return_voucher_items (voucher_id, voucher_code, product_code, product_name, unit, unit_price, quantity, total_amount, notes, vat_rate)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		`, rv.ID, rv.Code, itm.ProductCode, itm.ProductName, itm.Unit, itm.UnitPrice, itm.Quantity, itm.TotalAmount, itm.Notes, vatRate)
 	}
 
 	JSON(w, rv)

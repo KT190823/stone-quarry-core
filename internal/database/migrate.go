@@ -1290,6 +1290,12 @@ func Migrate() {
 	alters := []string{
 		`ALTER TABLE hr_attendance_logs ADD COLUMN IF NOT EXISTS overtime_hours DOUBLE PRECISION DEFAULT 0`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS code TEXT`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS mine_location TEXT`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS rfid_card TEXT`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS join_date TEXT`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS shift_count INTEGER DEFAULT 0`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS title TEXT`,
 		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS recipient TEXT`,
 		`ALTER TABLE statutory_reports ADD COLUMN IF NOT EXISTS date TEXT`,
@@ -1608,6 +1614,7 @@ func Migrate() {
 			current_stock DOUBLE PRECISION DEFAULT 0,
 			status TEXT DEFAULT 'active',
 			notes TEXT,
+			vat_rate DOUBLE PRECISION DEFAULT 10,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
@@ -1643,6 +1650,7 @@ func Migrate() {
 			unit_price DOUBLE PRECISION DEFAULT 0,
 			quantity DOUBLE PRECISION DEFAULT 0,
 			total_amount DOUBLE PRECISION DEFAULT 0,
+			vat_rate DOUBLE PRECISION DEFAULT 10,
 			weight_ton DOUBLE PRECISION DEFAULT 0,
 			standard TEXT,
 			storage_loc TEXT,
@@ -1685,6 +1693,7 @@ func Migrate() {
 			unit_price DOUBLE PRECISION DEFAULT 0,
 			quantity DOUBLE PRECISION DEFAULT 0,
 			total_amount DOUBLE PRECISION DEFAULT 0,
+			vat_rate DOUBLE PRECISION DEFAULT 10,
 			weight_ton DOUBLE PRECISION DEFAULT 0,
 			standard TEXT,
 			storage_loc TEXT,
@@ -1722,6 +1731,7 @@ func Migrate() {
 			unit_price DOUBLE PRECISION DEFAULT 0,
 			quantity DOUBLE PRECISION DEFAULT 0,
 			total_amount DOUBLE PRECISION DEFAULT 0,
+			vat_rate DOUBLE PRECISION DEFAULT 10,
 			notes TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
@@ -1983,6 +1993,60 @@ func Migrate() {
 		Pool.Exec(stepCtx, a)
 		cancel()
 	}
+
+	// Synchronize sales_voucher_items from tickets for any sales vouchers without line items
+	syncItemsQuery := `
+		INSERT INTO sales_voucher_items (
+			voucher_id, voucher_code, product_code, product_name, unit, density,
+			unit_price, quantity, total_amount, weight_ton, standard, storage_loc, notes
+		)
+		SELECT
+			sv.id,
+			sv.code,
+			CASE 
+				WHEN t.mat_hang ILIKE '%1x2%' THEN 'SP-DA-1X2'
+				WHEN t.mat_hang ILIKE '%base%' THEN 'SP-DA-BASE'
+				WHEN t.mat_hang ILIKE '%cát%' OR t.mat_hang ILIKE '%vsi%' THEN 'SP-CAT-VSI'
+				WHEN t.mat_hang ILIKE '%2x4%' THEN 'SP-DA-2X4'
+				WHEN t.mat_hang ILIKE '%4x6%' THEN 'SP-DA-4X6'
+				WHEN t.mat_hang ILIKE '%mi bụi%' OR t.mat_hang ILIKE '%mibui%' THEN 'SP-DA-MIBUI'
+				ELSE 'SP-DA-01'
+			END,
+			COALESCE(NULLIF(t.mat_hang, ''), 'Đá xây dựng'),
+			'tấn',
+			1.5,
+			COALESCE(NULLIF(t.don_gia, 0), CASE WHEN COALESCE(NULLIF(regexp_replace(COALESCE(t.kl_tinh_tien, '0'), '[^0-9.]', '', 'g'), '')::numeric, 0) > 0 THEN sv.total_amount / NULLIF(regexp_replace(t.kl_tinh_tien, '[^0-9.]', '', 'g'), '')::numeric ELSE sv.total_amount END),
+			COALESCE(NULLIF(regexp_replace(COALESCE(t.kl_tinh_tien, '0'), '[^0-9.]', '', 'g'), '')::numeric, CASE WHEN t.don_gia > 0 THEN sv.total_amount / t.don_gia ELSE 1 END),
+			sv.total_amount,
+			COALESCE(NULLIF(regexp_replace(COALESCE(t.kl_tinh_tien, '0'), '[^0-9.]', '', 'g'), '')::numeric, CASE WHEN t.don_gia > 0 THEN sv.total_amount / t.don_gia ELSE 1 END),
+			COALESCE(t.quy_cach, 'TCVN 7570:2006'),
+			COALESCE(NULLIF(sv.warehouse_loc, ''), t.tram_can),
+			'Đồng bộ tự động từ phiếu cân ' || sv.ticket_code
+		FROM sales_vouchers sv
+		JOIN tickets t ON (t.id = sv.ticket_code OR sv.code = 'PB-' || t.id)
+		WHERE NOT EXISTS (
+			SELECT 1 FROM sales_voucher_items svi WHERE svi.voucher_code = sv.code OR svi.voucher_id = sv.id
+		)
+	`
+	syncCtx, cancelSync := context.WithTimeout(ctx, 5*time.Second)
+	_, _ = Pool.Exec(syncCtx, syncItemsQuery)
+
+	// Ensure vat_rate column exists across all item tables & master products
+	_, _ = Pool.Exec(syncCtx, `ALTER TABLE inventory_products ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
+	_, _ = Pool.Exec(syncCtx, `ALTER TABLE sales_voucher_items ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
+	_, _ = Pool.Exec(syncCtx, `ALTER TABLE purchase_voucher_items ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
+	_, _ = Pool.Exec(syncCtx, `ALTER TABLE return_voucher_items ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
+
+	// Set dynamic VAT rates per product specification (e.g. 8% vs 10%)
+	_, _ = Pool.Exec(syncCtx, `UPDATE inventory_products SET vat_rate = 8 WHERE code IN ('SP-DA-0X4-SUB', 'SP-CAT-NGHIEN', 'SP-DA-MI-BUI', 'SP-CAT-VSI');`)
+	_, _ = Pool.Exec(syncCtx, `UPDATE inventory_products SET vat_rate = 10 WHERE vat_rate IS NULL OR vat_rate = 0;`)
+	_, _ = Pool.Exec(syncCtx, `
+		UPDATE sales_voucher_items svi
+		SET vat_rate = COALESCE(p.vat_rate, 10)
+		FROM inventory_products p
+		WHERE svi.product_code = p.code;
+	`)
+	cancelSync()
 
 	MigrateQuarryModule()
 
