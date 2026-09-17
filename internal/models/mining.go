@@ -53,6 +53,8 @@ type MiningPlanItem struct {
 }
 
 type ProductionStage struct {
+	ID                string  `json:"id"`
+	Code              string  `json:"code"`
 	StageNumber       int     `json:"stageNumber"`
 	StageName         string  `json:"stageName"`
 	Icon              string  `json:"icon"`
@@ -63,6 +65,9 @@ type ProductionStage struct {
 	LossStatus        string  `json:"lossStatus"`
 	MeasurementMethod string  `json:"measurementMethod"`
 	Description       string  `json:"description"`
+	Status            string  `json:"status"`
+	QuarryCode        string  `json:"quarryCode"`
+	QuarryName        string  `json:"quarryName"`
 }
 
 type StatutoryReport struct {
@@ -78,6 +83,8 @@ type StatutoryReport struct {
 	EnvFeeAmount float64 `json:"envFeeAmount"`
 	Status       string  `json:"status"`
 	StatusLabel  string  `json:"statusLabel"`
+	QuarryCode   string  `json:"quarryCode"`
+	QuarryName   string  `json:"quarryName"`
 }
 
 type NaturalResourceTax struct {
@@ -92,6 +99,8 @@ type NaturalResourceTax struct {
 	EnvironmentalFee  float64 `json:"environmentalFee"`
 	TotalPayable      float64 `json:"totalPayable"`
 	Status            string  `json:"status"`
+	QuarryCode        string  `json:"quarryCode"`
+	QuarryName        string  `json:"quarryName"`
 }
 
 type BlastingPassport struct {

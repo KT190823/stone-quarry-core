@@ -736,24 +736,57 @@ func Seed() {
 	fmt.Println("🌱 Seeding Mining Operations, Plans, Permits & Inventory/Payments...")
 	miningQueries := []string{
 		`DELETE FROM statutory_reports`,
-		`INSERT INTO statutory_reports (id, code, title, recipient, period, date, mined_volume, unit, tax_amount, env_fee_amount, status, status_label) VALUES
-		('STAT-01', 'BC-TK-2026-Q3', 'Báo cáo thống kê hoạt động khai thác khoáng sản Q3/2026 (Mẫu số 01/KTKS)', 'Sở Tài nguyên & Môi trường tỉnh Phú Thọ', 'Quý 3/2026', '15/10/2026', 362400, 'tấn', 4348800000, 1087200000, 'approved', 'Đã phê duyệt'),
-		('STAT-02', 'BC-AT-2026-10', 'Báo cáo công tác an toàn lao động & VLNCN tháng 10/2026', 'Sở Công Thương tỉnh Phú Thọ', 'Tháng 10/2026', '25/10/2026', 124500, 'tấn', 1494000000, 373500000, 'approved', 'Đã thẩm định'),
-		('STAT-03', 'BC-BVMT-2026-Q3', 'Báo cáo quan trắc môi trường định kỳ mỏ Q3/2026', 'Cục Địa chất & Khoáng sản Việt Nam', 'Quý 3/2026', '30/10/2026', 362400, 'tấn', 4348800000, 1087200000, 'pending', 'Chờ tiếp nhận')`,
+		`INSERT INTO statutory_reports (id, code, title, recipient, period, date, mined_volume, unit, tax_amount, env_fee_amount, status, status_label, quarry_code, quarry_name) VALUES
+		-- Mỏ Phú Thọ (MO-PT-01)
+		('STAT-PT-01', 'BC-TK-PT-2026-Q3', 'Báo cáo thống kê hoạt động khai thác khoáng sản Q3/2026 (Mẫu số 01/KTKS)', 'Sở Tài nguyên & Môi trường tỉnh Phú Thọ', 'Quý 3/2026', '15/10/2026', 362400, 'tấn', 4348800000, 1087200000, 'approved', 'Đã phê duyệt', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('STAT-PT-02', 'BC-AT-PT-2026-10', 'Báo cáo công tác an toàn lao động & VLNCN tháng 10/2026', 'Sở Công Thương tỉnh Phú Thọ', 'Tháng 10/2026', '25/10/2026', 124500, 'tấn', 1494000000, 373500000, 'approved', 'Đã thẩm định', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('STAT-PT-03', 'BC-BVMT-PT-2026-Q3', 'Báo cáo quan trắc môi trường định kỳ mỏ Q3/2026', 'Cục Địa chất & Khoáng sản Việt Nam', 'Quý 3/2026', '30/10/2026', 362400, 'tấn', 4348800000, 1087200000, 'pending', 'Chờ tiếp nhận', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		-- Mỏ Tân Uyên (MO-TU-02)
+		('STAT-TU-01', 'BC-TK-TU-2026-Q3', 'Báo cáo thống kê khai thác khoáng sản Mỏ Tân Uyên Q3/2026', 'Sở Tài nguyên & Môi trường tỉnh Bình Dương', 'Quý 3/2026', '18/10/2026', 480000, 'tấn', 6240000000, 1440000000, 'approved', 'Đã phê duyệt', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('STAT-TU-02', 'BC-BVMT-TU-2026-Q3', 'Báo cáo giám sát môi trường định kỳ KCN Nam Tân Uyên Q3/2026', 'Sở TN&MT tỉnh Bình Dương', 'Quý 3/2026', '28/10/2026', 480000, 'tấn', 6240000000, 1440000000, 'approved', 'Đã thẩm định', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		-- Mỏ Kiện Khê (MO-HN-03)
+		('STAT-HN-01', 'BC-TK-HN-2026-Q3', 'Báo cáo thống kê sản lượng khai thác đá vôi Kiện Khê Q3/2026', 'Sở Tài nguyên & Môi trường tỉnh Hà Nam', 'Quý 3/2026', '20/10/2026', 620000, 'tấn', 7130000000, 1860000000, 'approved', 'Đã phê duyệt', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('STAT-HN-02', 'BC-AT-HN-2026-10', 'Báo cáo an toàn nổ mìn & kho vật liệu nổ công nghiệp Kiện Khê', 'Sở Công Thương tỉnh Hà Nam', 'Tháng 10/2026', '26/10/2026', 205000, 'tấn', 2460000000, 615000000, 'approved', 'Đã thẩm định', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam')`,
 
 		`DELETE FROM resource_taxes`,
-		`INSERT INTO resource_taxes (code, mineral_type, mined_volume, unit, tax_price_per_unit, tax_rate, resource_tax_amount, environmental_fee, total_payable, status) VALUES
-		('TAX-01', 'Đá vôi xây dựng nguyên khai (Đá hộc)', 362400, 'tấn', 120000, '10%', 4348800000, 1087200000, 5436000000, 'Đã nộp NSNN'),
-		('TAX-02', 'Đá thành phẩm nghiền sàng (Đá 1x2, 2x4, 4x6)', 245000, 'tấn', 160000, '10%', 3920000000, 735000000, 4655000000, 'Đã nộp NSNN'),
-		('TAX-03', 'Cát nghiền nhân tạo (Mạt đá mi)', 85000, 'tấn', 110000, '10%', 935000000, 340000000, 1275000000, 'Chờ quyết toán')`,
+		`INSERT INTO resource_taxes (code, mineral_type, mined_volume, unit, tax_price_per_unit, tax_rate, resource_tax_amount, environmental_fee, total_payable, status, quarry_code, quarry_name) VALUES
+		-- Mỏ đá Phú Thọ (MO-PT-01)
+		('TAX-PT-01', 'Đá vôi xây dựng nguyên khai (Đá hộc)', 362400, 'tấn', 120000, '10%', 4348800000, 1087200000, 5436000000, 'Đã nộp NSNN', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('TAX-PT-02', 'Đá thành phẩm nghiền sàng (Đá 1x2, 2x4, 4x6)', 245000, 'tấn', 160000, '10%', 3920000000, 735000000, 4655000000, 'Đã nộp NSNN', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('TAX-PT-03', 'Cát nghiền nhân tạo (Mạt đá mi)', 85000, 'tấn', 110000, '10%', 935000000, 255000000, 1190000000, 'Đã nộp NSNN', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('TAX-PT-04', 'Đá base cấp phối hạ tầng Dmax25/Dmax37.5', 135000, 'tấn', 135000, '10%', 1822500000, 405000000, 2227500000, 'Chờ quyết toán', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('TAX-PT-05', 'Đá hộc kè sông & kè móng công trình', 52000, 'tấn', 125000, '10%', 650000000, 156000000, 806000000, 'Chờ quyết toán', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		-- Mỏ đá Tân Uyên (MO-TU-02)
+		('TAX-TU-01', 'Đá xây dựng nguyên khai Tân Uyên', 480000, 'tấn', 130000, '10%', 6240000000, 1440000000, 7680000000, 'Đã nộp NSNN', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('TAX-TU-02', 'Đá 1x2, 2x4 bê tông Becamex Bình Dương', 320000, 'tấn', 175000, '10%', 5600000000, 960000000, 6560000000, 'Đã nộp NSNN', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('TAX-TU-03', 'Cát đồi tuyển rửa tiêu chuẩn trạm trộn', 120000, 'tấn', 140000, '10%', 1680000000, 360000000, 2040000000, 'Chờ quyết toán', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		-- Mỏ đá Kiện Khê (MO-HN-03)
+		('TAX-HN-01', 'Đá vôi sản xuất xi măng Xuân Thành', 620000, 'tấn', 115000, '10%', 7130000000, 1860000000, 8990000000, 'Đã nộp NSNN', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('TAX-HN-02', 'Đá 1x2 mác cao xuất khẩu & dự án trọng điểm', 410000, 'tấn', 165000, '10%', 6765000000, 1230000000, 7995000000, 'Đã nộp NSNN', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('TAX-HN-03', 'Bột đá & phụ gia nghiền mịn', 95000, 'tấn', 105000, '10%', 997500000, 285000000, 1282500000, 'Chờ quyết toán', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam')`,
 
 		`DELETE FROM production_stages`,
-		`INSERT INTO production_stages (code, stage_number, stage_name, icon, volume_month, volume_ytd, unit, loss_rate, loss_status, measurement_method, description, status) VALUES
-		('STG-01', 1, 'Khoan & Nổ mìn Cắt tầng', 'zap', 125000, 1120000, 'tấn', '0.5% (Định mức)', 'normal', 'Đo đạc 3D Laser Scanner & Hộ chiếu nổ mìn', 'Hộ chiếu nổ mìn điện tử phê duyệt Sở Công Thương', 'Đang vận hành'),
-		('STG-02', 2, 'Bốc xúc & Vận tải Moong', 'truck', 124300, 1114000, 'tấn', '0.6% (Định mức)', 'normal', 'Camera AI đếm chuyến & Cảm biến gầu xúc', 'Giám sát GPS và hành trình xe ben nội bộ', 'Đang vận hành'),
-		('STG-03', 3, 'Nghiền sàng & Phân loại', 'layers', 123500, 1107000, 'tấn', '0.8% (Định mức)', 'normal', 'Cân băng tải động & Ampe kế phụ tải nghiền', 'Tự động bù ẩm và chốt công tơ điện định mức', 'Đang vận hành'),
-		('STG-04', 4, 'Tồn trữ Bãi thành phẩm', 'database', 85000, 85000, 'tấn', '0.2%', 'normal', 'Drone RTK quét địa hình tính khối lượng bãi', 'Bay quét Flycam 3D định kỳ 15 ngày/lần', 'Đang vận hành'),
-		('STG-05', 5, 'Cân điện tử & Xuất bán', 'scale', 118200, 1058000, 'tấn', '0.0% (Chuẩn)', 'success', 'Trạm cân 120T Keli + Camera AI chụp 4 góc', 'Phiếu cân điện tử mã hóa QR, ký số HĐĐT tức thì', 'Đang vận hành')`,
+		`INSERT INTO production_stages (code, stage_number, stage_name, icon, volume_month, volume_ytd, unit, loss_rate, loss_status, measurement_method, description, status, quarry_code, quarry_name) VALUES
+		-- Mỏ đá Phú Thọ (MO-PT-01)
+		('STG-PT-01', 1, 'Khoan & Nổ mìn Cắt tầng', 'zap', 128500, 1150000, 'tấn', '0.5% (Định mức)', 'normal', 'Đo đạc 3D Laser Scanner & Hộ chiếu nổ mìn', 'Hộ chiếu nổ mìn điện tử phê duyệt Sở Công Thương Phú Thọ', 'Đang vận hành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('STG-PT-02', 2, 'Bốc xúc & Vận tải Moong', 'truck', 127800, 1144000, 'tấn', '0.5% (Định mức)', 'normal', 'Camera AI đếm chuyến & Cảm biến gầu xúc', 'Giám sát GPS và hành trình 18 xe ben nội bộ', 'Đang vận hành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('STG-PT-03', 3, 'Nghiền sàng & Phân loại', 'layers', 126900, 1136000, 'tấn', '0.7% (Định mức)', 'normal', 'Cân băng tải động & Ampe kế phụ tải nghiền', 'Dây chuyền nghiền sàng 350T/h chốt công tơ điện định mức', 'Đang vận hành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('STG-PT-04', 4, 'Tồn trữ Bãi thành phẩm', 'database', 92400, 92400, 'tấn', '0.2% (Định mức)', 'normal', 'Drone RTK quét địa hình tính khối lượng bãi', 'Bay quét Flycam DJI Matrice 300 RTK định kỳ 15 ngày/lần', 'Đang vận hành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('STG-PT-05', 5, 'Cân điện tử & Xuất bán', 'scale', 121500, 1088000, 'tấn', '0.0% (Chuẩn)', 'success', 'Trạm cân 120T Keli + Camera AI chụp 4 góc', 'Phiếu cân điện tử mã hóa QR, ký số HĐĐT tức thì', 'Đang vận hành', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+
+		-- Mỏ đá Tân Uyên (MO-TU-02)
+		('STG-TU-01', 1, 'Khoan & Nổ mìn Cắt tầng', 'zap', 168000, 1520000, 'tấn', '0.4% (Định mức)', 'normal', 'Đo đạc 3D Laser Scanner & Hộ chiếu nổ mìn', 'Hộ chiếu nổ mìn điện tử phê duyệt Sở Công Thương Bình Dương', 'Đang vận hành', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('STG-TU-02', 2, 'Bốc xúc & Vận tải Moong', 'truck', 167200, 1513000, 'tấn', '0.5% (Định mức)', 'normal', 'Camera AI đếm chuyến & Cảm biến gầu xúc', 'Giám sát GPS và hành trình xe ben mỏ Tân Uyên', 'Đang vận hành', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('STG-TU-03', 3, 'Nghiền sàng & Phân loại', 'layers', 166100, 1503000, 'tấn', '0.7% (Định mức)', 'normal', 'Cân băng tải động & Ampe kế phụ tải nghiền', 'Dây chuyền nghiền sàng 500T/h tự động bù ẩm', 'Đang vận hành', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('STG-TU-04', 4, 'Tồn trữ Bãi thành phẩm', 'database', 115000, 115000, 'tấn', '0.2% (Định mức)', 'normal', 'Drone RTK quét địa hình tính khối lượng bãi', 'Bay quét 3D định kỳ 10 ngày/lần kiểm kê tồn kho', 'Đang vận hành', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('STG-TU-05', 5, 'Cân điện tử & Xuất bán', 'scale', 159800, 1446000, 'tấn', '0.0% (Chuẩn)', 'success', 'Trạm cân 150T Keli + Camera AI nhận diện biển số', 'Tự động xuất vé cân điện tử đồng bộ ERP', 'Đang vận hành', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+
+		-- Mỏ đá Kiện Khê (MO-HN-03)
+		('STG-HN-01', 1, 'Khoan & Nổ mìn Cắt tầng', 'zap', 205000, 1840000, 'tấn', '0.4% (Định mức)', 'normal', 'Đo đạc 3D Laser Scanner & Hộ chiếu nổ mìn', 'Hộ chiếu nổ mìn điện tử phê duyệt Sở Công Thương Hà Nam', 'Đang vận hành', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('STG-HN-02', 2, 'Bốc xúc & Vận tải Moong', 'truck', 204100, 1832000, 'tấn', '0.4% (Định mức)', 'normal', 'Camera AI đếm chuyến & Cảm biến gầu xúc', 'Giám sát GPS 24 xe ben mỏ Kiện Khê', 'Đang vận hành', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('STG-HN-03', 3, 'Nghiền sàng & Phân loại', 'layers', 202800, 1821000, 'tấn', '0.6% (Định mức)', 'normal', 'Cân băng tải động & Ampe kế phụ tải nghiền', 'Trạm nghiền sàng liên hoàn công suất lớn 600T/h', 'Đang vận hành', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('STG-HN-04', 4, 'Tồn trữ Bãi thành phẩm', 'database', 142000, 142000, 'tấn', '0.2% (Định mức)', 'normal', 'Drone RTK quét địa hình tính khối lượng bãi', 'Bay quét 3D định kỳ kiểm kê bãi đá mác cao và đá xi măng', 'Đang vận hành', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('STG-HN-05', 5, 'Cân điện tử & Xuất bán', 'scale', 195200, 1753000, 'tấn', '0.0% (Chuẩn)', 'success', 'Trạm cân 150T Keli + Camera AI chụp 4 góc', 'Phiếu cân điện tử tích hợp HĐĐT Tổng Cục Thuế', 'Đang vận hành', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam')`,
 
 		`DELETE FROM mining_plans WHERE id IN ('PLAN-01', 'PLAN-02', 'PLAN-03', 'PLAN-04', 'PLAN-05', 'PLAN-06', 'PLAN-TU-01', 'PLAN-TU-02', 'PLAN-HN-01', 'PLAN-HN-02')`,
 		`INSERT INTO mining_plans (id, mine, item, annual_target, unit, q1_plan, q1_actual, q2_plan, q2_actual, q3_plan, q3_actual, q4_plan, q4_actual, ytd_actual, completion_rate, status, status_label, quarry_code) VALUES
@@ -1006,30 +1039,70 @@ func Seed() {
 		ON CONFLICT (id) DO NOTHING`,
 
 		`DELETE FROM inventory_inbound`,
-		`INSERT INTO inventory_inbound (code, source, loc, item, qty, quantity, unit, date, status, created_at) VALUES
-		('NK-281025-01', 'Moong Khai Thác Tầng 3', 'Bãi Đá Hộc & Nguyên Khai', 'Đá hộc khai thác tầng', 450.00, 450.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 08:30:00+07'),
-		('NK-281025-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá Thành Phẩm 01', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 09:15:00+07'),
-		('NK-281025-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá 4x6 Kè Móng', 'Đá 4x6 móng công trình', 320.00, 320.00, 'tấn', '27/10/2026', 'Đã nhập bãi', '2026-10-27 10:00:00+07'),
-		('NK-281025-04', 'Dây Chuyền Nghiền Sàng 02', 'Kho Cát Nghiền Mái Che', 'Cát nghiền nhân tạo (Mạt đá)', 280.50, 280.50, 'tấn', '27/10/2026', 'Đã nhập bãi', '2026-10-27 14:30:00+07')`,
+		`INSERT INTO inventory_inbound (code, source, loc, item, qty, quantity, unit, date, status, created_at, quarry_code, quarry_name) VALUES
+		-- Mỏ Phú Thọ (MO-PT-01)
+		('NK-PT-281025-01', 'Moong Khai Thác Tầng 3', 'Bãi Đá Hộc & Nguyên Khai', 'Đá hộc khai thác tầng', 450.00, 450.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 08:30:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('NK-PT-281025-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá Thành Phẩm 01', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 09:15:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('NK-PT-281025-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Đá 4x6 Kè Móng', 'Đá 4x6 móng công trình', 320.00, 320.00, 'tấn', '27/10/2026', 'Đã nhập bãi', '2026-10-27 10:00:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('NK-PT-281025-04', 'Dây Chuyền Nghiền Sàng 02', 'Kho Cát Nghiền Mái Che', 'Cát nghiền nhân tạo (Mạt đá)', 280.50, 280.50, 'tấn', '27/10/2026', 'Đã nhập bãi', '2026-10-27 14:30:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		-- Mỏ Tân Uyên (MO-TU-02)
+		('NK-TU-281025-01', 'Moong Khai Thác Tân Uyên', 'Bãi Đá Nguyên Khai Lô Đông', 'Đá nguyên khai Tân Uyên', 650.00, 650.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 08:45:00+07', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('NK-TU-281025-02', 'Trạm Nghiền Liên Hoàn 500T/h', 'Bãi Đá 1x2 Tân Uyên', 'Đá 1x2 bê tông Becamex', 520.00, 520.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 10:15:00+07', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		-- Mỏ Kiện Khê (MO-HN-03)
+		('NK-HN-281025-01', 'Moong Núi Cả Kiện Khê', 'Bãi Tiếp Liệu Xi Măng', 'Đá vôi sản xuất xi măng', 850.00, 850.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 08:15:00+07', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('NK-HN-281025-02', 'Trạm Nghiền Sàng Kiện Khê', 'Bãi Đá 1x2 Mác Cao', 'Đá 1x2 Kiện Khê chất lượng cao', 600.00, 600.00, 'tấn', '28/10/2026', 'Đã nhập bãi', '2026-10-28 11:30:00+07', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam')`,
 
 		`DELETE FROM inventory_outbound`,
-		`INSERT INTO inventory_outbound (code, customer, dest, item, qty, quantity, unit, date, status, created_at) VALUES
-		('XK-281025-01', 'Công ty CP Đầu Tư Xây Dựng 319', 'Dự án KCN Phú Hà', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 09:00:00+07'),
-		('XK-281025-02', 'Tập Đoàn CIENCO 4 (Cao Tốc)', 'Gói thầu XL-02 Cao tốc', 'Đá 4x6 móng công trình', 290.00, 290.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 10:30:00+07'),
-		('XK-281025-03', 'Công ty Bê Tông Việt Trì', 'Trạm trộn Bê tông Việt Trì', 'Đá 1x2 bê tông mác 350', 180.00, 180.00, 'tấn', '27/10/2026', 'Đã xuất bãi', '2026-10-27 11:15:00+07'),
-		('XK-281025-04', 'Tổng Công Ty XD Trường Sơn', 'Dự án Cầu Phong Châu mới', 'Đá base cấp phối loại 1', 140.00, 140.00, 'tấn', '27/10/2026', 'Đã xuất bãi', '2026-10-27 15:45:00+07')`,
+		`INSERT INTO inventory_outbound (code, customer, dest, item, qty, quantity, unit, date, status, created_at, quarry_code, quarry_name) VALUES
+		-- Mỏ Phú Thọ (MO-PT-01)
+		('XK-PT-281025-01', 'Công ty CP Đầu Tư Xây Dựng 319', 'Dự án KCN Phú Hà', 'Đá 1x2 bê tông tiêu chuẩn', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 09:00:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('XK-PT-281025-02', 'Tập Đoàn CIENCO 4 (Cao Tốc)', 'Gói thầu XL-02 Cao tốc', 'Đá 4x6 móng công trình', 290.00, 290.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 10:30:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('XK-PT-281025-03', 'Công ty Bê Tông Việt Trì', 'Trạm trộn Bê tông Việt Trì', 'Đá 1x2 bê tông mác 350', 180.00, 180.00, 'tấn', '27/10/2026', 'Đã xuất bãi', '2026-10-27 11:15:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('XK-PT-281025-04', 'Tổng Công Ty XD Trường Sơn', 'Dự án Cầu Phong Châu mới', 'Đá base cấp phối loại 1', 140.00, 140.00, 'tấn', '27/10/2026', 'Đã xuất bãi', '2026-10-27 15:45:00+07', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		-- Mỏ Tân Uyên (MO-TU-02)
+		('XK-TU-281025-01', 'Tập Đoàn Becamex IDC', 'KCN VSIP III Bình Dương', 'Đá 1x2 bê tông tiêu chuẩn Tân Uyên', 450.00, 450.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 09:30:00+07', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('XK-TU-281025-02', 'Công ty CP Xây Dựng Coteccons', 'Dự án Nhà máy LEGO', 'Đá 2x4 đổ bê tông hạ tầng', 320.00, 320.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 11:00:00+07', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		-- Mỏ Kiện Khê (MO-HN-03)
+		('XK-HN-281025-01', 'Công ty Xi Măng Xuân Thành', 'Nhà máy Xi măng Xuân Thành Hà Nam', 'Đá vôi sản xuất xi măng', 720.00, 720.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 08:30:00+07', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('XK-HN-281025-02', 'Tập Đoàn Vingroup', 'Dự án Khu đô thị Nam Hà Nam', 'Đá 1x2 Kiện Khê mác 400', 380.00, 380.00, 'tấn', '28/10/2026', 'Đã xuất bãi', '2026-10-28 14:00:00+07', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam')`,
 
 		`DELETE FROM inventory_stocktake`,
-		`INSERT INTO inventory_stocktake (code, zone, item, volume, survey, erp, book, actual, diff, quantity, unit, date, status) VALUES
-		('KK-20261028-01', 'Bãi Đá 1x2 Thành Phẩm Số 1 (Lô A)', 'Đá 1x2 bê tông tiêu chuẩn', 7517.0, 7517.0, 7520.0, 7520.0, 7517.0, -3.0, 7517.0, 'tấn', '28/10/2026', 'Khớp 99.9% (Chiếm 55%)'),
-		('KK-20261028-02', 'Bãi Đá 4x6 Móng Hạ Tầng (Lô B)', 'Đá 4x6 móng công trình', 5056.0, 5056.0, 5050.0, 5050.0, 5056.0, 6.0, 5056.0, 'tấn', '28/10/2026', 'Khớp 100% (Chiếm 32%)'),
-		('KK-20261028-03', 'Kho Phụ Trợ 02 (Lô C)', 'Cát nghiền nhân tạo (Mạt đá)', 611.0, 611.0, 615.0, 615.0, 611.0, -4.0, 611.0, 'tấn', '27/10/2026', 'Khớp 99.4%')`,
+		`INSERT INTO inventory_stocktake (code, zone, item, volume, survey, erp, book, actual, diff, quantity, unit, date, status, quarry_code, quarry_name) VALUES
+		-- Mỏ đá Phú Thọ (MO-PT-01)
+		('KK-PT-20261028-01', 'Bãi Đá 1x2 Thành Phẩm Số 1 (Lô A)', 'Đá 1x2 bê tông tiêu chuẩn', 7517.0, 7517.0, 7520.0, 7520.0, 7517.0, -3.0, 7517.0, 'tấn', '28/10/2026', 'Khớp 99.9% (Chiếm 55%)', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('KK-PT-20261028-02', 'Bãi Đá 4x6 Móng Hạ Tầng (Lô B)', 'Đá 4x6 móng công trình', 5056.0, 5056.0, 5050.0, 5050.0, 5056.0, 6.0, 5056.0, 'tấn', '28/10/2026', 'Khớp 100% (Chiếm 32%)', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('KK-PT-20261028-03', 'Kho Cát Nhân Tạo Mái Che (Lô C)', 'Cát nghiền nhân tạo (Mạt đá mi)', 1850.0, 1845.0, 1850.0, 1850.0, 1845.0, -5.0, 1845.0, 'tấn', '27/10/2026', 'Khớp 99.7%', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('KK-PT-20261028-04', 'Bãi Cấp Phối Base Cổng 1 (Lô D)', 'Đá base cấp phối loại 1 Dmax25', 6200.0, 6208.0, 6200.0, 6200.0, 6208.0, 8.0, 6208.0, 'tấn', '27/10/2026', 'Khớp 100.1%', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('KK-PT-20261028-05', 'Bãi Đá Hộc Kè Móng (Lô E)', 'Đá hộc kè sông & kè móng công trình', 3400.0, 3390.0, 3400.0, 3400.0, 3390.0, -10.0, 3390.0, 'tấn', '26/10/2026', 'Khớp 99.7%', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+
+		-- Mỏ đá Tân Uyên (MO-TU-02)
+		('KK-TU-20261028-01', 'Bãi Đá 1x2 Tân Uyên Lô Đông', 'Đá 1x2 bê tông Becamex Bình Dương', 9200.0, 9190.0, 9200.0, 9200.0, 9190.0, -10.0, 9190.0, 'tấn', '28/10/2026', 'Khớp 99.9%', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('KK-TU-20261028-02', 'Bãi Đá 2x4 Tân Uyên Lô Nam', 'Đá 2x4 đổ bê tông hạ tầng KCN', 6800.0, 6815.0, 6800.0, 6800.0, 6815.0, 15.0, 6815.0, 'tấn', '28/10/2026', 'Khớp 100.2%', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('KK-TU-20261028-03', 'Kho Cát Đồi Tuyển Rửa', 'Cát đồi tuyển rửa Becamex', 4500.0, 4492.0, 4500.0, 4500.0, 4492.0, -8.0, 4492.0, 'tấn', '27/10/2026', 'Khớp 99.8%', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+
+		-- Mỏ đá Kiện Khê - Hà Nam (MO-HN-03)
+		('KK-HN-20261028-01', 'Bãi Đá Xi Măng Xuân Thành', 'Đá vôi sản xuất xi măng Xuân Thành', 14500.0, 14480.0, 14500.0, 14500.0, 14480.0, -20.0, 14480.0, 'tấn', '28/10/2026', 'Khớp 99.9%', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('KK-HN-20261028-02', 'Bãi Đá 1x2 Kiện Khê Tuyển', 'Đá 1x2 Kiện Khê chất lượng cao', 8900.0, 8912.0, 8900.0, 8900.0, 8912.0, 12.0, 8912.0, 'tấn', '28/10/2026', 'Khớp 100.1%', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('KK-HN-20261028-03', 'Silo Bột Đá Mịn Số 1', 'Bột đá & phụ gia nghiền mịn', 2200.0, 2196.0, 2200.0, 2200.0, 2196.0, -4.0, 2196.0, 'tấn', '27/10/2026', 'Khớp 99.8%', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam')`,
 
 		`DELETE FROM inventory_movements`,
-		`INSERT INTO inventory_movements (code, from_loc, to_loc, item, qty, quantity, unit, date, status) VALUES
-		('DC-281025-01', 'Bãi Nổ Mìn Tầng 2', 'Phễu Nghiền Thô 01', 'Đá hộc cấp liệu nghiền 1x2 & 4x6', 850.0, 850.0, 'tấn', '28/10/2026', 'Hoàn tất'),
-		('DC-281025-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Chứa Thành Phẩm Đá 1x2', 'Đá 1x2 sàng tuyển tiêu chuẩn', 480.0, 480.0, 'tấn', '28/10/2026', 'Hoàn tất'),
-		('DC-281025-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Chứa Móng Hạ Tầng Đá 4x6', 'Đá 4x6 móng đường cao tốc', 290.0, 290.0, 'tấn', '27/10/2026', 'Hoàn tất')`,
+		`INSERT INTO inventory_movements (code, from_loc, to_loc, item, qty, quantity, unit, date, status, quarry_code, quarry_name) VALUES
+		-- Mỏ đá Phú Thọ (MO-PT-01)
+		('DC-PT-20261028-01', 'Bãi Nổ Mìn Tầng 2 Khai Trường Tây', 'Phễu Nghiền Thô 01 (Trạm 350T/h)', 'Đá hộc cấp liệu nghiền 1x2 & 4x6', 850.0, 850.0, 'tấn', '28/10/2026', 'Hoàn tất', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('DC-PT-20261028-02', 'Trạm Nghiền Sàng Số 01', 'Bãi Chứa Thành Phẩm Đá 1x2 Lô A', 'Đá 1x2 sàng tuyển tiêu chuẩn TCVN', 480.0, 480.0, 'tấn', '28/10/2026', 'Hoàn tất', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('DC-PT-20261028-03', 'Trạm Nghiền Sàng Số 01', 'Bãi Chứa Móng Hạ Tầng Đá 4x6', 'Đá 4x6 móng đường cao tốc', 290.0, 290.0, 'tấn', '27/10/2026', 'Hoàn tất', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('DC-PT-20261028-04', 'Trạm Nghiền Sàng Số 02', 'Kho Cát Nghiền Mái Che', 'Cát nghiền nhân tạo (Mạt đá mi)', 165.0, 165.0, 'tấn', '27/10/2026', 'Hoàn tất', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+		('DC-PT-20261028-05', 'Kho Vật Tư Phụ Tùng Trung Tâm', 'Xưởng Cơ Điện Sửa Chữa Moong', 'Bộ hàm nghiền dự phòng Jaw Crusher 1200x900', 2.0, 2.0, 'bộ', '26/10/2026', 'Hoàn tất', 'MO-PT-01', 'Công ty CP TTC - Mỏ đá Phú Thọ'),
+
+		-- Mỏ đá Tân Uyên (MO-TU-02)
+		('DC-TU-20261028-01', 'Moong Mở Rộng Tân Uyên', 'Trạm Nghiền Liên Hoàn 500T/h', 'Đá nguyên khai Tân Uyên tuyển chọn', 1250.0, 1250.0, 'tấn', '28/10/2026', 'Hoàn tất', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('DC-TU-20261028-02', 'Trạm Nghiền Tân Uyên', 'Bãi Đá 1x2 Tân Uyên Lô Đông', 'Đá 1x2 bê tông tiêu chuẩn', 620.0, 620.0, 'tấn', '28/10/2026', 'Hoàn tất', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+		('DC-TU-20261028-03', 'Kho Cơ Giới Tân Uyên', 'Khai Trường Đông', 'Dây curoa băng tải trạm nghiền EP200', 4.0, 4.0, 'cuộn', '27/10/2026', 'Hoàn tất', 'MO-TU-02', 'Mỏ đá Tân Uyên'),
+
+		-- Mỏ đá Kiện Khê - Hà Nam (MO-HN-03)
+		('DC-HN-20261028-01', 'Moong Núi Cả Kiện Khê', 'Silo Tiếp Liệu Xi Măng Xuân Thành', 'Đá vôi sản xuất xi măng chất lượng cao', 1800.0, 1800.0, 'tấn', '28/10/2026', 'Hoàn tất', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('DC-HN-20261028-02', 'Trạm Nghiền Sàng Kiện Khê', 'Bãi Đá 1x2 Xuất Khẩu Cảng Sông Đáy', 'Đá 1x2 Kiện Khê mác 400', 750.0, 750.0, 'tấn', '28/10/2026', 'Hoàn tất', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam'),
+		('DC-HN-20261028-03', 'Xưởng Chế Biến Phụ Gia', 'Silo Bột Đá Mịn Số 1', 'Bột đá siêu mịn tráng CaCO3', 120.0, 120.0, 'tấn', '27/10/2026', 'Hoàn tất', 'MO-HN-03', 'Mỏ đá Kiện Khê - Hà Nam')`,
 
 		`DELETE FROM payments_debt`,
 		`INSERT INTO payments_debt (code, partner, customer, limit_amount, limit_val, balance, amount, debt, due, status) VALUES
