@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -67,6 +68,29 @@ func (r *BaseRepo) columnSet() map[string]struct{} {
 	return cols
 }
 
+// NormalizeQuarryFilter maps any quarry code, slug, UUID, or name to canonical code and name
+func NormalizeQuarryFilter(input string) (canonicalCode string, locationName string) {
+	raw := strings.TrimSpace(input)
+	if raw == "" || strings.EqualFold(raw, "all") || strings.EqualFold(raw, "ttc-all") {
+		return "", ""
+	}
+	lower := strings.ToLower(raw)
+	upper := strings.ToUpper(raw)
+
+	switch {
+	case strings.Contains(upper, "PT") || strings.Contains(lower, "phu-tho") || strings.Contains(lower, "phutho") || strings.Contains(lower, "phu tho") || strings.Contains(lower, "phú thọ") || strings.Contains(lower, "thanh ba") || strings.Contains(upper, "ECD6FC42"):
+		return "MO-PT-01", "Phú Thọ"
+	case strings.Contains(upper, "TU") || strings.Contains(lower, "tan-uyen") || strings.Contains(lower, "tanuyen") || strings.Contains(lower, "tan uyen") || strings.Contains(lower, "tân uyên") || strings.Contains(lower, "binh duong") || strings.Contains(lower, "bình dương") || strings.Contains(upper, "8D84B1B1"):
+		return "MO-TU-02", "Tân Uyên"
+	case strings.Contains(upper, "HN") || strings.Contains(lower, "ha-nam") || strings.Contains(lower, "hanam") || strings.Contains(lower, "ha nam") || strings.Contains(lower, "hà nam") || strings.Contains(lower, "kien khe") || strings.Contains(lower, "kiện khê") || strings.Contains(upper, "17B4EA5E"):
+		return "MO-HN-03", "Hà Nam"
+	case strings.Contains(upper, "BP") || strings.Contains(lower, "binh-phuoc") || strings.Contains(lower, "binhphuoc") || strings.Contains(lower, "binh phuoc") || strings.Contains(lower, "bình phước") || strings.Contains(lower, "chon thanh") || strings.Contains(lower, "chơn thành") || strings.Contains(upper, "4730475F"):
+		return "MO-BP-04", "Bình Phước"
+	default:
+		return raw, ""
+	}
+}
+
 func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error) {
 	ctx := context.Background()
 	offset := (params.Page - 1) * params.PageSize
@@ -89,22 +113,11 @@ func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error
 
 	qCode := strings.TrimSpace(params.QuarryCode)
 	if qCode != "" && qCode != "TTC-ALL" && qCode != "ALL" && qCode != "all" {
-		upperQ := strings.ToUpper(qCode)
-		var matchTerm string
-		if strings.Contains(upperQ, "PT") || strings.Contains(upperQ, "PHÚ THỌ") {
-			matchTerm = "Phú Thọ"
-		} else if strings.Contains(upperQ, "HN") || strings.Contains(upperQ, "HÀ NAM") {
-			matchTerm = "Hà Nam"
-		} else if strings.Contains(upperQ, "TU") || strings.Contains(upperQ, "TÂN UYÊN") {
-			matchTerm = "Tân Uyên"
-		} else if strings.Contains(upperQ, "BP") || strings.Contains(upperQ, "BÌNH PHƯỚC") {
-			matchTerm = "Bình Phước"
-		}
-
-		if matchTerm != "" {
-			whereConditions = append(whereConditions, fmt.Sprintf("(CAST(row_to_json(%s) AS TEXT) ILIKE $%d OR CAST(row_to_json(%s) AS TEXT) ILIKE $%d)", r.Table, argIdx, r.Table, argIdx+1))
-			args = append(args, "%"+qCode+"%", "%"+matchTerm+"%")
-			argIdx += 2
+		cCode, locName := NormalizeQuarryFilter(qCode)
+		if locName != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("(CAST(row_to_json(%s) AS TEXT) ILIKE $%d OR CAST(row_to_json(%s) AS TEXT) ILIKE $%d OR CAST(row_to_json(%s) AS TEXT) ILIKE $%d)", r.Table, argIdx, r.Table, argIdx+1, r.Table, argIdx+2))
+			args = append(args, "%"+qCode+"%", "%"+cCode+"%", "%"+locName+"%")
+			argIdx += 3
 		} else {
 			whereConditions = append(whereConditions, fmt.Sprintf("CAST(row_to_json(%s) AS TEXT) ILIKE $%d", r.Table, argIdx))
 			args = append(args, "%"+qCode+"%")
@@ -160,12 +173,36 @@ func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error
 
 func (r *BaseRepo) GetByID(id string) (map[string]interface{}, error) {
 	ctx := context.Background()
-	query := fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE %s = $1) t", r.Table, r.IDColumn)
+	cols := r.columnSet()
+	hasCode := false
+	if _, ok := cols["code"]; ok {
+		hasCode = true
+	}
+	var query string
+	var args []interface{}
+	numID, err := strconv.Atoi(id)
+	if err == nil && numID > 0 {
+		if hasCode {
+			query = fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE %s = $1 OR code = $2) t", r.Table, r.IDColumn)
+			args = []interface{}{numID, id}
+		} else {
+			query = fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE %s = $1) t", r.Table, r.IDColumn)
+			args = []interface{}{numID}
+		}
+	} else {
+		if hasCode {
+			query = fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE code = $1) t", r.Table)
+			args = []interface{}{id}
+		} else {
+			query = fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE %s = $1) t", r.Table, r.IDColumn)
+			args = []interface{}{id}
+		}
+	}
 
 	var data []byte
-	err := database.Pool.QueryRow(ctx, query, id).Scan(&data)
-	if err != nil {
-		return nil, err
+	scanErr := database.Pool.QueryRow(ctx, query, args...).Scan(&data)
+	if scanErr != nil {
+		return nil, scanErr
 	}
 
 	var item map[string]interface{}
@@ -287,14 +324,33 @@ func (r *BaseRepo) ListJSONB(params ListParams) ([]map[string]interface{}, int, 
 		params.PageSize = 50
 	}
 
-	where := ""
+	whereConditions := []string{}
 	args := []interface{}{}
 	argIdx := 1
 
 	if params.Search != "" {
-		where = fmt.Sprintf(" WHERE data::text ILIKE $%d", argIdx)
+		whereConditions = append(whereConditions, fmt.Sprintf("data::text ILIKE $%d", argIdx))
 		args = append(args, "%"+params.Search+"%")
 		argIdx++
+	}
+
+	qCode := strings.TrimSpace(params.QuarryCode)
+	if qCode != "" && qCode != "TTC-ALL" && qCode != "ALL" && qCode != "all" {
+		cCode, locName := NormalizeQuarryFilter(qCode)
+		if locName != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("(data::text ILIKE $%d OR data::text ILIKE $%d OR data::text ILIKE $%d)", argIdx, argIdx+1, argIdx+2))
+			args = append(args, "%"+qCode+"%", "%"+cCode+"%", "%"+locName+"%")
+			argIdx += 3
+		} else {
+			whereConditions = append(whereConditions, fmt.Sprintf("data::text ILIKE $%d", argIdx))
+			args = append(args, "%"+qCode+"%")
+			argIdx++
+		}
+	}
+
+	where := ""
+	if len(whereConditions) > 0 {
+		where = " WHERE " + strings.Join(whereConditions, " AND ")
 	}
 
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s%s", r.Table, where)

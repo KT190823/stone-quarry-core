@@ -18,6 +18,7 @@ type InventoryProduct struct {
 	CurrentStock  float64   `json:"currentStock"`
 	Status        string    `json:"status"`
 	Notes         string    `json:"notes"`
+	VatRate       float64   `json:"vatRate"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
@@ -39,7 +40,7 @@ type PurchaseVoucher struct {
 	Notes         string         `json:"notes"`
 	CreatedAt     time.Time      `json:"createdAt"`
 	UpdatedAt     time.Time      `json:"updatedAt"`
-	Items         []PurchaseItem `json:"items,omitempty"`
+	Items         []PurchaseItem `json:"items"`
 }
 
 type PurchaseItem struct {
@@ -53,6 +54,7 @@ type PurchaseItem struct {
 	UnitPrice   float64 `json:"unitPrice"`
 	Quantity    float64 `json:"quantity"`
 	TotalAmount float64 `json:"totalAmount"`
+	VatRate     float64 `json:"vatRate"`
 	WeightTon   float64 `json:"weightTon"`
 	Standard    string  `json:"standard"`
 	StorageLoc  string  `json:"storageLoc"`
@@ -80,7 +82,7 @@ type SalesVoucher struct {
 	Notes         string      `json:"notes"`
 	CreatedAt     time.Time   `json:"createdAt"`
 	UpdatedAt     time.Time   `json:"updatedAt"`
-	Items         []SalesItem `json:"items,omitempty"`
+	Items         []SalesItem `json:"items"`
 }
 
 type SalesItem struct {
@@ -94,6 +96,7 @@ type SalesItem struct {
 	UnitPrice   float64 `json:"unitPrice"`
 	Quantity    float64 `json:"quantity"`
 	TotalAmount float64 `json:"totalAmount"`
+	VatRate     float64 `json:"vatRate"`
 	WeightTon   float64 `json:"weightTon"`
 	Standard    string  `json:"standard"`
 	StorageLoc  string  `json:"storageLoc"`
@@ -117,7 +120,7 @@ type ReturnVoucher struct {
 	Notes          string       `json:"notes"`
 	CreatedAt      time.Time    `json:"createdAt"`
 	UpdatedAt      time.Time    `json:"updatedAt"`
-	Items          []ReturnItem `json:"items,omitempty"`
+	Items          []ReturnItem `json:"items"`
 }
 
 type ReturnItem struct {
@@ -130,6 +133,7 @@ type ReturnItem struct {
 	UnitPrice   float64 `json:"unitPrice"`
 	Quantity    float64 `json:"quantity"`
 	TotalAmount float64 `json:"totalAmount"`
+	VatRate     float64 `json:"vatRate"`
 	Notes       string  `json:"notes"`
 }
 

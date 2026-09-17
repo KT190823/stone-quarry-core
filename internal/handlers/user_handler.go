@@ -94,6 +94,16 @@ func (h *UserHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
 	JSON(w, map[string]interface{}{"data": results, "total": total})
 }
 
+func (h *UserHandler) GetRole(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	result, err := h.roleSvc.GetByID(id)
+	if err != nil {
+		http.Error(w, "not found", 404)
+		return
+	}
+	JSON(w, result)
+}
+
 func (h *UserHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 	params := parseListParams(r)
 	results, total, err := h.logSvc.List(params)
@@ -102,6 +112,16 @@ func (h *UserHandler) ListLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	JSON(w, map[string]interface{}{"data": results, "total": total})
+}
+
+func (h *UserHandler) GetLog(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	result, err := h.logSvc.GetByID(id)
+	if err != nil {
+		http.Error(w, "not found", 404)
+		return
+	}
+	JSON(w, result)
 }
 
 func (h *UserHandler) ListReports(w http.ResponseWriter, r *http.Request) {

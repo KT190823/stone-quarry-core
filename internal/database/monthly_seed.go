@@ -64,15 +64,16 @@ type materialSpec struct {
 	Unit     string
 	Standard string
 	Price    float64
+	VatRate  float64
 }
 
 var materialCatalog = []materialSpec{
-	{"Đá 1x2 Bê tông", "SP-DA-1X2", "tấn", "TCVN 7570:2006", 240000},
-	{"Đá Base Cấp Phối Dmax25", "SP-DA-BASE", "tấn", "TCVN 8859:2011", 180000},
-	{"Cát Nghiền Nhân Tạo VSI", "SP-CAT-VSI", "tấn", "TCVN 9205:2012", 260000},
-	{"Đá 2x4 Xây Dựng", "SP-DA-2X4", "tấn", "TCVN 7570:2006", 235000},
-	{"Đá 4x6 Kè Móng", "SP-DA-4X6", "tấn", "TCVN 7570:2006", 220000},
-	{"Đá Mi Bụi Đắp Nền", "SP-DA-MIBUI", "tấn", "TCVN 8859:2011", 150000},
+	{"Đá 1x2 Bê tông", "SP-DA-1X2", "tấn", "TCVN 7570:2006", 240000, 10},
+	{"Đá Base Cấp Phối Dmax25", "SP-DA-BASE", "tấn", "TCVN 8859:2011", 180000, 10},
+	{"Cát Nghiền Nhân Tạo VSI", "SP-CAT-VSI", "tấn", "TCVN 9205:2012", 260000, 8},
+	{"Đá 2x4 Xây Dựng", "SP-DA-2X4", "tấn", "TCVN 7570:2006", 235000, 10},
+	{"Đá 4x6 Kè Móng", "SP-DA-4X6", "tấn", "TCVN 7570:2006", 220000, 10},
+	{"Đá Mi Bụi Đắp Nền", "SP-DA-MIBUI", "tấn", "TCVN 8859:2011", 150000, 8},
 }
 
 type customerSpec struct {
@@ -132,6 +133,7 @@ func SeedMonthlyQuarryData() {
 	// 1. Thoroughly clean old 2026 data to ensure 100% coherence and prevent double counting
 	_, _ = Pool.Exec(ctx, "DELETE FROM tickets WHERE id LIKE 'TK-%-2026%'")
 	_, _ = Pool.Exec(ctx, "DELETE FROM vehicle_trips WHERE camera_id = 'CAM-GATE-01' AND check_in_time >= '2026-01-01'")
+	_, _ = Pool.Exec(ctx, "DELETE FROM sales_voucher_items WHERE voucher_code LIKE 'PB-TK-%'")
 	_, _ = Pool.Exec(ctx, "DELETE FROM sales_vouchers WHERE code LIKE 'PB-TK-%'")
 	_, _ = Pool.Exec(ctx, "DELETE FROM production_costs WHERE created_at >= '2026-01-01'")
 	_, _ = Pool.Exec(ctx, "DELETE FROM equipment_fuel_logs WHERE created_at >= '2026-01-01'")
@@ -226,8 +228,21 @@ func SeedMonthlyQuarryData() {
 			ON CONFLICT (code) DO UPDATE SET total_amount = EXCLUDED.total_amount
 		`,
 			voucherCode, cust.Code, cust.Name, tDate.Format("2006-01-02"), q.Location, flt.Plate,
-			ticketID, totalPrice, totalPrice*0.1, totalPrice*1.1, totalPrice*1.1,
+			ticketID, totalPrice, totalPrice*(mat.VatRate/100.0), totalPrice*(1.0+mat.VatRate/100.0), totalPrice*(1.0+mat.VatRate/100.0),
 			"Xuất hàng trạm cân "+q.Scale, tDate, tDate,
+		)
+
+		b.Queue(`
+			INSERT INTO sales_voucher_items (
+				voucher_code, product_code, product_name, unit, density, unit_price,
+				quantity, total_amount, weight_ton, standard, storage_loc, notes, vat_rate
+			) VALUES (
+				$1, $2, $3, $4, $5, $6,
+				$7, $8, $9, $10, $11, $12, $13
+			)
+		`,
+			voucherCode, mat.Code, mat.Name, mat.Unit, 1.5, unitPrice,
+			netWeight, totalPrice, netWeight, mat.Standard, q.Location, "Xuất kho trạm cân "+q.Scale, mat.VatRate,
 		)
 
 		return netWeight, totalPrice

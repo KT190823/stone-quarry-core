@@ -258,8 +258,8 @@ func Seed() {
 	fmt.Println("🌱 Seeding Fleet Vehicles (Chuẩn kỹ thuật 10 - 20 Tấn Trọng Tấn)...")
 	vehicles := []struct {
 		BS, Loai, RFID, Status, HanDangKiem, Date, ChuXe, Unit, SoTruc, DongCo, HangSX string
-		Bi, TaiTrong, TongTai, Dai, Rong, Cao, TheTich, DinhMucCoTai, DinhMucKhongTai float64
-		NamSX, Count                                                                    int
+		Bi, TaiTrong, TongTai, Dai, Rong, Cao, TheTich, DinhMucCoTai, DinhMucKhongTai  float64
+		NamSX, Count                                                                   int
 	}{
 		{
 			BS: "19H-056.22", Loai: "Xe ben Chenglong Hải Âu 385HP (8x4)", RFID: "RFID-19H-056", Status: "Hoạt động",
@@ -370,7 +370,7 @@ func Seed() {
 	fmt.Println("🌱 Seeding Stone Materials Catalog...")
 	materials := []struct {
 		Code, Name, DVT, Unit, Kho, Standard, Status, Date string
-		Density, DinhMuc, Price                             float64
+		Density, DinhMuc, Price                            float64
 	}{
 		{"MAT-01", "Đá 1x2 Xây Dựng", "tấn", "tấn", "Bãi Đá Thành Phẩm 01", "TCVN 7570:2006", "Đang kinh doanh", "28/10/2026", 1.55, 1.55, 240000},
 		{"MAT-02", "Đá 4x6 Kè Móng", "tấn", "tấn", "Bãi Đá Hộc & 4x6", "TCVN 1771:1987", "Đang kinh doanh", "28/10/2026", 1.60, 1.60, 220000},
@@ -433,192 +433,524 @@ func Seed() {
 	}
 
 	// 7. Seed GPS Fleet Telemetry
-	var gpsCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM gps_fleet").Scan(&gpsCount)
-	if gpsCount == 0 {
-		fmt.Println("🌱 Seeding Live GPS Fleet Telemetry...")
-		Pool.Exec(ctx, `
-			INSERT INTO gps_fleet (code, data) VALUES
-			('DRV-01', '{"id":"DRV-01","plate":"88H-042.27","driverName":"Trần Đình Trọng","driverPhone":"0984.112.334","rfidCode":"RFID-1008-TTC","vehicleType":"Xe ben HOWO 4 chân 371HP","status":"idling_alert","lat":21.3210,"lng":105.3280,"speed":0,"engineAcc":"OFF","engineRpm":0,"currentFuelLiters":182,"fuelTankPercent":45,"locationName":"Quán nước ven QL2 Km 72 (Đứng yên sụt dầu)","destination":"QL2 ➔ Trạm trộn Phù Ninh","cargo":"Đá 1x2 bê tông","updatedTime":"12:55 28/10/2026"}'::jsonb),
-			('DRV-02', '{"id":"DRV-02","plate":"19H-056.22","driverName":"Nguyễn Văn Mạnh","driverPhone":"0982.145.882","rfidCode":"RFID-1015-TTC","vehicleType":"Xe ben Chenglong Hải Âu 385HP","status":"moving","lat":21.3240,"lng":105.3180,"speed":48,"engineAcc":"ON","engineRpm":1450,"currentFuelLiters":268,"fuelTankPercent":67,"locationName":"Đang chạy trên Quốc Lộ 2 Km 68","destination":"Mỏ Đá TTC ➔ Cảng Sông Lô","cargo":"Đá Base cấp phối","updatedTime":"13:02 28/10/2026"}'::jsonb),
-			('DRV-03', '{"id":"DRV-03","plate":"29C-781.90","driverName":"Lê Văn Cường","driverPhone":"0977.890.123","rfidCode":"RFID-1022-TTC","vehicleType":"Xe ben Shacman 4 chân X3000","status":"loading","lat":21.3255,"lng":105.3005,"speed":0,"engineAcc":"ON","engineRpm":800,"currentFuelLiters":310,"fuelTankPercent":77,"locationName":"Bãi Xe Trung Tâm - Khai Trường Mỏ TTC","destination":"Chờ nhận phiếu cân","cargo":"Đá hộc xô bồ","updatedTime":"13:05 28/10/2026"}'::jsonb)
-		`)
-	}
+	Pool.Exec(ctx, "DELETE FROM gps_fleet;")
+	fmt.Println("🌱 Seeding Live GPS Fleet Telemetry for 4 Quarries...")
+	Pool.Exec(ctx, `
+		INSERT INTO gps_fleet (code, data) VALUES
+		-- Mỏ 1: Phú Thọ (MO-PT-01)
+		('DRV-PT-01', '{"id":"DRV-PT-01","code":"DRV-PT-01","plate":"19H-056.22","driverName":"Nguyễn Văn Toàn","driverPhone":"0912.888.999","rfidCode":"RFID-19H-056","vehicleType":"Xe ben Howo 371HP (8x4)","status":"moving","lat":21.3240,"lng":105.3180,"speed":48,"engineAcc":"ON","engineRpm":1450,"currentFuelLiters":268,"fuelTankPercent":67,"locationName":"Đang chạy trên QL2 Km 68 (Phù Ninh, Phú Thọ)","destination":"Mỏ Đá Phú Thọ ➔ Trạm trộn Bê tông Việt Trì","cargo":"Đá 1x2 bê tông mác 350","updatedTime":"13:02 28/10/2026","quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)"}'::jsonb),
+		('DRV-PT-02', '{"id":"DRV-PT-02","code":"DRV-PT-02","plate":"19C-128.45","driverName":"Lê Hữu Thắng","driverPhone":"0983.234.567","rfidCode":"RFID-19C-128","vehicleType":"Xe ben Howo 371HP 4 chân","status":"loading","lat":21.3255,"lng":105.3005,"speed":0,"engineAcc":"ON","engineRpm":800,"currentFuelLiters":315,"fuelTankPercent":79,"locationName":"Bãi Cấp Phối Cổng 1 - Mỏ Phú Thọ","destination":"Cảng Sông Lô","cargo":"Đá Base cấp phối Dmax25","updatedTime":"13:05 28/10/2026","quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)"}'::jsonb),
+		('DRV-PT-03', '{"id":"DRV-PT-03","code":"DRV-PT-03","plate":"19H-032.88","driverName":"Đinh Tiến Dũng","driverPhone":"0984.771.223","rfidCode":"RFID-19H-032","vehicleType":"Xe ben Howo V7G 380HP","status":"idling_alert","lat":21.3210,"lng":105.3280,"speed":0,"engineAcc":"OFF","engineRpm":0,"currentFuelLiters":182,"fuelTankPercent":45,"locationName":"Quán nước ven QL2 Km 72 (Đứng yên sụt dầu)","destination":"QL2 ➔ Trạm trộn Phù Ninh","cargo":"Đá 1x2 bê tông","updatedTime":"12:55 28/10/2026","quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)"}'::jsonb),
+
+		-- Mỏ 2: Tân Uyên (MO-TU-02)
+		('DRV-TU-01', '{"id":"DRV-TU-01","code":"DRV-TU-01","plate":"61C-452.18","driverName":"Trương Văn Nam","driverPhone":"0938.667.129","rfidCode":"RFID-61C-452","vehicleType":"Xe ben Hyundai HD270 15T","status":"moving","lat":11.0820,"lng":106.7750,"speed":42,"engineAcc":"ON","engineRpm":1380,"currentFuelLiters":295,"fuelTankPercent":78,"locationName":"Đường ĐT 746 Tân Uyên ➔ Vành Đai 3","destination":"Dự án Đường Vành Đai 3 TP.HCM","cargo":"Đá Base cấp phối","updatedTime":"13:00 28/10/2026","quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên"}'::jsonb),
+		('DRV-TU-02', '{"id":"DRV-TU-02","code":"DRV-TU-02","plate":"60C-312.78","driverName":"Trần Minh Quân","driverPhone":"0933.114.558","rfidCode":"RFID-60C-312","vehicleType":"Xe đầu kéo mooc ben Chenglong 420HP","status":"moving","lat":11.0890,"lng":106.7820,"speed":50,"engineAcc":"ON","engineRpm":1420,"currentFuelLiters":330,"fuelTankPercent":73,"locationName":"Đoạn qua KCN Nam Tân Uyên (Bình Dương)","destination":"Cảng Thạnh Phước","cargo":"Đá 1x2 Xây Dựng","updatedTime":"13:04 28/10/2026","quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên"}'::jsonb),
+		('DRV-TU-03', '{"id":"DRV-TU-03","code":"DRV-TU-03","plate":"60H-033.72","driverName":"Huỳnh Văn Hậu","driverPhone":"0918.445.662","rfidCode":"RFID-60H-033","vehicleType":"Xe ben Howo 380HP 4 chân","status":"idling_alert","lat":11.0750,"lng":106.7620,"speed":0,"engineAcc":"OFF","engineRpm":0,"currentFuelLiters":175,"fuelTankPercent":44,"locationName":"Cây xăng ven ĐT 746 Tân Uyên (Đứng yên sụt dầu)","destination":"Mỏ Tân Uyên ➔ KCN VSIP 2","cargo":"Đá 4x6 kè móng","updatedTime":"12:50 28/10/2026","quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên"}'::jsonb),
+
+		-- Mỏ 3: Hà Nam (MO-HN-03)
+		('DRV-HN-01', '{"id":"DRV-HN-01","code":"DRV-HN-01","plate":"90C-054.67","driverName":"Bùi Văn Long","driverPhone":"0984.331.228","rfidCode":"RFID-90C-054","vehicleType":"Xe ben 3 chân Howo 371HP","status":"moving","lat":20.4850,"lng":105.8920,"speed":45,"engineAcc":"ON","engineRpm":1400,"currentFuelLiters":245,"fuelTankPercent":70,"locationName":"Đoạn QL1A gần ngã ba Kiện Khê (Hà Nam)","destination":"Trạm Bê tông Xuân Mai","cargo":"Đá 1x2 Bê tông Kiện Khê","updatedTime":"13:02 28/10/2026","quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam"}'::jsonb),
+		('DRV-HN-02', '{"id":"DRV-HN-02","code":"DRV-HN-02","plate":"88H-042.27","driverName":"Trần Đình Trọng","driverPhone":"0984.112.334","rfidCode":"RFID-88H-042","vehicleType":"Xe ben HOWO 4 chân 371HP","status":"idling_alert","lat":20.4920,"lng":105.8850,"speed":0,"engineAcc":"OFF","engineRpm":0,"currentFuelLiters":165,"fuelTankPercent":41,"locationName":"Ven đường tránh QL1A TP Phủ Lý (Đứng yên sụt dầu)","destination":"Kiện Khê ➔ Cao Tốc Cầu Giẽ - Ninh Bình","cargo":"Đá cấp phối Base K98","updatedTime":"12:45 28/10/2026","quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam"}'::jsonb),
+		('DRV-HN-03', '{"id":"DRV-HN-03","code":"DRV-HN-03","plate":"90C-123.45","driverName":"Vũ Đức Mạnh","driverPhone":"0977.123.890","rfidCode":"RFID-90C-123","vehicleType":"Xe ben Shacman 4 chân X3000","status":"loading","lat":20.4810,"lng":105.8990,"speed":0,"engineAcc":"ON","engineRpm":850,"currentFuelLiters":310,"fuelTankPercent":77,"locationName":"Bãi Tập Kết Trung Chuyển Kiện Khê","destination":"Khai trường Moong Tầng +35m","cargo":"Đá hộc xô bồ nổ mìn","updatedTime":"13:06 28/10/2026","quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam"}'::jsonb),
+
+		-- Mỏ 4: Bình Phước (MO-BP-04)
+		('DRV-BP-01', '{"id":"DRV-BP-01","code":"DRV-BP-01","plate":"93C-114.52","driverName":"Phạm Minh Tuấn","driverPhone":"0968.112.556","rfidCode":"RFID-93C-114","vehicleType":"Xe tải ben Dongfeng 4 chân 375HP","status":"moving","lat":11.4520,"lng":106.6350,"speed":52,"engineAcc":"ON","engineRpm":1460,"currentFuelLiters":305,"fuelTankPercent":76,"locationName":"Quốc Lộ 13 hướng Chơn Thành đi Bến Cát","destination":"Dự án Cao tốc Gia Nghĩa - Chơn Thành","cargo":"Đá 1x2 Granite Chơn Thành","updatedTime":"13:01 28/10/2026","quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước"}'::jsonb),
+		('DRV-BP-02', '{"id":"DRV-BP-02","code":"DRV-BP-02","plate":"93H-067.89","driverName":"Lâm Quốc Bảo","driverPhone":"0979.331.445","rfidCode":"RFID-93H-067","vehicleType":"Xe ben Howo Sinotruk 371HP","status":"idling_alert","lat":11.4610,"lng":106.6280,"speed":0,"engineAcc":"OFF","engineRpm":0,"currentFuelLiters":180,"fuelTankPercent":45,"locationName":"Khu vực ngã tư Chơn Thành QL13 (Đứng yên sụt dầu)","destination":"Mỏ Chơn Thành ➔ KCN Becamex","cargo":"Đá cấp phối Base","updatedTime":"12:48 28/10/2026","quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước"}'::jsonb),
+		('DRV-BP-03', '{"id":"DRV-BP-03","code":"DRV-BP-03","plate":"93C-225.10","driverName":"Trịnh Đình Khang","driverPhone":"0908.552.114","rfidCode":"RFID-93C-225","vehicleType":"Xe ben Hyundai Trago 4 chân 380HP","status":"loading","lat":11.4480,"lng":106.6410,"speed":0,"engineAcc":"ON","engineRpm":820,"currentFuelLiters":340,"fuelTankPercent":85,"locationName":"Bãi Xe Cơ Giới Mỏ Chơn Thành","destination":"Khai trường Moong Bãi Xúc 02","cargo":"Đá hộc bóc tầng phủ","updatedTime":"13:08 28/10/2026","quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước"}'::jsonb)
+	`)
 
 	// 8. Seed Fuel Theft Audits
 	Pool.Exec(ctx, "DELETE FROM fuel_theft_audits;")
-	fmt.Println("🌱 Seeding Fuel Theft Audits with Professional Variance Terminology...")
+	fmt.Println("🌱 Seeding Fuel Theft Audits for 4 Quarries...")
 	Pool.Exec(ctx, `
 		INSERT INTO fuel_theft_audits (code, data) VALUES
-		('AUD-01', '{"id":"AUD-01","code":"AUD-01","plate":"88H-042.27","driverName":"Trần Đình Trọng","vehicleType":"Xe ben HOWO 4 chân 371HP","shiftDate":"12:55 28/10/2026","totalKm":124,"totalKmLoaded":82,"totalKmEmpty":42,"idlingHours":2.1,"fuelInitialLiters":320,"fuelRefilledLiters":0,"fuelFinalLiters":249.5,"actualFuelConsumedLiters":70.5,"theoreticalNormLiters":52.0,"fuelVarianceLiters":18.5,"fuelVariancePercent":35.6,"variancePercent":35.6,"theftCostLostVnd":416250,"riskLevel":"CRITICAL_VARIANCE_DETECTED","anomalyDescription":"Mức dầu bình sụt giảm 18.5 Lít trong 11 phút khi dừng đỗ ven Quốc Lộ 2 Km 72 trong trạng thái tắt máy (ACC=OFF)","resolutionStatus":"Chờ đối soát xác minh","locationTheftDetected":"Km 72 QL2 (Ven đường)","investigator":"Tô Quốc Huy (Ban Kiểm Soát Nhiên Liệu)"}'::jsonb),
-		('AUD-02', '{"id":"AUD-02","code":"AUD-02","plate":"19H-056.22","driverName":"Nguyễn Văn Mạnh","vehicleType":"Xe ben Chenglong Hải Âu 385HP","shiftDate":"28/10/2026","totalKm":156,"totalKmLoaded":110,"totalKmEmpty":46,"idlingHours":0.6,"fuelInitialLiters":312,"fuelRefilledLiters":0,"fuelFinalLiters":268,"actualFuelConsumedLiters":44,"theoreticalNormLiters":46.5,"fuelVarianceLiters":-2.5,"fuelVariancePercent":-5.4,"variancePercent":-5.4,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Vận hành tiết kiệm dầu, đúng lộ trình cao tốc","resolutionStatus":"Bình thường / Khen thưởng","locationTheftDetected":"Tuyến Mỏ TTC ➔ Cao Tốc","investigator":"Tô Quốc Huy"}'::jsonb),
-		('AUD-03', '{"id":"AUD-03","code":"AUD-03","plate":"29C-781.90","driverName":"Lê Văn Cường","vehicleType":"Xe ben Shacman 4 chân X3000","shiftDate":"28/10/2026","totalKm":98,"totalKmLoaded":68,"totalKmEmpty":30,"idlingHours":0.8,"fuelInitialLiters":345,"fuelRefilledLiters":0,"fuelFinalLiters":310,"actualFuelConsumedLiters":35,"theoreticalNormLiters":36.2,"fuelVarianceLiters":-1.2,"fuelVariancePercent":-3.3,"variancePercent":-3.3,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Đạt định mức chuẩn nội bộ khai trường","resolutionStatus":"Bình thường","locationTheftDetected":"Khai trường Moong Tầng 3","investigator":"Tô Quốc Huy"}'::jsonb)
+		-- Mỏ 1: Phú Thọ (MO-PT-01)
+		('AUD-PT-01', '{"id":"AUD-PT-01","code":"AUD-PT-01","plate":"19H-032.88","driverName":"Đinh Tiến Dũng","vehicleType":"Xe ben Howo V7G 380HP","shiftDate":"12:55 28/10/2026","totalKm":118,"totalKmLoaded":78,"totalKmEmpty":40,"idlingHours":1.9,"fuelInitialLiters":310,"fuelRefilledLiters":0,"fuelFinalLiters":241.5,"actualFuelConsumedLiters":68.5,"theoreticalNormLiters":50.0,"fuelVarianceLiters":18.5,"fuelVariancePercent":37.0,"variancePercent":37.0,"theftCostLostVnd":416250,"riskLevel":"CRITICAL_VARIANCE_DETECTED","anomalyDescription":"Mức dầu bình sụt giảm 18.5 Lít trong 11 phút khi dừng đỗ ven Quốc Lộ 2 Km 72 (ACC=OFF)","resolutionStatus":"Chờ đối soát xác minh","locationTheftDetected":"Km 72 QL2 (Ven đường Phù Ninh)","investigator":"Tô Quốc Huy (Ban Kiểm Soát Nhiên Liệu)","quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)"}'::jsonb),
+		('AUD-PT-02', '{"id":"AUD-PT-02","code":"AUD-PT-02","plate":"19H-056.22","driverName":"Nguyễn Văn Toàn","vehicleType":"Xe ben Howo 371HP (8x4)","shiftDate":"28/10/2026","totalKm":156,"totalKmLoaded":110,"totalKmEmpty":46,"idlingHours":0.6,"fuelInitialLiters":312,"fuelRefilledLiters":0,"fuelFinalLiters":268,"actualFuelConsumedLiters":44,"theoreticalNormLiters":46.5,"fuelVarianceLiters":-2.5,"fuelVariancePercent":-5.4,"variancePercent":-5.4,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Vận hành tiết kiệm dầu, đúng lộ trình cao tốc Phú Thọ","resolutionStatus":"Bình thường / Khen thưởng","locationTheftDetected":"Tuyến Mỏ Phú Thọ ➔ Trạm trộn Việt Trì","investigator":"Tô Quốc Huy","quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)"}'::jsonb),
+
+		-- Mỏ 2: Tân Uyên (MO-TU-02)
+		('AUD-TU-01', '{"id":"AUD-TU-01","code":"AUD-TU-01","plate":"60H-033.72","driverName":"Huỳnh Văn Hậu","vehicleType":"Xe ben Howo 380HP 4 chân","shiftDate":"12:50 28/10/2026","totalKm":135,"totalKmLoaded":90,"totalKmEmpty":45,"idlingHours":2.3,"fuelInitialLiters":330,"fuelRefilledLiters":0,"fuelFinalLiters":252.0,"actualFuelConsumedLiters":78.0,"theoreticalNormLiters":56.0,"fuelVarianceLiters":22.0,"fuelVariancePercent":39.3,"variancePercent":39.3,"theftCostLostVnd":495000,"riskLevel":"CRITICAL_VARIANCE_DETECTED","anomalyDescription":"Mức dầu bình sụt giảm 22.0 Lít bất thường khi dừng ven đường ĐT 746 gần KCN Nam Tân Uyên (ACC=OFF)","resolutionStatus":"Chờ đối soát xác minh","locationTheftDetected":"Tuyến ĐT 746 Tân Uyên (Bình Dương)","investigator":"Nguyễn Tấn Tài (Tổ Kiểm Soát Mỏ Tân Uyên)","quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên"}'::jsonb),
+		('AUD-TU-02', '{"id":"AUD-TU-02","code":"AUD-TU-02","plate":"61C-452.18","driverName":"Trương Văn Nam","vehicleType":"Xe ben Hyundai HD270 15T","shiftDate":"28/10/2026","totalKm":142,"totalKmLoaded":95,"totalKmEmpty":47,"idlingHours":0.5,"fuelInitialLiters":340,"fuelRefilledLiters":0,"fuelFinalLiters":295,"actualFuelConsumedLiters":45,"theoreticalNormLiters":47.2,"fuelVarianceLiters":-2.2,"fuelVariancePercent":-4.7,"variancePercent":-4.7,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Tiêu hao nhiên liệu tối ưu tuyến Tân Uyên ➔ Vành Đai 3 TP.HCM","resolutionStatus":"Bình thường / Khen thưởng","locationTheftDetected":"Tuyến Vành Đai 3 TP.HCM","investigator":"Nguyễn Tấn Tài","quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên"}'::jsonb),
+
+		-- Mỏ 3: Hà Nam (MO-HN-03)
+		('AUD-HN-01', '{"id":"AUD-HN-01","code":"AUD-HN-01","plate":"88H-042.27","driverName":"Trần Đình Trọng","vehicleType":"Xe ben HOWO 4 chân 371HP","shiftDate":"12:45 28/10/2026","totalKm":148,"totalKmLoaded":98,"totalKmEmpty":50,"idlingHours":2.5,"fuelInitialLiters":335,"fuelRefilledLiters":0,"fuelFinalLiters":246.5,"actualFuelConsumedLiters":88.5,"theoreticalNormLiters":62.5,"fuelVarianceLiters":26.0,"fuelVariancePercent":41.6,"variancePercent":41.6,"theftCostLostVnd":585000,"riskLevel":"CRITICAL_VARIANCE_DETECTED","anomalyDescription":"Phát hiện sụt 26.0 Lít dầu trong 14 phút ven đường tránh QL1A TP Phủ Lý (ACC=OFF)","resolutionStatus":"Đề xuất lập biên bản kiểm tra rơle bình dầu","locationTheftDetected":"Đường tránh QL1A TP Phủ Lý (Hà Nam)","investigator":"Đặng Đình Bách (Trưởng Ban Kiểm Soát Hà Nam)","quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam"}'::jsonb),
+		('AUD-HN-02', '{"id":"AUD-HN-02","code":"AUD-HN-02","plate":"90C-054.67","driverName":"Bùi Văn Long","vehicleType":"Xe ben 3 chân Howo 371HP","shiftDate":"28/10/2026","totalKm":120,"totalKmLoaded":80,"totalKmEmpty":40,"idlingHours":0.7,"fuelInitialLiters":290,"fuelRefilledLiters":0,"fuelFinalLiters":245,"actualFuelConsumedLiters":45,"theoreticalNormLiters":46.8,"fuelVarianceLiters":-1.8,"fuelVariancePercent":-3.8,"variancePercent":-3.8,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Đạt định mức tiêu chuẩn tuyến Kiện Khê ➔ Trạm bê tông Xuân Mai","resolutionStatus":"Bình thường","locationTheftDetected":"Tuyến Kiện Khê ➔ QL1A","investigator":"Đặng Đình Bách","quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam"}'::jsonb),
+
+		-- Mỏ 4: Bình Phước (MO-BP-04)
+		('AUD-BP-01', '{"id":"AUD-BP-01","code":"AUD-BP-01","plate":"93H-067.89","driverName":"Lâm Quốc Bảo","vehicleType":"Xe ben Howo Sinotruk 371HP","shiftDate":"12:48 28/10/2026","totalKm":126,"totalKmLoaded":84,"totalKmEmpty":42,"idlingHours":2.0,"fuelInitialLiters":320,"fuelRefilledLiters":0,"fuelFinalLiters":248.5,"actualFuelConsumedLiters":71.5,"theoreticalNormLiters":52.0,"fuelVarianceLiters":19.5,"fuelVariancePercent":37.5,"variancePercent":37.5,"theftCostLostVnd":438750,"riskLevel":"CRITICAL_VARIANCE_DETECTED","anomalyDescription":"Phát hiện sụt 19.5 Lít dầu bất thường tại ngã tư Chơn Thành QL13 (ACC=OFF)","resolutionStatus":"Chờ đối soát xác minh","locationTheftDetected":"Ngã tư Chơn Thành QL13 (Bình Phước)","investigator":"Trần Văn Thắng (Ban Kiểm Soát Mỏ Bình Phước)","quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước"}'::jsonb),
+		('AUD-BP-02', '{"id":"AUD-BP-02","code":"AUD-BP-02","plate":"93C-114.52","driverName":"Phạm Minh Tuấn","vehicleType":"Xe tải ben Dongfeng 4 chân 375HP","shiftDate":"28/10/2026","totalKm":138,"totalKmLoaded":92,"totalKmEmpty":46,"idlingHours":0.6,"fuelInitialLiters":350,"fuelRefilledLiters":0,"fuelFinalLiters":305,"actualFuelConsumedLiters":45,"theoreticalNormLiters":46.8,"fuelVarianceLiters":-1.8,"fuelVariancePercent":-3.8,"variancePercent":-3.8,"theftCostLostVnd":0,"riskLevel":"SAVING","anomalyDescription":"Vận chuyển đá Granite Chơn Thành tiết kiệm 1.8 Lít dầu so với định mức","resolutionStatus":"Bình thường / Khen thưởng","locationTheftDetected":"Tuyến Chơn Thành ➔ KCN Becamex","investigator":"Trần Văn Thắng","quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước"}'::jsonb)
 	`)
 
-	// 9. Seed Fuel Norms
-	// 9. Seed Fleet Fuel Norms with Multi-Driver Shift Allocations
+	// 9. Seed Fleet Fuel Norms for 4 Quarries (5 vehicles per quarry = 20 vehicles total)
 	Pool.Exec(ctx, "DELETE FROM fuel_norms;")
-	fmt.Println("🌱 Seeding Fleet Fuel Norms with Multi-Driver Shift Allocations...")
+	fmt.Println("🌱 Seeding Fleet Fuel Norms for 4 Quarries (20 Vehicles Total)...")
 	Pool.Exec(ctx, `
 		INSERT INTO fuel_norms (code, data) VALUES
-		('V-01', '{
-			"id":"V-01","code":"V-01","plate":"19H-056.22",
+		-- =========================================================
+		-- MỎ 1: PHÚ THỌ (MO-PT-01) - 5 XE BIỂN SỐ 19
+		-- =========================================================
+		('V-PT-01', '{
+			"id":"V-PT-01","code":"V-PT-01","plate":"19H-056.22",
 			"vehicleType":"Xe ben Howo 371HP (8x4)","type":"Xe ben Howo 371HP (8x4)","model":"Howo Sinotruk 8x4","enginePowerHp":371,
 			"driverName":"Nguyễn Văn Toàn","driverPhone":"0912.888.999",
 			"drivers":[
-				{"id":"EMP-DRV-01","name":"Nguyễn Văn Toàn","phone":"0912.888.999","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ"},
+				{"id":"EMP-DRV-01","name":"Nguyễn Văn Toàn","phone":"0912.888.999","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Phú Thọ"},
 				{"id":"EMP-DRV-04","name":"Trần Đình Khang","phone":"0904.112.334","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"},
-				{"id":"EMP-DRV-07","name":"Vũ Văn Hải","phone":"0972.334.556","shift":"Dự phòng","role":"backup","status":"standby","notes":"Tài xế dự phòng thay ca"},
-				{"id":"EMP-DRV-P01","name":"Phạm Văn Quý","phone":"0913.445.667","shift":"Đã nghỉ việc","role":"past","status":"resigned","notes":"Nghỉ việc từ 01/10/2026, đã bàn giao xe"}
+				{"id":"EMP-DRV-07","name":"Vũ Văn Hải","phone":"0972.334.556","shift":"Dự phòng","role":"backup","status":"standby","notes":"Tài xế dự phòng thay ca"}
 			],
-			"rfidCode":"RFID-1015-TTC","status":"active",
+			"rfidCode":"RFID-19H-056","status":"active",
 			"loadedNormLitersPer100km":39.0,"emptyNormLitersPer100km":26.5,"idlingNormLitersPerHour":3.0,"quarryTerrainFactor":1.12,
 			"normLoadedL100km":39.0,"normUnloadedL100km":26.5,"normIdlingLiterPerHour":3.0,"slopeCorrectionFactor":1.12,
 			"currentFuelLiters":268,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":148580,"driverIntegrityScore":96,
-			"lastMaintenanceDate":"20/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Xe công ty mỏ chở đá 1x2 cho công trường Cao Tốc."
+			"lastMaintenanceDate":"20/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Xe chuyên chở đá 1x2 mỏ Phú Thọ đi công trường Cao Tốc.",
+			"quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)","mine_location":"Thanh Ba, Phú Thọ"
 		}'::jsonb),
-		('V-02', '{
-			"id":"V-02","code":"V-02","plate":"19C-128.45",
-			"vehicleType":"Xe ben Howo 371HP (8x4)","type":"Xe ben Howo 371HP (8x4)","model":"Howo Sinotruk 8x4","enginePowerHp":371,
+		('V-PT-02', '{
+			"id":"V-PT-02","code":"V-PT-02","plate":"19C-128.45",
+			"vehicleType":"Xe ben Howo 371HP 4 chân (8x4)","type":"Xe ben Howo 371HP 4 chân (8x4)","model":"Howo Sinotruk 8x4","enginePowerHp":371,
 			"driverName":"Lê Hữu Thắng","driverPhone":"0983.234.567",
 			"drivers":[
-				{"id":"EMP-DRV-02","name":"Lê Hữu Thắng","phone":"0983.234.567","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
-				{"id":"EMP-DRV-08","name":"Đỗ Quang Dũng","phone":"0986.332.114","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"},
-				{"id":"EMP-DRV-09","name":"Nguyễn Thế Bảo","phone":"0903.441.229","shift":"Dự phòng","role":"backup","status":"standby","notes":"Lái phụ tăng cường"}
+				{"id":"EMP-DRV-02","name":"Lê Hữu Thắng","phone":"0983.234.567","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Phú Thọ"},
+				{"id":"EMP-DRV-08","name":"Đỗ Quang Dũng","phone":"0986.332.114","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
 			],
-			"rfidCode":"RFID-1016-TTC","status":"active",
+			"rfidCode":"RFID-19C-128","status":"active",
 			"loadedNormLitersPer100km":40.0,"emptyNormLitersPer100km":26.8,"idlingNormLitersPerHour":3.1,"quarryTerrainFactor":1.15,
 			"normLoadedL100km":40.0,"normUnloadedL100km":26.8,"normIdlingLiterPerHour":3.1,"slopeCorrectionFactor":1.15,
 			"currentFuelLiters":315,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":172400,"driverIntegrityScore":93,
-			"lastMaintenanceDate":"18/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở hàng giao trạm trộn bê tông KCN Thụy Vân."
+			"lastMaintenanceDate":"18/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở hàng giao trạm trộn bê tông KCN Thụy Vân.",
+			"quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)","mine_location":"Thanh Ba, Phú Thọ"
 		}'::jsonb),
-		('V-03', '{
-			"id":"V-03","code":"V-03","plate":"29C-781.90",
-			"vehicleType":"Xe ben Shacman 4 chân X3000","type":"Xe ben Shacman 4 chân X3000","model":"Shacman X3000 Weichai 380HP","enginePowerHp":380,
-			"driverName":"Lê Văn Cường","driverPhone":"0977.890.123",
-			"drivers":[
-				{"id":"EMP-DRV-05","name":"Lê Văn Cường","phone":"0977.890.123","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
-				{"id":"EMP-DRV-03","name":"Hoàng Minh Đức","phone":"0977.456.123","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca đêm"},
-				{"id":"EMP-DRV-P02","name":"Bùi Văn Toản","phone":"0915.667.889","shift":"Chuyển xe","role":"past","status":"transferred","notes":"Đã điều chuyển sang lái máy xúc CAT 336D"}
-			],
-			"rfidCode":"RFID-1022-TTC","status":"active",
-			"loadedNormLitersPer100km":41.0,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.15,
-			"normLoadedL100km":41.0,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.15,
-			"currentFuelLiters":310,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":210400,"driverIntegrityScore":94,
-			"lastMaintenanceDate":"12/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chạy tuyến khai trường moong về trạm nghiền trung tâm."
-		}'::jsonb),
-		('V-04', '{
-			"id":"V-04","code":"V-04","plate":"88H-042.27",
-			"vehicleType":"Xe ben HOWO 4 chân 371HP","type":"Xe ben HOWO 4 chân 371HP","model":"Howo Sinotruk 371","enginePowerHp":371,
-			"driverName":"Trần Đình Trọng","driverPhone":"0984.112.334",
-			"drivers":[
-				{"id":"EMP-DRV-06","name":"Trần Đình Trọng","phone":"0984.112.334","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng (đang theo dõi hao hụt dầu)"},
-				{"id":"EMP-DRV-10","name":"Nguyễn Hữu Kiên","phone":"0966.554.433","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca tối"}
-			],
-			"rfidCode":"RFID-1008-TTC","status":"theft_alert",
-			"loadedNormLitersPer100km":42.5,"emptyNormLitersPer100km":28.0,"idlingNormLitersPerHour":3.5,"quarryTerrainFactor":1.15,
-			"normLoadedL100km":42.5,"normUnloadedL100km":28.0,"normIdlingLiterPerHour":3.5,"slopeCorrectionFactor":1.15,
-			"currentFuelLiters":182,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":184520,"driverIntegrityScore":58,
-			"lastMaintenanceDate":"15/10/2026","fuelSensorStatus":"ACTIVE_ANOMALY","notes":"Phát hiện sụt dầu bất thường 38 Lít khi dừng ven QL2."
-		}'::jsonb),
-		('V-05', '{
-			"id":"V-05","code":"V-05","plate":"29H-882.19",
-			"vehicleType":"Xe ben Shacman 4 chân 340HP","type":"Xe ben Shacman 4 chân 340HP","model":"Shacman Delong F3000","enginePowerHp":340,
-			"driverName":"Hoàng Minh Đức","driverPhone":"0977.456.123",
-			"drivers":[
-				{"id":"EMP-DRV-03","name":"Hoàng Minh Đức","phone":"0977.456.123","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
-				{"id":"EMP-DRV-11","name":"Phan Đình Tuấn","phone":"0982.667.112","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều bóc tầng phủ"},
-				{"id":"EMP-DRV-P03","name":"Đinh Văn Hùng","phone":"0902.998.776","shift":"Đã nghỉ việc","role":"past","status":"resigned","notes":"Tài xế cũ đã nghỉ việc từ tháng 09/2026"}
-			],
-			"rfidCode":"RFID-1025-TTC","status":"active",
-			"loadedNormLitersPer100km":41.5,"emptyNormLitersPer100km":27.2,"idlingNormLitersPerHour":3.3,"quarryTerrainFactor":1.18,
-			"normLoadedL100km":41.5,"normUnloadedL100km":27.2,"normIdlingLiterPerHour":3.3,"slopeCorrectionFactor":1.18,
-			"currentFuelLiters":290,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":165200,"driverIntegrityScore":91,
-			"lastMaintenanceDate":"10/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đất đá bóc tầng phủ moong khai trường."
-		}'::jsonb),
-		('V-06', '{
-			"id":"V-06","code":"V-06","plate":"19C-089.12",
+		('V-PT-03', '{
+			"id":"V-PT-03","code":"V-PT-03","plate":"19C-089.12",
 			"vehicleType":"Xe ben Dongfeng 4 chân 375HP","type":"Xe ben Dongfeng 4 chân 375HP","model":"Dongfeng Cummins 375HP","enginePowerHp":375,
 			"driverName":"Vũ Tuấn Anh","driverPhone":"0916.223.344",
 			"drivers":[
 				{"id":"EMP-DRV-12","name":"Vũ Tuấn Anh","phone":"0916.223.344","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
-				{"id":"EMP-DRV-13","name":"Đặng Quốc Huy","phone":"0989.112.233","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"},
-				{"id":"EMP-DRV-14","name":"Tạ Quang Minh","phone":"0907.332.118","shift":"Dự phòng","role":"backup","status":"standby","notes":"Lái phụ thay thế"}
+				{"id":"EMP-DRV-13","name":"Đặng Quốc Huy","phone":"0989.112.233","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
 			],
-			"rfidCode":"RFID-1028-TTC","status":"active",
+			"rfidCode":"RFID-19C-089","status":"active",
 			"loadedNormLitersPer100km":40.5,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.1,"quarryTerrainFactor":1.14,
 			"normLoadedL100km":40.5,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.1,"slopeCorrectionFactor":1.14,
 			"currentFuelLiters":340,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":198300,"driverIntegrityScore":95,
-			"lastMaintenanceDate":"22/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá cấp phối base ra cảng bốc hàng."
+			"lastMaintenanceDate":"22/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá cấp phối base ra cảng Sông Lô bốc hàng.",
+			"quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)","mine_location":"Thanh Ba, Phú Thọ"
 		}'::jsonb),
-		('V-07', '{
-			"id":"V-07","code":"V-07","plate":"29C-654.32",
-			"vehicleType":"Xe ben Chenglong Hải Âu 385HP","type":"Xe ben Chenglong Hải Âu 385HP","model":"Chenglong Yuchai 385HP","enginePowerHp":385,
-			"driverName":"Trịnh Văn Giang","driverPhone":"0973.882.199",
+		('V-PT-04', '{
+			"id":"V-PT-04","code":"V-PT-04","plate":"19C-098.76",
+			"vehicleType":"Xe tải ben 15 tấn 3 chân Hino 500","type":"Xe tải ben 15 tấn 3 chân Hino 500","model":"Hino 500 FL (6x4)","enginePowerHp":280,
+			"driverName":"Hoàng Văn Nam","driverPhone":"0973.882.199",
 			"drivers":[
-				{"id":"EMP-DRV-15","name":"Trịnh Văn Giang","phone":"0973.882.199","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
-				{"id":"EMP-DRV-16","name":"Lương Thế Vinh","phone":"0908.445.667","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca tối"},
-				{"id":"EMP-DRV-17","name":"Trần Văn Nam","phone":"0984.771.223","shift":"Dự phòng","role":"backup","status":"standby","notes":"Lái phụ trực ca"}
+				{"id":"EMP-DRV-15","name":"Hoàng Văn Nam","phone":"0973.882.199","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-16","name":"Bùi Đình Phúc","phone":"0908.445.667","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca tối"}
 			],
-			"rfidCode":"RFID-1031-TTC","status":"active",
-			"loadedNormLitersPer100km":39.5,"emptyNormLitersPer100km":26.0,"idlingNormLitersPerHour":3.0,"quarryTerrainFactor":1.12,
-			"normLoadedL100km":39.5,"normUnloadedL100km":26.0,"normIdlingLiterPerHour":3.0,"slopeCorrectionFactor":1.12,
-			"currentFuelLiters":360,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":134100,"driverIntegrityScore":97,
-			"lastMaintenanceDate":"25/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Xe chuyên tuyến mỏ đá TTC đi các trạm trộn bê tông Vĩnh Phúc."
+			"rfidCode":"RFID-19C-098","status":"maintenance",
+			"loadedNormLitersPer100km":32.0,"emptyNormLitersPer100km":22.0,"idlingNormLitersPerHour":2.5,"quarryTerrainFactor":1.10,
+			"normLoadedL100km":32.0,"normUnloadedL100km":22.0,"normIdlingLiterPerHour":2.5,"slopeCorrectionFactor":1.10,
+			"currentFuelLiters":210,"tankCapacityLiters":300,"fuelCapacityLiters":300,"odometerCurrentKm":112650,"driverIntegrityScore":97,
+			"lastMaintenanceDate":"28/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Xe bảo dưỡng định kỳ thay dầu động cơ tại xưởng mỏ.",
+			"quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)","mine_location":"Thanh Ba, Phú Thọ"
 		}'::jsonb),
-		('V-08', '{
-			"id":"V-08","code":"V-08","plate":"88C-198.76",
+		('V-PT-05', '{
+			"id":"V-PT-05","code":"V-PT-05","plate":"19H-032.88",
+			"vehicleType":"Xe ben Howo V7G 380HP 4 chân","type":"Xe ben Howo V7G 380HP 4 chân","model":"Howo Sinotruk V7G","enginePowerHp":380,
+			"driverName":"Đinh Tiến Dũng","driverPhone":"0984.771.223",
+			"drivers":[
+				{"id":"EMP-DRV-17","name":"Đinh Tiến Dũng","phone":"0984.771.223","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng (đang theo dõi hao hụt dầu)"},
+				{"id":"EMP-DRV-18","name":"Nguyễn Viết Hùng","phone":"0918.334.455","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều"}
+			],
+			"rfidCode":"RFID-19H-032","status":"theft_alert",
+			"loadedNormLitersPer100km":41.5,"emptyNormLitersPer100km":27.5,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.16,
+			"normLoadedL100km":41.5,"normUnloadedL100km":27.5,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.16,
+			"currentFuelLiters":182,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":135400,"driverIntegrityScore":62,
+			"lastMaintenanceDate":"15/10/2026","fuelSensorStatus":"ACTIVE_ANOMALY","notes":"Phát hiện sụt dầu bất thường 18.5 Lít tại QL2 Km 72.",
+			"quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)","mine_location":"Thanh Ba, Phú Thọ"
+		}'::jsonb),
+
+		-- =========================================================
+		-- MỎ 2: TÂN UYÊN (MO-TU-02) - 5 XE BIỂN SỐ 61, 60 (BÌNH DƯƠNG)
+		-- =========================================================
+		('V-TU-01', '{
+			"id":"V-TU-01","code":"V-TU-01","plate":"61C-452.18",
+			"vehicleType":"Xe ben Hyundai HD270 15T (6x4)","type":"Xe ben Hyundai HD270 15T (6x4)","model":"Hyundai HD270 D6AC 380HP","enginePowerHp":380,
+			"driverName":"Trương Văn Nam","driverPhone":"0938.667.129",
+			"drivers":[
+				{"id":"EMP-DRV-20","name":"Trương Văn Nam","phone":"0938.667.129","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Tân Uyên"},
+				{"id":"EMP-DRV-21","name":"Võ Văn Thọ","phone":"0937.112.445","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
+			],
+			"rfidCode":"RFID-61C-452","status":"active",
+			"loadedNormLitersPer100km":38.5,"emptyNormLitersPer100km":26.0,"idlingNormLitersPerHour":2.8,"quarryTerrainFactor":1.10,
+			"normLoadedL100km":38.5,"normUnloadedL100km":26.0,"normIdlingLiterPerHour":2.8,"slopeCorrectionFactor":1.10,
+			"currentFuelLiters":295,"tankCapacityLiters":380,"fuelCapacityLiters":380,"odometerCurrentKm":156200,"driverIntegrityScore":96,
+			"lastMaintenanceDate":"22/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở đá Base cấp phối từ mỏ Tân Uyên ra dự án Vành Đai 3.",
+			"quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên","mine_location":"Tân Uyên, Bình Dương"
+		}'::jsonb),
+		('V-TU-02', '{
+			"id":"V-TU-02","code":"V-TU-02","plate":"60C-312.78",
+			"vehicleType":"Xe đầu kéo mooc ben Chenglong 420HP","type":"Xe đầu kéo mooc ben Chenglong 420HP","model":"Chenglong H7 Yuchai 420HP","enginePowerHp":420,
+			"driverName":"Trần Minh Quân","driverPhone":"0933.114.558",
+			"drivers":[
+				{"id":"EMP-DRV-22","name":"Trần Minh Quân","phone":"0933.114.558","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Tân Uyên"},
+				{"id":"EMP-DRV-23","name":"Nguyễn Tấn Phát","phone":"0908.223.119","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều"}
+			],
+			"rfidCode":"RFID-60C-312","status":"active",
+			"loadedNormLitersPer100km":44.0,"emptyNormLitersPer100km":29.5,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.12,
+			"normLoadedL100km":44.0,"normUnloadedL100km":29.5,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.12,
+			"currentFuelLiters":330,"tankCapacityLiters":450,"fuelCapacityLiters":450,"odometerCurrentKm":214800,"driverIntegrityScore":94,
+			"lastMaintenanceDate":"16/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá 1x2 khối lượng lớn cho trạm trộn bê tông.",
+			"quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên","mine_location":"Tân Uyên, Bình Dương"
+		}'::jsonb),
+		('V-TU-03', '{
+			"id":"V-TU-03","code":"V-TU-03","plate":"61H-089.34",
+			"vehicleType":"Xe ben Daewoo Novus 15T (6x4)","type":"Xe ben Daewoo Novus 15T (6x4)","model":"Daewoo Novus Doosan DE12TIS","enginePowerHp":340,
+			"driverName":"Lê Hoàng Nam","driverPhone":"0909.882.331",
+			"drivers":[
+				{"id":"EMP-DRV-24","name":"Lê Hoàng Nam","phone":"0909.882.331","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-25","name":"Phạm Đức Duy","phone":"0982.771.004","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca tối"}
+			],
+			"rfidCode":"RFID-61H-089","status":"active",
+			"loadedNormLitersPer100km":39.5,"emptyNormLitersPer100km":26.2,"idlingNormLitersPerHour":2.9,"quarryTerrainFactor":1.11,
+			"normLoadedL100km":39.5,"normUnloadedL100km":26.2,"normIdlingLiterPerHour":2.9,"slopeCorrectionFactor":1.11,
+			"currentFuelLiters":270,"tankCapacityLiters":350,"fuelCapacityLiters":350,"odometerCurrentKm":128500,"driverIntegrityScore":95,
+			"lastMaintenanceDate":"24/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Xe nội bộ vận chuyển đá hộc từ moong lên trạm nghiền sàng.",
+			"quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên","mine_location":"Tân Uyên, Bình Dương"
+		}'::jsonb),
+		('V-TU-04', '{
+			"id":"V-TU-04","code":"V-TU-04","plate":"60H-033.72",
+			"vehicleType":"Xe ben Howo 380HP 4 chân (8x4)","type":"Xe ben Howo 380HP 4 chân (8x4)","model":"Howo Sinotruk 380HP","enginePowerHp":380,
+			"driverName":"Huỳnh Văn Hậu","driverPhone":"0918.445.662",
+			"drivers":[
+				{"id":"EMP-DRV-26","name":"Huỳnh Văn Hậu","phone":"0918.445.662","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính (đang theo dõi thất thoát dầu ĐT 746)"},
+				{"id":"EMP-DRV-27","name":"Đặng Văn Tiến","phone":"0976.331.889","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều"}
+			],
+			"rfidCode":"RFID-60H-033","status":"theft_alert",
+			"loadedNormLitersPer100km":42.0,"emptyNormLitersPer100km":27.8,"idlingNormLitersPerHour":3.3,"quarryTerrainFactor":1.14,
+			"normLoadedL100km":42.0,"normUnloadedL100km":27.8,"normIdlingLiterPerHour":3.3,"slopeCorrectionFactor":1.14,
+			"currentFuelLiters":175,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":189450,"driverIntegrityScore":55,
+			"lastMaintenanceDate":"14/10/2026","fuelSensorStatus":"ACTIVE_ANOMALY","notes":"Cảnh báo sụt giảm 22 Lít dầu khi dừng đỗ ven ĐT 746.",
+			"quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên","mine_location":"Tân Uyên, Bình Dương"
+		}'::jsonb),
+		('V-TU-05', '{
+			"id":"V-TU-05","code":"V-TU-05","plate":"61C-921.45",
+			"vehicleType":"Xe ben Shacman F3000 Weichai 380HP","type":"Xe ben Shacman F3000 Weichai 380HP","model":"Shacman Delong F3000","enginePowerHp":380,
+			"driverName":"Bùi Quốc Cường","driverPhone":"0978.223.119",
+			"drivers":[
+				{"id":"EMP-DRV-28","name":"Bùi Quốc Cường","phone":"0978.223.119","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Tân Uyên"},
+				{"id":"EMP-DRV-29","name":"Nguyễn Văn Đạt","phone":"0912.009.334","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
+			],
+			"rfidCode":"RFID-61C-921","status":"active",
+			"loadedNormLitersPer100km":41.0,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.1,"quarryTerrainFactor":1.13,
+			"normLoadedL100km":41.0,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.1,"slopeCorrectionFactor":1.13,
+			"currentFuelLiters":320,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":142300,"driverIntegrityScore":93,
+			"lastMaintenanceDate":"21/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở đá 4x6 giao dự án đường tạo lực Bắc Tân Uyên.",
+			"quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên","mine_location":"Tân Uyên, Bình Dương"
+		}'::jsonb),
+
+		-- =========================================================
+		-- MỎ 3: HÀ NAM (MO-HN-03) - 5 XE BIỂN SỐ 90, 88 (HÀ NAM)
+		-- =========================================================
+		('V-HN-01', '{
+			"id":"V-HN-01","code":"V-HN-01","plate":"90C-054.67",
+			"vehicleType":"Xe ben 3 chân Howo 371HP (6x4)","type":"Xe ben 3 chân Howo 371HP (6x4)","model":"Howo WD615.47 (371HP)","enginePowerHp":371,
+			"driverName":"Bùi Văn Long","driverPhone":"0984.331.228",
+			"drivers":[
+				{"id":"EMP-DRV-30","name":"Bùi Văn Long","phone":"0984.331.228","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Hà Nam"},
+				{"id":"EMP-DRV-31","name":"Đỗ Văn Tuấn","phone":"0967.221.884","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
+			],
+			"rfidCode":"RFID-90C-054","status":"active",
+			"loadedNormLitersPer100km":37.5,"emptyNormLitersPer100km":25.5,"idlingNormLitersPerHour":2.9,"quarryTerrainFactor":1.12,
+			"normLoadedL100km":37.5,"normUnloadedL100km":25.5,"normIdlingLiterPerHour":2.9,"slopeCorrectionFactor":1.12,
+			"currentFuelLiters":245,"tankCapacityLiters":350,"fuelCapacityLiters":350,"odometerCurrentKm":167800,"driverIntegrityScore":96,
+			"lastMaintenanceDate":"19/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở đá 1x2 xuất mỏ Kiện Khê giao trạm bê tông Xuân Mai.",
+			"quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam","mine_location":"Kiện Khê, Thanh Liêm, Hà Nam"
+		}'::jsonb),
+		('V-HN-02', '{
+			"id":"V-HN-02","code":"V-HN-02","plate":"88H-042.27",
+			"vehicleType":"Xe ben HOWO 4 chân 371HP (8x4)","type":"Xe ben HOWO 4 chân 371HP (8x4)","model":"Howo Sinotruk 371","enginePowerHp":371,
+			"driverName":"Trần Đình Trọng","driverPhone":"0984.112.334",
+			"drivers":[
+				{"id":"EMP-DRV-06","name":"Trần Đình Trọng","phone":"0984.112.334","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính (đang theo dõi hao hụt dầu đường tránh Phủ Lý)"},
+				{"id":"EMP-DRV-10","name":"Nguyễn Hữu Kiên","phone":"0966.554.433","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca tối"}
+			],
+			"rfidCode":"RFID-88H-042","status":"theft_alert",
+			"loadedNormLitersPer100km":42.5,"emptyNormLitersPer100km":28.0,"idlingNormLitersPerHour":3.5,"quarryTerrainFactor":1.15,
+			"normLoadedL100km":42.5,"normUnloadedL100km":28.0,"normIdlingLiterPerHour":3.5,"slopeCorrectionFactor":1.15,
+			"currentFuelLiters":165,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":184520,"driverIntegrityScore":54,
+			"lastMaintenanceDate":"15/10/2026","fuelSensorStatus":"ACTIVE_ANOMALY","notes":"Phát hiện sụt dầu 26 Lít trên đường tránh QL1A Phủ Lý.",
+			"quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam","mine_location":"Kiện Khê, Thanh Liêm, Hà Nam"
+		}'::jsonb),
+		('V-HN-03', '{
+			"id":"V-HN-03","code":"V-HN-03","plate":"90C-123.45",
 			"vehicleType":"Xe ben Shacman 4 chân X3000","type":"Xe ben Shacman 4 chân X3000","model":"Shacman X3000 Weichai 380HP","enginePowerHp":380,
-			"driverName":"Mai Văn Thắng","driverPhone":"0918.334.455",
+			"driverName":"Vũ Đức Mạnh","driverPhone":"0977.123.890",
 			"drivers":[
-				{"id":"EMP-DRV-18","name":"Mai Văn Thắng","phone":"0918.334.455","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
-				{"id":"EMP-DRV-19","name":"Hoàng Quốc Việt","phone":"0967.889.001","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều"},
-				{"id":"EMP-DRV-P04","name":"Dương Văn Hòa","phone":"0919.882.331","shift":"Đã nghỉ việc","role":"past","status":"resigned","notes":"Tài xế cũ nghỉ việc tháng 08/2026 bàn giao cho Mai Văn Thắng"}
+				{"id":"EMP-DRV-32","name":"Vũ Đức Mạnh","phone":"0977.123.890","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Hà Nam"},
+				{"id":"EMP-DRV-33","name":"Lương Đình Hoàn","phone":"0915.882.113","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
 			],
-			"rfidCode":"RFID-1035-TTC","status":"active",
-			"loadedNormLitersPer100km":41.2,"emptyNormLitersPer100km":27.5,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.16,
-			"normLoadedL100km":41.2,"normUnloadedL100km":27.5,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.16,
-			"currentFuelLiters":275,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":224800,"driverIntegrityScore":92,
-			"lastMaintenanceDate":"14/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá xô bồ nổ mìn về hộc máy kẹp nghiền thô."
+			"rfidCode":"RFID-90C-123","status":"active",
+			"loadedNormLitersPer100km":41.0,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.14,
+			"normLoadedL100km":41.0,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.14,
+			"currentFuelLiters":310,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":175200,"driverIntegrityScore":95,
+			"lastMaintenanceDate":"17/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở đá Base Dmax25 cho công trường Cao tốc Cầu Giẽ - Ninh Bình.",
+			"quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam","mine_location":"Kiện Khê, Thanh Liêm, Hà Nam"
+		}'::jsonb),
+		('V-HN-04', '{
+			"id":"V-HN-04","code":"V-HN-04","plate":"90H-088.19",
+			"vehicleType":"Xe đầu kéo Howo mooc ben 6 trục","type":"Xe đầu kéo Howo mooc ben 6 trục","model":"Howo A7 D10.38 (380HP)","enginePowerHp":380,
+			"driverName":"Ngô Văn Hùng","driverPhone":"0912.334.889",
+			"drivers":[
+				{"id":"EMP-DRV-34","name":"Ngô Văn Hùng","phone":"0912.334.889","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-35","name":"Tạ Văn Quyết","phone":"0989.445.001","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca tối"}
+			],
+			"rfidCode":"RFID-90H-088","status":"active",
+			"loadedNormLitersPer100km":45.0,"emptyNormLitersPer100km":30.0,"idlingNormLitersPerHour":3.4,"quarryTerrainFactor":1.15,
+			"normLoadedL100km":45.0,"normUnloadedL100km":30.0,"normIdlingLiterPerHour":3.4,"slopeCorrectionFactor":1.15,
+			"currentFuelLiters":355,"tankCapacityLiters":450,"fuelCapacityLiters":450,"odometerCurrentKm":232100,"driverIntegrityScore":93,
+			"lastMaintenanceDate":"12/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận tải khối lượng lớn ra cảng sông Đáy bốc tàu hàng thủy.",
+			"quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam","mine_location":"Kiện Khê, Thanh Liêm, Hà Nam"
+		}'::jsonb),
+		('V-HN-05', '{
+			"id":"V-HN-05","code":"V-HN-05","plate":"35C-078.62",
+			"vehicleType":"Xe ben Dongfeng 4 chân 385HP","type":"Xe ben Dongfeng 4 chân 385HP","model":"Dongfeng Cummins 385HP","enginePowerHp":385,
+			"driverName":"Phạm Quang Linh","driverPhone":"0988.441.223",
+			"drivers":[
+				{"id":"EMP-DRV-36","name":"Phạm Quang Linh","phone":"0988.441.223","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Hà Nam"},
+				{"id":"EMP-DRV-37","name":"Nguyễn Đức Toàn","phone":"0974.113.882","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
+			],
+			"rfidCode":"RFID-35C-078","status":"active",
+			"loadedNormLitersPer100km":41.2,"emptyNormLitersPer100km":27.2,"idlingNormLitersPerHour":3.1,"quarryTerrainFactor":1.14,
+			"normLoadedL100km":41.2,"normUnloadedL100km":27.2,"normIdlingLiterPerHour":3.1,"slopeCorrectionFactor":1.14,
+			"currentFuelLiters":290,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":141900,"driverIntegrityScore":94,
+			"lastMaintenanceDate":"23/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá xô bồ nổ mìn về hộc máy kẹp nghiền thô.",
+			"quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam","mine_location":"Kiện Khê, Thanh Liêm, Hà Nam"
+		}'::jsonb),
+
+		-- =========================================================
+		-- MỎ 4: BÌNH PHƯỚC (MO-BP-04) - 5 XE BIỂN SỐ 93, 70 (BÌNH PHƯỚC)
+		-- =========================================================
+		('V-BP-01', '{
+			"id":"V-BP-01","code":"V-BP-01","plate":"93C-114.52",
+			"vehicleType":"Xe tải ben Dongfeng 4 chân 375HP","type":"Xe tải ben Dongfeng 4 chân 375HP","model":"Dongfeng Cummins 375HP","enginePowerHp":375,
+			"driverName":"Phạm Minh Tuấn","driverPhone":"0968.112.556",
+			"drivers":[
+				{"id":"EMP-DRV-38","name":"Phạm Minh Tuấn","phone":"0968.112.556","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Chơn Thành"},
+				{"id":"EMP-DRV-39","name":"Nguyễn Thanh Sơn","phone":"0918.442.115","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca chiều"}
+			],
+			"rfidCode":"RFID-93C-114","status":"active",
+			"loadedNormLitersPer100km":40.0,"emptyNormLitersPer100km":26.8,"idlingNormLitersPerHour":3.0,"quarryTerrainFactor":1.13,
+			"normLoadedL100km":40.0,"normUnloadedL100km":26.8,"normIdlingLiterPerHour":3.0,"slopeCorrectionFactor":1.13,
+			"currentFuelLiters":305,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":153400,"driverIntegrityScore":97,
+			"lastMaintenanceDate":"24/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở đá Granite Chơn Thành giao dự án cao tốc Gia Nghĩa - Chơn Thành.",
+			"quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước","mine_location":"Chơn Thành, Bình Phước"
+		}'::jsonb),
+		('V-BP-02', '{
+			"id":"V-BP-02","code":"V-BP-02","plate":"93H-067.89",
+			"vehicleType":"Xe ben Howo Sinotruk 371HP (8x4)","type":"Xe ben Howo Sinotruk 371HP (8x4)","model":"Howo Sinotruk 371HP","enginePowerHp":371,
+			"driverName":"Lâm Quốc Bảo","driverPhone":"0979.331.445",
+			"drivers":[
+				{"id":"EMP-DRV-40","name":"Lâm Quốc Bảo","phone":"0979.331.445","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính (đang kiểm tra nghi vấn thất thoát dầu QL13)"},
+				{"id":"EMP-DRV-41","name":"Đoàn Văn Hiếu","phone":"0903.882.114","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca tối"}
+			],
+			"rfidCode":"RFID-93H-067","status":"theft_alert",
+			"loadedNormLitersPer100km":42.0,"emptyNormLitersPer100km":27.8,"idlingNormLitersPerHour":3.3,"quarryTerrainFactor":1.15,
+			"normLoadedL100km":42.0,"normUnloadedL100km":27.8,"normIdlingLiterPerHour":3.3,"slopeCorrectionFactor":1.15,
+			"currentFuelLiters":180,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":178900,"driverIntegrityScore":56,
+			"lastMaintenanceDate":"13/10/2026","fuelSensorStatus":"ACTIVE_ANOMALY","notes":"Sụt giảm 19.5 Lít dầu bất thường tại ngã tư Chơn Thành QL13.",
+			"quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước","mine_location":"Chơn Thành, Bình Phước"
+		}'::jsonb),
+		('V-BP-03', '{
+			"id":"V-BP-03","code":"V-BP-03","plate":"93C-225.10",
+			"vehicleType":"Xe ben Hyundai Trago 4 chân 380HP","type":"Xe ben Hyundai Trago 4 chân 380HP","model":"Hyundai Trago D6CB 380HP","enginePowerHp":380,
+			"driverName":"Trịnh Đình Khang","driverPhone":"0908.552.114",
+			"drivers":[
+				{"id":"EMP-DRV-42","name":"Trịnh Đình Khang","phone":"0908.552.114","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Chơn Thành"},
+				{"id":"EMP-DRV-43","name":"Phan Văn Nam","phone":"0981.662.339","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều"}
+			],
+			"rfidCode":"RFID-93C-225","status":"active",
+			"loadedNormLitersPer100km":40.5,"emptyNormLitersPer100km":26.9,"idlingNormLitersPerHour":3.1,"quarryTerrainFactor":1.13,
+			"normLoadedL100km":40.5,"normUnloadedL100km":26.9,"normIdlingLiterPerHour":3.1,"slopeCorrectionFactor":1.13,
+			"currentFuelLiters":340,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":195600,"driverIntegrityScore":95,
+			"lastMaintenanceDate":"18/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở đá Base K98 giao dự án mở rộng KCN Becamex Bình Phước.",
+			"quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước","mine_location":"Chơn Thành, Bình Phước"
+		}'::jsonb),
+		('V-BP-04', '{
+			"id":"V-BP-04","code":"V-BP-04","plate":"70H-018.44",
+			"vehicleType":"Xe ben Shacman 4 chân X3000 (8x4)","type":"Xe ben Shacman 4 chân X3000 (8x4)","model":"Shacman X3000 Weichai 380HP","enginePowerHp":380,
+			"driverName":"Mai Quốc Thắng","driverPhone":"0914.889.220",
+			"drivers":[
+				{"id":"EMP-DRV-44","name":"Mai Quốc Thắng","phone":"0914.889.220","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng mỏ Bình Phước"},
+				{"id":"EMP-DRV-45","name":"Võ Thành Trung","phone":"0962.334.887","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái đổi ca tối"}
+			],
+			"rfidCode":"RFID-70H-018","status":"active",
+			"loadedNormLitersPer100km":41.0,"emptyNormLitersPer100km":27.0,"idlingNormLitersPerHour":3.2,"quarryTerrainFactor":1.14,
+			"normLoadedL100km":41.0,"normUnloadedL100km":27.0,"normIdlingLiterPerHour":3.2,"slopeCorrectionFactor":1.14,
+			"currentFuelLiters":280,"tankCapacityLiters":400,"fuelCapacityLiters":400,"odometerCurrentKm":139200,"driverIntegrityScore":94,
+			"lastMaintenanceDate":"22/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Vận chuyển đá hộc nổ mìn bãi xúc moong về hộc cấp liệu.",
+			"quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước","mine_location":"Chơn Thành, Bình Phước"
+		}'::jsonb),
+		('V-BP-05', '{
+			"id":"V-BP-05","code":"V-BP-05","plate":"93C-338.92",
+			"vehicleType":"Xe ben Howo T5G Man 340HP (6x4)","type":"Xe ben Howo T5G Man 340HP (6x4)","model":"Howo T5G MC07.34 (340HP)","enginePowerHp":340,
+			"driverName":"Nguyễn Trọng Nghĩa","driverPhone":"0972.110.887",
+			"drivers":[
+				{"id":"EMP-DRV-46","name":"Nguyễn Trọng Nghĩa","phone":"0972.110.887","shift":"Ca 1 (06:00 - 14:00)","role":"primary","status":"active","notes":"Lái chính ca sáng"},
+				{"id":"EMP-DRV-47","name":"Lê Công Vinh","phone":"0907.551.442","shift":"Ca 2 (14:00 - 22:00)","role":"shift_driver","status":"active","notes":"Lái ca chiều"}
+			],
+			"rfidCode":"RFID-93C-338","status":"active",
+			"loadedNormLitersPer100km":38.0,"emptyNormLitersPer100km":25.5,"idlingNormLitersPerHour":2.9,"quarryTerrainFactor":1.12,
+			"normLoadedL100km":38.0,"normUnloadedL100km":25.5,"normIdlingLiterPerHour":2.9,"slopeCorrectionFactor":1.12,
+			"currentFuelLiters":315,"tankCapacityLiters":380,"fuelCapacityLiters":380,"odometerCurrentKm":162800,"driverIntegrityScore":96,
+			"lastMaintenanceDate":"25/10/2026","fuelSensorStatus":"ACTIVE_NORMAL","notes":"Chở đá 1x2 xuất mỏ Chơn Thành đi các nhà máy bê tông Đồng Phú.",
+			"quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước","mine_location":"Chơn Thành, Bình Phước"
 		}'::jsonb);
 	`)
 
-	// 10. Seed Yard CheckInOut
-	var yardCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM yard_checkinout").Scan(&yardCount)
-	if yardCount == 0 {
-		fmt.Println("🌱 Seeding Yard Check-in/out Logs...")
-		Pool.Exec(ctx, `
-			INSERT INTO yard_checkinout (code, data) VALUES
-			('CHK-01', '{"id":"CHK-01","code":"CHK-01","yardId":"YARD-PT-01","yardName":"Bãi Xe Trung Tâm - Khai Trường Mỏ Phú Thọ","plate":"88H-042.27","driverName":"Trần Đình Trọng","driverPhone":"0984.112.334","rfidTag":"RFID-1008-TTC","actionType":"CHECK_OUT","timestamp":"07:05 28/10/2026","distanceMeters":12.4,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":184396,"endOdometer":184520,"kmTraveled":124,"startFuelLiters":320,"endFuelLiters":182,"actualFuelConsumedLiters":138,"destination":"QL2 ➔ Trạm trộn Phù Ninh","cargo":"Đá 1x2 bê tông"}'::jsonb),
-			('CHK-02', '{"id":"CHK-02","code":"CHK-02","yardId":"YARD-PT-01","yardName":"Bãi Xe Trung Tâm - Khai Trường Mỏ Phú Thọ","plate":"19H-056.22","driverName":"Nguyễn Văn Mạnh","driverPhone":"0982.145.882","rfidTag":"RFID-1015-TTC","actionType":"CHECK_IN","timestamp":"08:15 28/10/2026","distanceMeters":8.5,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":148424,"endOdometer":148580,"kmTraveled":156,"startFuelLiters":312,"endFuelLiters":268,"actualFuelConsumedLiters":44,"destination":"Mỏ Đá TTC ➔ Cảng Sông Lô","cargo":"Đá Base cấp phối"}'::jsonb),
-			('CHK-03', '{"id":"CHK-03","code":"CHK-03","yardId":"YARD-QL2-02","yardName":"Bãi Tập Kết Trung Chuyển QL2 - Phù Ninh","plate":"29C-781.90","driverName":"Lê Văn Cường","driverPhone":"0977.890.123","rfidTag":"RFID-1022-TTC","actionType":"CHECK_IN","timestamp":"09:30 28/10/2026","distanceMeters":15.1,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":210302,"endOdometer":210400,"kmTraveled":98,"startFuelLiters":345,"endFuelLiters":310,"actualFuelConsumedLiters":35,"destination":"Khai trường Moong Tầng 3","cargo":"Đá hộc xô bồ"}'::jsonb)
-		`)
-	}
+	// 10. Seed Yard CheckInOut for 4 Quarries (2 sessions per quarry = 8 sessions total)
+	Pool.Exec(ctx, "DELETE FROM yard_checkinout;")
+	fmt.Println("🌱 Seeding Yard Check-in/out Logs for 4 Quarries...")
+	Pool.Exec(ctx, `
+		INSERT INTO yard_checkinout (code, data) VALUES
+		-- Mỏ 1: Phú Thọ (MO-PT-01)
+		('CHK-PT-01', '{"id":"CHK-PT-01","code":"CHK-PT-01","yardId":"YARD-PT-01","yardName":"Bãi Xe Trung Tâm - Khai Trường Mỏ Phú Thọ","plate":"19H-032.88","driverName":"Đinh Tiến Dũng","driverPhone":"0984.771.223","rfidTag":"RFID-19H-032","actionType":"CHECK_OUT","timestamp":"07:05 28/10/2026","distanceMeters":12.4,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":135282,"endOdometer":135400,"kmTraveled":118,"startFuelLiters":310,"endFuelLiters":182,"actualFuelConsumedLiters":128,"destination":"QL2 ➔ Trạm trộn Phù Ninh","cargo":"Đá 1x2 bê tông","quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)"}'::jsonb),
+		('CHK-PT-02', '{"id":"CHK-PT-02","code":"CHK-PT-02","yardId":"YARD-PT-01","yardName":"Bãi Xe Trung Tâm - Khai Trường Mỏ Phú Thọ","plate":"19H-056.22","driverName":"Nguyễn Văn Toàn","driverPhone":"0912.888.999","rfidTag":"RFID-19H-056","actionType":"CHECK_IN","timestamp":"08:15 28/10/2026","distanceMeters":8.5,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":148424,"endOdometer":148580,"kmTraveled":156,"startFuelLiters":312,"endFuelLiters":268,"actualFuelConsumedLiters":44,"destination":"Mỏ Phú Thọ ➔ Cảng Sông Lô","cargo":"Đá Base cấp phối","quarry_code":"MO-PT-01","quarry_name":"Mỏ Đá Phú Thọ (Khu 1)"}'::jsonb),
+
+		-- Mỏ 2: Tân Uyên (MO-TU-02)
+		('CHK-TU-01', '{"id":"CHK-TU-01","code":"CHK-TU-01","yardId":"YARD-TU-01","yardName":"Bãi Xe & Trạm Bơm DO - Mỏ Tân Uyên","plate":"60H-033.72","driverName":"Huỳnh Văn Hậu","driverPhone":"0918.445.662","rfidTag":"RFID-60H-033","actionType":"CHECK_OUT","timestamp":"06:50 28/10/2026","distanceMeters":10.2,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":189315,"endOdometer":189450,"kmTraveled":135,"startFuelLiters":330,"endFuelLiters":175,"actualFuelConsumedLiters":155,"destination":"Mỏ Tân Uyên ➔ Dự án Vành Đai 3","cargo":"Đá 4x6 kè móng","quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên"}'::jsonb),
+		('CHK-TU-02', '{"id":"CHK-TU-02","code":"CHK-TU-02","yardId":"YARD-TU-01","yardName":"Bãi Xe & Trạm Bơm DO - Mỏ Tân Uyên","plate":"61C-452.18","driverName":"Trương Văn Nam","driverPhone":"0938.667.129","rfidTag":"RFID-61C-452","actionType":"CHECK_IN","timestamp":"09:10 28/10/2026","distanceMeters":7.8,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":156058,"endOdometer":156200,"kmTraveled":142,"startFuelLiters":340,"endFuelLiters":295,"actualFuelConsumedLiters":45,"destination":"Tân Uyên ➔ Cảng Thạnh Phước","cargo":"Đá Base cấp phối","quarry_code":"MO-TU-02","quarry_name":"Mỏ Đá Tân Uyên"}'::jsonb),
+
+		-- Mỏ 3: Hà Nam (MO-HN-03)
+		('CHK-HN-01', '{"id":"CHK-HN-01","code":"CHK-HN-01","yardId":"YARD-HN-01","yardName":"Bãi Tập Kết Trung Chuyển Kiện Khê","plate":"88H-042.27","driverName":"Trần Đình Trọng","driverPhone":"0984.112.334","rfidTag":"RFID-88H-042","actionType":"CHECK_OUT","timestamp":"07:15 28/10/2026","distanceMeters":14.0,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":184372,"endOdometer":184520,"kmTraveled":148,"startFuelLiters":335,"endFuelLiters":165,"actualFuelConsumedLiters":170,"destination":"Kiện Khê ➔ Cao Tốc Cầu Giẽ - Ninh Bình","cargo":"Đá cấp phối Base K98","quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam"}'::jsonb),
+		('CHK-HN-02', '{"id":"CHK-HN-02","code":"CHK-HN-02","yardId":"YARD-HN-01","yardName":"Bãi Tập Kết Trung Chuyển Kiện Khê","plate":"90C-054.67","driverName":"Bùi Văn Long","driverPhone":"0984.331.228","rfidTag":"RFID-90C-054","actionType":"CHECK_IN","timestamp":"08:45 28/10/2026","distanceMeters":9.1,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":167680,"endOdometer":167800,"kmTraveled":120,"startFuelLiters":290,"endFuelLiters":245,"actualFuelConsumedLiters":45,"destination":"Mỏ Hà Nam ➔ Trạm Bê Tông Xuân Mai","cargo":"Đá 1x2 Bê tông Kiện Khê","quarry_code":"MO-HN-03","quarry_name":"Mỏ Đá Hà Nam"}'::jsonb),
+
+		-- Mỏ 4: Bình Phước (MO-BP-04)
+		('CHK-BP-01', '{"id":"CHK-BP-01","code":"CHK-BP-01","yardId":"YARD-BP-01","yardName":"Bãi Xe Cơ Giới Mỏ Chơn Thành","plate":"93H-067.89","driverName":"Lâm Quốc Bảo","driverPhone":"0979.331.445","rfidTag":"RFID-93H-067","actionType":"CHECK_OUT","timestamp":"06:40 28/10/2026","distanceMeters":11.5,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":178774,"endOdometer":178900,"kmTraveled":126,"startFuelLiters":320,"endFuelLiters":180,"actualFuelConsumedLiters":140,"destination":"Mỏ Chơn Thành ➔ KCN Becamex Bình Phước","cargo":"Đá cấp phối Base","quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước"}'::jsonb),
+		('CHK-BP-02', '{"id":"CHK-BP-02","code":"CHK-BP-02","yardId":"YARD-BP-01","yardName":"Bãi Xe Cơ Giới Mỏ Chơn Thành","plate":"93C-114.52","driverName":"Phạm Minh Tuấn","driverPhone":"0968.112.556","rfidTag":"RFID-93C-114","actionType":"CHECK_IN","timestamp":"09:00 28/10/2026","distanceMeters":6.4,"isWithin20mGeofence":true,"geofenceStatus":"VALID_WITHIN_20M","startOdometer":153262,"endOdometer":153400,"kmTraveled":138,"startFuelLiters":350,"endFuelLiters":305,"actualFuelConsumedLiters":45,"destination":"Chơn Thành ➔ Tuyến Cao Tốc Gia Nghĩa","cargo":"Đá 1x2 Granite Chơn Thành","quarry_code":"MO-BP-04","quarry_name":"Mỏ Đá Bình Phước"}'::jsonb)
+	`)
+
+	// Sync all 20 vehicles into 'vehicles' table for cross-module consistency
+	fmt.Println("🌱 Syncing 20 Fleet Vehicles into 'vehicles' table with Quarry Codes...")
+	Pool.Exec(ctx, `
+		INSERT INTO vehicles (bs, loai, chu_xe, tai_trong, count, rfid, han_dang_kiem, status, date, bi, unit, ownership_type, current_driver_name, quarry_code)
+		VALUES
+		-- Phú Thọ (MO-PT-01)
+		('19H-056.22', 'Xe ben Howo 371HP (8x4)', 'Công ty Cổ phần Mỏ Đá TTC', 30, 98, 'RFID-19H-056', '20/01/2027', 'Hoạt động', '28/10/2026', 14.80, 'tấn', 'company', 'Nguyễn Văn Toàn', 'MO-PT-01'),
+		('19C-128.45', 'Xe ben Howo 371HP 4 chân (8x4)', 'Công ty Cổ phần Mỏ Đá TTC', 30, 115, 'RFID-19C-128', '18/05/2027', 'Hoạt động', '28/10/2026', 15.20, 'tấn', 'company', 'Lê Hữu Thắng', 'MO-PT-01'),
+		('19C-089.12', 'Xe ben Dongfeng 4 chân 375HP', 'Công ty Cổ phần Mỏ Đá TTC', 30, 86, 'RFID-19C-089', '22/10/2027', 'Hoạt động', '28/10/2026', 15.10, 'tấn', 'company', 'Vũ Tuấn Anh', 'MO-PT-01'),
+		('19C-098.76', 'Xe tải ben 15 tấn 3 chân Hino 500', 'Công ty Cổ phần Mỏ Đá TTC', 15, 35, 'RFID-19C-098', '28/10/2026', 'Bảo dưỡng', '28/10/2026', 10.80, 'tấn', 'company', 'Hoàng Văn Nam', 'MO-PT-01'),
+		('19H-032.88', 'Xe ben Howo V7G 380HP 4 chân', 'Công ty Cổ phần Mỏ Đá TTC', 30, 74, 'RFID-19H-032', '15/10/2027', 'Hoạt động', '28/10/2026', 15.40, 'tấn', 'company', 'Đinh Tiến Dũng', 'MO-PT-01'),
+
+		-- Tân Uyên (MO-TU-02)
+		('61C-452.18', 'Xe ben Hyundai HD270 15T (6x4)', 'Công ty Cổ phần Mỏ Đá TTC', 15, 82, 'RFID-61C-452', '22/10/2027', 'Hoạt động', '28/10/2026', 11.50, 'tấn', 'company', 'Trương Văn Nam', 'MO-TU-02'),
+		('60C-312.78', 'Xe đầu kéo mooc ben Chenglong 420HP', 'Công ty Cổ phần Mỏ Đá TTC', 35, 76, 'RFID-60C-312', '10/08/2027', 'Hoạt động', '28/10/2026', 17.80, 'tấn', 'company', 'Trần Minh Quân', 'MO-TU-02'),
+		('61H-089.34', 'Xe ben Daewoo Novus 15T (6x4)', 'Công ty Cổ phần Mỏ Đá TTC', 15, 68, 'RFID-61H-089', '24/10/2027', 'Hoạt động', '28/10/2026', 11.80, 'tấn', 'company', 'Lê Hoàng Nam', 'MO-TU-02'),
+		('60H-033.72', 'Xe ben Howo 380HP 4 chân (8x4)', 'Công ty Cổ phần Mỏ Đá TTC', 30, 92, 'RFID-60H-033', '14/10/2027', 'Hoạt động', '28/10/2026', 15.30, 'tấn', 'company', 'Huỳnh Văn Hậu', 'MO-TU-02'),
+		('61C-921.45', 'Xe ben Shacman F3000 Weichai 380HP', 'Công ty Cổ phần Mỏ Đá TTC', 30, 84, 'RFID-61C-921', '21/10/2027', 'Hoạt động', '28/10/2026', 15.20, 'tấn', 'company', 'Bùi Quốc Cường', 'MO-TU-02'),
+
+		-- Hà Nam (MO-HN-03)
+		('90C-054.67', 'Xe ben 3 chân Howo 371HP (6x4)', 'Công ty Cổ phần Mỏ Đá TTC', 15, 78, 'RFID-90C-054', '12/04/2027', 'Hoạt động', '28/10/2026', 11.20, 'tấn', 'company', 'Bùi Văn Long', 'MO-HN-03'),
+		('88H-042.27', 'Xe ben HOWO 4 chân 371HP (8x4)', 'Công ty Cổ phần Mỏ Đá TTC', 30, 142, 'RFID-88H-042', '15/12/2026', 'Hoạt động', '28/10/2026', 15.42, 'tấn', 'company', 'Trần Đình Trọng', 'MO-HN-03'),
+		('90C-123.45', 'Xe ben Shacman 4 chân X3000', 'Công ty Cổ phần Mỏ Đá TTC', 30, 89, 'RFID-90C-123', '17/10/2027', 'Hoạt động', '28/10/2026', 15.10, 'tấn', 'company', 'Vũ Đức Mạnh', 'MO-HN-03'),
+		('90H-088.19', 'Xe đầu kéo Howo mooc ben 6 trục', 'Công ty Cổ phần Mỏ Đá TTC', 35, 65, 'RFID-90H-088', '12/10/2027', 'Hoạt động', '28/10/2026', 17.50, 'tấn', 'company', 'Ngô Văn Hùng', 'MO-HN-03'),
+		('35C-078.62', 'Xe ben Dongfeng 4 chân 385HP', 'Công ty Cổ phần Mỏ Đá TTC', 30, 72, 'RFID-35C-078', '23/10/2027', 'Hoạt động', '28/10/2026', 15.00, 'tấn', 'company', 'Phạm Quang Linh', 'MO-HN-03'),
+
+		-- Bình Phước (MO-BP-04)
+		('93C-114.52', 'Xe tải ben Dongfeng 4 chân 375HP', 'Công ty Cổ phần Mỏ Đá TTC', 30, 88, 'RFID-93C-114', '05/06/2027', 'Hoạt động', '28/10/2026', 16.10, 'tấn', 'company', 'Phạm Minh Tuấn', 'MO-BP-04'),
+		('93H-067.89', 'Xe ben Howo Sinotruk 371HP (8x4)', 'Công ty Cổ phần Mỏ Đá TTC', 30, 95, 'RFID-93H-067', '13/10/2027', 'Hoạt động', '28/10/2026', 15.20, 'tấn', 'company', 'Lâm Quốc Bảo', 'MO-BP-04'),
+		('93C-225.10', 'Xe ben Hyundai Trago 4 chân 380HP', 'Công ty Cổ phần Mỏ Đá TTC', 30, 80, 'RFID-93C-225', '18/10/2027', 'Hoạt động', '28/10/2026', 15.50, 'tấn', 'company', 'Trịnh Đình Khang', 'MO-BP-04'),
+		('70H-018.44', 'Xe ben Shacman 4 chân X3000 (8x4)', 'Công ty Cổ phần Mỏ Đá TTC', 30, 64, 'RFID-70H-018', '22/10/2027', 'Hoạt động', '28/10/2026', 15.30, 'tấn', 'company', 'Mai Quốc Thắng', 'MO-BP-04'),
+		('93C-338.92', 'Xe ben Howo T5G Man 340HP (6x4)', 'Công ty Cổ phần Mỏ Đá TTC', 15, 58, 'RFID-93C-338', '25/10/2027', 'Hoạt động', '28/10/2026', 11.60, 'tấn', 'company', 'Nguyễn Trọng Nghĩa', 'MO-BP-04')
+		ON CONFLICT (bs) DO UPDATE SET 
+			quarry_code = EXCLUDED.quarry_code, 
+			current_driver_name = EXCLUDED.current_driver_name,
+			chu_xe = EXCLUDED.chu_xe,
+			ownership_type = EXCLUDED.ownership_type,
+			rfid = EXCLUDED.rfid,
+			loai = EXCLUDED.loai;
+	`)
 
 	// 11. Seed Users & System Settings
-	var usrCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM users").Scan(&usrCount)
-		if usrCount == 0 {
-			Pool.Exec(ctx, `
-				INSERT INTO users (username, name, ten, role, dept, email, phone, sdt, password_hash, last_login, status) VALUES
-				('admin', 'Nguyễn Đức Trường', 'Nguyễn Đức Trường', 'Giám Đốc Mỏ', 'Ban Giám Đốc', 'truongnd@ttcgroup.vn', '0912.345.678', '0912.345.678', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:30', 'Hoạt động'),
-				('dungnv', 'Nguyễn Văn Dũng', 'Nguyễn Văn Dũng', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'dungnv@ttcgroup.vn', '0984.556.789', '0984.556.789', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:15', 'Hoạt động'),
-				('kientv', 'Trần Văn Kiên', 'Trần Văn Kiên', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'kientv@ttcgroup.vn', '0988.341.992', '0988.341.992', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:45', 'Hoạt động'),
-				('thuynt', 'Nguyễn Thị Thủy', 'Nguyễn Thị Thủy', 'Kế Toán Trưởng', 'Phòng Kế Toán & Vật Tư', 'thuynt@ttcgroup.vn', '0915.678.901', '0915.678.901', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:00', 'Hoạt động')
-				ON CONFLICT (username) DO NOTHING;
+	// Seed Users for all 4 Quarries (10 users per quarry = 40 users total)
+	Pool.Exec(ctx, `
+		INSERT INTO users (username, name, ten, role, dept, email, phone, sdt, password_hash, last_login, status, code, mine_location, rfid_card, join_date, shift_count, quarry_code) VALUES
+		-- Mỏ 1: Phú Thọ (MO-PT-01) - 10 Users
+		('admin', 'Nguyễn Đức Trường', 'Nguyễn Đức Trường', 'Giám Đốc Mỏ', 'Ban Giám Đốc', 'truongnd@ttcgroup.vn', '0912.345.678', '0912.345.678', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:30', 'Hoạt động', 'TTC-PT-001', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-MGR-PT01', '2021-03-15', 24, 'MO-PT-01'),
+		('dungnv', 'Nguyễn Văn Dũng', 'Nguyễn Văn Dũng', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'dungnv@ttcgroup.vn', '0984.556.789', '0984.556.789', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:15', 'Hoạt động', 'TTC-PT-002', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-OP-PT02', '2022-06-10', 18, 'MO-PT-01'),
+		('hoanglm', 'Lê Minh Hoàng', 'Lê Minh Hoàng', 'Kỹ Sư Trắc Địa 3D', 'Phòng Kỹ Thuật Trắc Địa', 'hoanglm@ttcgroup.vn', '0973.123.456', '0973.123.456', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:15', 'Hoạt động', 'TTC-PT-003', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-SURV-PT03', '2022-04-05', 12, 'MO-PT-01'),
+		('thuynt', 'Nguyễn Thị Thủy', 'Nguyễn Thị Thủy', 'Kế Toán Trưởng', 'Phòng Kế Toán & Vật Tư', 'thuynt@ttcgroup.vn', '0915.678.901', '0915.678.901', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:00', 'Hoạt động', 'TTC-PT-004', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-ACC-PT04', '2023-01-12', 20, 'MO-PT-01'),
+		('minhpt', 'Phạm Tuấn Minh', 'Phạm Tuấn Minh', 'Phó Giám Đốc Kỹ Thuật', 'Phòng Kỹ Thuật Khai Thác', 'minhpt@ttcgroup.vn', '0913.224.556', '0913.224.556', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:30', 'Hoạt động', 'TTC-PT-005', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-ENG-PT05', '2021-08-20', 22, 'MO-PT-01'),
+		('cuongtv', 'Trần Văn Cường', 'Trần Văn Cường', 'Nhân viên vận hành bàn cân (Scale Operator)', 'Tổ Vận Hành Trạm Cân', 'cuongtv@ttcgroup.vn', '0982.113.445', '0982.113.445', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 06:45', 'Hoạt động', 'TTC-PT-006', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-OP-PT06', '2023-03-01', 19, 'MO-PT-01'),
+		('hungda', 'Đặng Anh Hùng', 'Đặng Anh Hùng', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'hungda@ttcgroup.vn', '0974.556.889', '0974.556.889', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:00', 'Hoạt động', 'TTC-PT-007', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-BLAST-PT07', '2022-11-15', 16, 'MO-PT-01'),
+		('namvb', 'Vũ Bá Nam', 'Vũ Bá Nam', 'Thợ Khoan & An Toàn Mỏ', 'Tổ Khoan Nổ Mìn & VLNCN', 'namvb@ttcgroup.vn', '0965.443.221', '0965.443.221', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:15', 'Hoạt động', 'TTC-PT-008', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-SAFE-PT08', '2023-05-10', 14, 'MO-PT-01'),
+		('hieunv', 'Nguyễn Văn Hiếu', 'Nguyễn Văn Hiếu', 'Thủ kho bãi khoáng sản (Stock Keeper)', 'Đội Kho Vận & Bãi Đá', 'hieunv@ttcgroup.vn', '0943.887.665', '0943.887.665', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:20', 'Hoạt động', 'TTC-PT-009', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-STK-PT09', '2022-09-01', 21, 'MO-PT-01'),
+		('linhnt', 'Ngô Thùy Linh', 'Ngô Thùy Linh', 'Kế toán công nợ & Hóa đơn (Accountant)', 'Phòng Kế Toán & Vật Tư', 'linhnt@ttcgroup.vn', '0932.665.443', '0932.665.443', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:45', 'Hoạt động', 'TTC-PT-010', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-ACC-PT10', '2023-08-15', 17, 'MO-PT-01'),
 
-				INSERT INTO user_roles (role, "desc", description, users, level, permission, status) VALUES
-				('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', '2', 'Cấp 1', 'Toàn quyền hệ thống', 'Hoạt động'),
-				('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI OCR ANPR', 'Vận hành cân', '4', 'Cấp 2', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
-				('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', '3', 'Cấp 2', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
-				('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', '3', 'Cấp 2', 'Quản lý tài chính kế toán', 'Hoạt động');
+		-- Mỏ 2: Tân Uyên (MO-TU-02) - 10 Users
+		('tuanla', 'Lê Anh Tuấn', 'Lê Anh Tuấn', 'Giám Đốc Mỏ', 'Ban Giám Đốc', 'tuanla@ttcgroup.vn', '0918.445.667', '0918.445.667', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:15', 'Hoạt động', 'TTC-TU-001', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-MGR-TU01', '2021-02-10', 25, 'MO-TU-02'),
+		('kientv', 'Trần Văn Kiên', 'Trần Văn Kiên', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'kientv@ttcgroup.vn', '0988.341.992', '0988.341.992', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:45', 'Hoạt động', 'TTC-TU-002', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-BLAST-TU02', '2021-09-01', 15, 'MO-TU-02'),
+		('thangdm', 'Đỗ Mạnh Thắng', 'Đỗ Mạnh Thắng', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'thangdm@ttcgroup.vn', '0903.112.334', '0903.112.334', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:20', 'Hoạt động', 'TTC-TU-003', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-OP-TU03', '2022-05-18', 20, 'MO-TU-02'),
+		('namlh', 'Lê Hoàng Nam', 'Lê Hoàng Nam', 'Nhân viên vận hành bàn cân (Scale Operator)', 'Tổ Vận Hành Trạm Cân', 'namlh@ttcgroup.vn', '0987.654.321', '0987.654.321', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 06:30', 'Hoạt động', 'TTC-TU-004', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-OP-TU04', '2023-02-12', 18, 'MO-TU-02'),
+		('phuongnt', 'Nguyễn Thu Phương', 'Nguyễn Thu Phương', 'Kế Toán Trưởng', 'Phòng Kế Toán & Vật Tư', 'phuongnt@ttcgroup.vn', '0916.789.012', '0916.789.012', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:10', 'Hoạt động', 'TTC-TU-005', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-ACC-TU05', '2022-07-20', 22, 'MO-TU-02'),
+		('ducvm', 'Vũ Minh Đức', 'Vũ Minh Đức', 'Phó Giám Đốc Kỹ Thuật', 'Phòng Kỹ Thuật Khai Thác', 'ducvm@ttcgroup.vn', '0908.223.344', '0908.223.344', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:40', 'Hoạt động', 'TTC-TU-006', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-ENG-TU06', '2021-10-15', 23, 'MO-TU-02'),
+		('quangnv', 'Nguyễn Văn Quang', 'Nguyễn Văn Quang', 'Kỹ Sư Trắc Địa 3D', 'Phòng Kỹ Thuật Trắc Địa', 'quangnv@ttcgroup.vn', '0979.888.777', '0979.888.777', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:35', 'Hoạt động', 'TTC-TU-007', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-SURV-TU07', '2023-04-01', 14, 'MO-TU-02'),
+		('sontt', 'Trương Thanh Sơn', 'Trương Thanh Sơn', 'Thợ Khoan & An Toàn Mỏ', 'Tổ Khoan Nổ Mìn & VLNCN', 'sontt@ttcgroup.vn', '0968.123.987', '0968.123.987', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:05', 'Hoạt động', 'TTC-TU-008', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-SAFE-TU08', '2022-12-05', 16, 'MO-TU-02'),
+		('khanhpd', 'Phan Duy Khánh', 'Phan Duy Khánh', 'Thủ kho bãi khoáng sản (Stock Keeper)', 'Đội Kho Vận & Bãi Đá', 'khanhpd@ttcgroup.vn', '0938.456.789', '0938.456.789', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:50', 'Hoạt động', 'TTC-TU-009', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-STK-TU09', '2023-01-15', 19, 'MO-TU-02'),
+		('maith', 'Trần Hoàng Mai', 'Trần Hoàng Mai', 'Kế toán công nợ & Hóa đơn (Accountant)', 'Phòng Kế Toán & Vật Tư', 'maith@ttcgroup.vn', '0919.234.567', '0919.234.567', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:05', 'Hoạt động', 'TTC-TU-010', 'Mỏ Đá Tân Uyên (Bình Dương)', 'RFID-ACC-TU10', '2023-06-20', 17, 'MO-TU-02'),
 
-				INSERT INTO user_logs (time, "user", username, name, action, target, ip, status) VALUES
-				('28/10/2026 09:42', 'dungnv', 'dungnv', 'Nguyễn Văn Dũng', 'Chốt phiếu cân xuất mỏ Lần 2', 'TK-20261028-001 (88H-042.27)', '192.168.1.100', 'Thành công'),
-				('28/10/2026 09:30', 'kientv', 'kientv', 'Trần Văn Kiên', 'Lập hộ chiếu nổ mìn Moong tầng 3', 'PASSPORT-BLAST-1026-01', '192.168.1.105', 'Thành công'),
-			('28/10/2026 09:15', 'admin', 'admin', 'Nguyễn Đức Trường', 'Duyệt kế hoạch khai thác tháng 10', 'PLAN-Q4-2026-01', '192.168.1.10', 'Thành công'),
-			('28/10/2026 08:45', 'thuynt', 'thuynt', 'Nguyễn Thị Thủy', 'Xuất hóa đơn điện tử VAT', 'INV-20261028-0082', '192.168.1.50', 'Thành công');
+		-- Mỏ 3: Hà Nam (MO-HN-03) - 10 Users
+		('haihd', 'Hoàng Đình Hải', 'Hoàng Đình Hải', 'Giám Đốc Mỏ', 'Ban Giám Đốc', 'haihd@ttcgroup.vn', '0914.556.677', '0914.556.677', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:20', 'Hoạt động', 'TTC-HN-001', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-MGR-HN01', '2020-11-15', 26, 'MO-HN-03'),
+		('huanpt', 'Phạm Thanh Huấn', 'Phạm Thanh Huấn', 'Phó Giám Đốc Kỹ Thuật', 'Phòng Kỹ Thuật Khai Thác', 'huanpt@ttcgroup.vn', '0989.334.455', '0989.334.455', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:50', 'Hoạt động', 'TTC-HN-002', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-ENG-HN02', '2021-06-10', 21, 'MO-HN-03'),
+		('truongtx', 'Tạ Xuân Trường', 'Tạ Xuân Trường', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'truongtx@ttcgroup.vn', '0977.112.233', '0977.112.233', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:10', 'Hoạt động', 'TTC-HN-003', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-OP-HN03', '2022-03-25', 19, 'MO-HN-03'),
+		('binhnv', 'Nguyễn Văn Bình', 'Nguyễn Văn Bình', 'Nhân viên vận hành bàn cân (Scale Operator)', 'Tổ Vận Hành Trạm Cân', 'binhnv@ttcgroup.vn', '0985.443.322', '0985.443.322', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 06:40', 'Hoạt động', 'TTC-HN-004', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-OP-HN04', '2023-04-15', 18, 'MO-HN-03'),
+		('lannt', 'Nguyễn Thị Lan', 'Nguyễn Thị Lan', 'Kế Toán Trưởng', 'Phòng Kế Toán & Vật Tư', 'lannt@ttcgroup.vn', '0912.998.877', '0912.998.877', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:05', 'Hoạt động', 'TTC-HN-005', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-ACC-HN05', '2022-01-10', 23, 'MO-HN-03'),
+		('thanhdv', 'Đỗ Văn Thành', 'Đỗ Văn Thành', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'thanhdv@ttcgroup.vn', '0972.665.544', '0972.665.544', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:55', 'Hoạt động', 'TTC-HN-006', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-BLAST-HN06', '2021-12-01', 17, 'MO-HN-03'),
+		('datnq', 'Ngô Quốc Đạt', 'Ngô Quốc Đạt', 'Kỹ Sư Trắc Địa 3D', 'Phòng Kỹ Thuật Trắc Địa', 'datnq@ttcgroup.vn', '0969.554.433', '0969.554.433', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:25', 'Hoạt động', 'TTC-HN-007', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-SURV-HN07', '2023-05-20', 13, 'MO-HN-03'),
+		('anhtv', 'Trần Văn Anh', 'Trần Văn Anh', 'Thợ Khoan & An Toàn Mỏ', 'Tổ Khoan Nổ Mìn & VLNCN', 'anhtv@ttcgroup.vn', '0963.221.100', '0963.221.100', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:10', 'Hoạt động', 'TTC-HN-008', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-SAFE-HN08', '2022-08-14', 15, 'MO-HN-03'),
+		('tunt', 'Nguyễn Tiến Tú', 'Nguyễn Tiến Tú', 'Thủ kho bãi khoáng sản (Stock Keeper)', 'Đội Kho Vận & Bãi Đá', 'tunt@ttcgroup.vn', '0948.776.655', '0948.776.655', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:30', 'Hoạt động', 'TTC-HN-009', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-STK-HN09', '2023-03-10', 20, 'MO-HN-03'),
+		('ngocdt', 'Đinh Thị Ngọc', 'Đinh Thị Ngọc', 'Kế toán công nợ & Hóa đơn (Accountant)', 'Phòng Kế Toán & Vật Tư', 'ngocdt@ttcgroup.vn', '0936.887.766', '0936.887.766', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:00', 'Hoạt động', 'TTC-HN-010', 'Mỏ Đá Hà Nam (Kiện Khê)', 'RFID-ACC-HN10', '2023-09-01', 16, 'MO-HN-03'),
+
+		-- Mỏ 4: Bình Phước (MO-BP-04) - 10 Users
+		('nghiadv', 'Đặng Văn Nghĩa', 'Đặng Văn Nghĩa', 'Giám Đốc Mỏ', 'Ban Giám Đốc', 'nghiadv@ttcgroup.vn', '0917.334.455', '0917.334.455', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:15', 'Hoạt động', 'TTC-BP-001', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-MGR-BP01', '2021-05-20', 24, 'MO-BP-04'),
+		('thanhlt', 'Lương Trung Thành', 'Lương Trung Thành', 'Phó Giám Đốc Kỹ Thuật', 'Phòng Kỹ Thuật Khai Thác', 'thanhlt@ttcgroup.vn', '0986.223.311', '0986.223.311', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:45', 'Hoạt động', 'TTC-BP-002', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-ENG-BP02', '2021-11-10', 22, 'MO-BP-04'),
+		('phuclh', 'Lê Hoàng Phúc', 'Lê Hoàng Phúc', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'phuclh@ttcgroup.vn', '0907.889.900', '0907.889.900', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:25', 'Hoạt động', 'TTC-BP-003', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-OP-BP03', '2022-08-01', 20, 'MO-BP-04'),
+		('kiennd', 'Nguyễn Đăng Kiên', 'Nguyễn Đăng Kiên', 'Nhân viên vận hành bàn cân (Scale Operator)', 'Tổ Vận Hành Trạm Cân', 'kiennd@ttcgroup.vn', '0975.332.211', '0975.332.211', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 06:50', 'Hoạt động', 'TTC-BP-004', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-OP-BP04', '2023-06-12', 17, 'MO-BP-04'),
+		('huongnt', 'Nguyễn Thu Hương', 'Nguyễn Thu Hương', 'Kế Toán Trưởng', 'Phòng Kế Toán & Vật Tư', 'huongnt@ttcgroup.vn', '0913.778.899', '0913.778.899', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:25', 'Hoạt động', 'TTC-BP-005', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-ACC-BP05', '2022-04-18', 21, 'MO-BP-04'),
+		('longpv', 'Phan Văn Long', 'Phan Văn Long', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'longpv@ttcgroup.vn', '0978.445.566', '0978.445.566', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:05', 'Hoạt động', 'TTC-BP-006', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-BLAST-BP06', '2022-02-15', 18, 'MO-BP-04'),
+		('triett', 'Trương Trọng Triết', 'Trương Trọng Triết', 'Kỹ Sư Trắc Địa 3D', 'Phòng Kỹ Thuật Trắc Địa', 'triett@ttcgroup.vn', '0967.112.299', '0967.112.299', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:40', 'Hoạt động', 'TTC-BP-007', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-SURV-BP07', '2023-07-01', 15, 'MO-BP-04'),
+		('vuongdq', 'Đỗ Quang Vương', 'Đỗ Quang Vương', 'Thợ Khoan & An Toàn Mỏ', 'Tổ Khoan Nổ Mìn & VLNCN', 'vuongdq@ttcgroup.vn', '0962.334.477', '0962.334.477', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:15', 'Hoạt động', 'TTC-BP-008', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-SAFE-BP08', '2022-10-20', 16, 'MO-BP-04'),
+		('hieudt', 'Đoàn Trung Hiếu', 'Đoàn Trung Hiếu', 'Thủ kho bãi khoáng sản (Stock Keeper)', 'Đội Kho Vận & Bãi Đá', 'hieudt@ttcgroup.vn', '0945.667.788', '0945.667.788', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:35', 'Hoạt động', 'TTC-BP-009', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-STK-BP09', '2023-02-28', 19, 'MO-BP-04'),
+		('tramtt', 'Tạ Thị Bích Trâm', 'Tạ Thị Bích Trâm', 'Kế toán công nợ & Hóa đơn (Accountant)', 'Phòng Kế Toán & Vật Tư', 'tramtt@ttcgroup.vn', '0934.556.677', '0934.556.677', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:15', 'Hoạt động', 'TTC-BP-010', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-ACC-BP10', '2023-10-05', 18, 'MO-BP-04')
+		ON CONFLICT (username) DO UPDATE SET
+			name = EXCLUDED.name,
+			ten = EXCLUDED.ten,
+			role = EXCLUDED.role,
+			dept = EXCLUDED.dept,
+			email = EXCLUDED.email,
+			phone = EXCLUDED.phone,
+			sdt = EXCLUDED.sdt,
+			last_login = EXCLUDED.last_login,
+			status = EXCLUDED.status,
+			code = EXCLUDED.code,
+			mine_location = EXCLUDED.mine_location,
+			rfid_card = EXCLUDED.rfid_card,
+			join_date = EXCLUDED.join_date,
+			shift_count = EXCLUDED.shift_count,
+			quarry_code = EXCLUDED.quarry_code;
+	`)
+
+	// Ensure user roles and logs are seeded
+	var roleCount int
+	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM user_roles").Scan(&roleCount)
+	if roleCount == 0 {
+		Pool.Exec(ctx, `
+			INSERT INTO user_roles (role, "desc", description, users, level, permission, status) VALUES
+			('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', '4', 'Cấp 1', 'Toàn quyền hệ thống', 'Hoạt động'),
+			('Phó Giám Đốc Kỹ Thuật', 'Quản lý kỹ thuật mỏ, lập kế hoạch khai thác và giám sát an toàn', 'Kỹ thuật mỏ', '4', 'Cấp 2', 'Quản lý kế hoạch & thiết bị', 'Hoạt động'),
+			('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI ANPR OCR', 'Vận hành cân', '4', 'Cấp 2', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
+			('Nhân viên vận hành bàn cân', 'Cân xe 2 lượt (tổng bì & bì rỗng), in phiếu cân điện tử', 'Vận hành ca', '8', 'Cấp 2', 'Cân xe & in vé xuất mỏ', 'Hoạt động'),
+			('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', '4', 'Cấp 2', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
+			('Thợ Khoan & An Toàn Mỏ', 'Khoan tạo lỗ mìn, kiểm định an toàn moong tầng khai thác', 'An toàn lao động', '4', 'Cấp 2', 'Giám sát an toàn mỏ', 'Hoạt động'),
+			('Kỹ Sư Trắc Địa 3D', 'Bay quét UAV LiDAR, tính toán thể tích moong đào và bãi tồn', 'Trắc địa mỏ', '4', 'Cấp 2', 'Khảo sát 3D & mô hình hóa', 'Hoạt động'),
+			('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', '4', 'Cấp 2', 'Quản lý tài chính kế toán', 'Hoạt động'),
+			('Kế toán công nợ & Hóa đơn', 'Đối soát công nợ khách hàng, xuất hóa đơn điện tử', 'Công nợ mỏ', '4', 'Cấp 3', 'Đối soát & thanh toán', 'Hoạt động'),
+			('Thủ kho bãi khoáng sản', 'Quản lý tồn bãi đá thành phẩm, xuất nhập vật tư và nhiên liệu DO', 'Kho bãi mỏ', '4', 'Cấp 3', 'Quản lý bãi đá & cấp phát dầu', 'Hoạt động');
 		`)
 	}
 
@@ -681,7 +1013,7 @@ func Seed() {
 		('SET-01', 'WEIGH_TOLERANCE_KG', 'Dung sai bì trạm cân cho phép (kg)', '50', 'Trạm Cân', 'Hoạt động'),
 		('SET-02', 'GEOFENCE_RADIUS_METERS', 'Bán kính Geofence trạm bãi xe (mét)', '20', 'Định Vị GPS', 'Hoạt động'),
 		('SET-03', 'FUEL_THEFT_THRESHOLD_LITERS', 'Ngưỡng cảnh báo sụt dầu bất thường (lít)', '5.0', 'Nhiên Liệu', 'Hoạt động'),
-		('SET-04', 'OCR_ANPR_CONFIDENCE_MIN', 'Độ tin cậy nhận diện biển số AI OCR (%)', '92', 'Camera AI', 'Hoạt động')
+		('SET-04', 'OCR_ANPR_CONFIDENCE_MIN', 'Độ tin cậy nhận diện biển số AI (%)', '92', 'Camera AI', 'Hoạt động')
 		ON CONFLICT (code) DO NOTHING;
 	`)
 
@@ -993,7 +1325,6 @@ func Seed() {
 			current_fuel_liters = EXCLUDED.current_fuel_liters,
 			quarry_code = EXCLUDED.quarry_code`,
 
-
 		`INSERT INTO mining_permits (id, code, title, mine_name, category, category_label, issuer, license_number, issue_date, expiry_date, capacity, approved_reserve, mined_so_far, mined_percent, depth_level, area, coordinates, status, status_label, days_remaining, files, notes) VALUES
 		('PERMIT-01', 'GP-28102018-BTNMT', 'Giấy phép khai thác khoáng sản Mỏ Đá Vôi Thanh Ba', 'Mỏ 1 (Thanh Ba)', 'mining_license', 'Giấy phép khai thác mỏ', 'Bộ Tài nguyên và Môi trường', 'Số 2810/GP-BTNMT', '28/10/2018', '28/10/2038', '1.000.000 Tấn/năm', '20.000.000 Tấn', '5.240.000 Tấn', 26, 'Mức cao +85m đến +15m', '48.5 Hecta', '21.3210°N, 105.3280°E', 'valid', 'Còn hiệu lực', 4380, '[{"name":"Quyet_Dinh_Cap_Phep_2810.pdf","size":"4.2 MB","type":"pdf","url":"#"}]'::jsonb, 'Được phép khai thác đá vôi làm VLXD thông thường'),
 		('PERMIT-02', 'GP-15062020-UBND', 'Giấy phép khai thác đá xây dựng Mỏ Cẩm Khê', 'Mỏ 2 (Cẩm Khê)', 'mining_license', 'Giấy phép khai thác mỏ', 'UBND Tỉnh Phú Thọ', 'Số 1506/GP-UBND', '15/06/2020', '15/06/2035', '800.000 Tấn/năm', '12.000.000 Tấn', '3.120.000 Tấn', 26, 'Mức cao +90m đến +25m', '35.2 Hecta', '21.4120°N, 105.2150°E', 'valid', 'Còn hiệu lực', 3215, '[{"name":"Giay_Phep_Cam_Khe_1506.pdf","size":"3.8 MB","type":"pdf","url":"#"}]'::jsonb, 'Khai thác đá xây dựng và cát nhân tạo'),
@@ -1149,8 +1480,6 @@ func Seed() {
 			ON CONFLICT (id) DO NOTHING;
 		`)
 
-
-
 		Pool.Exec(ctx, `
 			INSERT INTO hr_insurance_records (id, employee_id, employee_name, insurance_number, type, participation_date, social_insurance_base, status) VALUES
 			('INS-01', 'EMP-01', 'Nguyễn Đức Trường', 'SBH-025081234', 'BHXH/BHYT/BHTN', '15/04/2018', 38000000, 'dang_tham_gia'),
@@ -1291,7 +1620,6 @@ func Seed() {
 		`)
 	}
 
-
 	// Seed Alerts (Cảnh báo gian lận / lệch bì trạm cân)
 	var alertCount int
 	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM alerts").Scan(&alertCount)
@@ -1299,7 +1627,7 @@ func Seed() {
 		fmt.Println("🌱 Seeding Fraud / Tare-Mismatch Alerts...")
 		alerts := []struct {
 			ID, Title, BS, Note, Time, Date, Status, Severity, Phieu, Cam string
-			BiDangKy, BiThucTe, LechBi                                        float64
+			BiDangKy, BiThucTe, LechBi                                    float64
 		}{
 			{"ALT-2026-001", "Lệch bì +0.38 Tấn (Vượt ngưỡng)", "19H-056.22", "Bùn đất dính dày dưới gầm thùng xe sau mưa moong", "13:59 28/10", "28/10/2026", "Đang xử lý hiện trường", "danger", "TK-20261028-002", "Trạm Cân Cổng 01 - Phú Thọ", 14.80, 15.18, 0.38},
 			{"ALT-2026-002", "Lệch bì -0.14 Tấn (Trong dung sai)", "88H-042.27", "Trừ bì lệch do dư lượng thùng sau bốc hàng", "11:20 28/10", "28/10/2026", "Đã phê duyệt xử lý xong", "warning", "TK-20261028-001", "Trạm Cân Cổng 01 - Phú Thọ", 15.42, 15.28, -0.14},
@@ -1329,7 +1657,7 @@ func Seed() {
 		fmt.Println("🌱 Seeding Configurable Print Templates...")
 		prints := []struct {
 			ID, Code, Name, DocType, Size, Orientation, Description, Layout, Status string
-			IsDefault                                                                 bool
+			IsDefault                                                               bool
 		}{
 			{"PRT-001", "TPL-TICKET-A5", "Phiếu cân xe A5 - 3 liên", "ticket", "A5", "portrait", "Phiếu in 3 liên (Khách, Kế toán, Bảo vệ) cho trạm cân", `{"page":{"size":"A5","orientation":"portrait","paddingMm":8},"elements":[{"id":"e1","kind":"text","text":"PHIẾU CÂN XE","x":0,"y":0,"w":100,"fontSize":16,"bold":true,"align":"center"},{"id":"e2","kind":"field","field":"bienSo","label":"Biển số","x":0,"y":24,"w":50,"fontSize":12,"bold":true},{"id":"e3","kind":"field","field":"matHang","label":"Mặt hàng","x":0,"y":38,"w":50,"fontSize":11},{"id":"e4","kind":"field","field":"klHang","label":"Khối lượng (kg)","x":0,"y":52,"w":50,"fontSize":12,"bold":true},{"id":"e5","kind":"field","field":"khachHang","label":"Bên mua","x":0,"y":66,"w":100,"fontSize":11},{"id":"e6","kind":"field","field":"laiXe","label":"Tài xế","x":0,"y":80,"w":50,"fontSize":11},{"id":"e7","kind":"field","field":"date","label":"Ngày","x":50,"y":80,"w":50,"fontSize":11}]}`, "active", true},
 			{"PRT-002", "TPL-INVOICE-A4", "Hóa đơn VAT - Mẫu A4", "invoice", "A4", "portrait", "Hóa đơn giá trị gia tăng bán hàng", `{"page":{"size":"A4","orientation":"portrait","paddingMm":12},"elements":[{"id":"e1","kind":"text","text":"HÓA ĐƠN GIÁ TRỊ GIA TĂNG","x":0,"y":0,"w":100,"fontSize":16,"bold":true,"align":"center"},{"id":"e2","kind":"text","text":"Ký hiệu: TT/26E  •  Số: 0002281","x":0,"y":20,"w":100,"fontSize":11,"align":"center"},{"id":"e3","kind":"field","field":"benMua","label":"Người mua","x":0,"y":36,"w":100,"fontSize":11},{"id":"e4","kind":"table","field":"items","label":"Danh mục","x":0,"y":60,"w":100,"fontSize":10}]}`, "active", true},
@@ -1465,17 +1793,17 @@ func Seed() {
 	if tripCount == 0 {
 		fmt.Println("🌱 Seeding Vehicle Trips (Camera AI)...")
 		trips := []struct {
-			Plate    string
-			Driver   string
-			Camera   string
-			Dir      string
-			InTime   string
-			OutTime  string
-			TripNum  int
-			Eqty     float64
-			Aqty     float64
-			Conf     float64
-			Status   string
+			Plate   string
+			Driver  string
+			Camera  string
+			Dir     string
+			InTime  string
+			OutTime string
+			TripNum int
+			Eqty    float64
+			Aqty    float64
+			Conf    float64
+			Status  string
 		}{
 			{"29E-380.15", "Nguyễn Văn Mạnh", "CAM-01", "inbound", "2026-08-27 06:30:00", "2026-08-27 06:45:00", 1, 30.5, 30.2, 0.98, "completed"},
 			{"29E-380.15", "Nguyễn Văn Mạnh", "CAM-01", "outbound", "2026-08-27 07:00:00", "2026-08-27 07:15:00", 2, 30.0, 29.8, 0.97, "completed"},
@@ -1585,12 +1913,12 @@ func Seed() {
 	if riskCount == 0 {
 		fmt.Println("🌱 Seeding Risk Alerts...")
 		alerts := []struct {
-			Type    string
-			Sev     string
-			Title   string
-			Desc    string
-			Module  string
-			Status  string
+			Type   string
+			Sev    string
+			Title  string
+			Desc   string
+			Module string
+			Status string
 		}{
 			{"vehicle", "high", "Xe 88H-042.27 đi sai tuyến", "Phát hiện xe ra khỏi vùng geofence allowed", "gps", "open"},
 			{"permit", "medium", "Giấy phép mỏ sắp hết hạn", "Giấy phép 189/GP-BTNMT hết hạn sau 45 ngày", "permits", "open"},
@@ -1638,26 +1966,27 @@ func seedTradeAndWarehouse(ctx context.Context) {
 	if prodCount == 0 {
 		fmt.Println("🌱 Seeding Inventory Products Master Data...")
 		products := []struct {
-			Code, Name, Category, Unit, StorageLoc, Standard, Status, Notes string
-			Density, SalePrice, PurchasePrice, MinStock, CurrentStock       float64
+			Code, Name, Category, Unit, StorageLoc, Standard, Status, Notes    string
+			Density, SalePrice, PurchasePrice, MinStock, CurrentStock, VatRate float64
 		}{
-			{"SP-DA-1X2", "Đá 1x2 Xanh Đồng Nai", "Đá thành phẩm", "m³", "Bãi Đá 1x2 Lô A", "TCVN 7570:2006", "Đang kinh doanh", "Đá xây dựng cấp phối bê tông mác 250 - 400", 1.55, 285000, 210000, 5000, 24800},
-			{"SP-DA-2X4", "Đá 2x4 Đổ Bê Tông Khối Lớn", "Đá thành phẩm", "m³", "Bãi Đá 2x4 Lô B", "TCVN 7570:2006", "Đang kinh doanh", "Dùng cho móng công trình, cọc khoan nhồi, trụ cầu", 1.58, 235000, 175000, 4000, 18500},
-			{"SP-DA-4X6", "Đá 4x6 Cầu Đường & Kè Đập", "Đá thành phẩm", "m³", "Bãi Đá 4x6 Lô C", "TCVN 7570:2006", "Đang kinh doanh", "Cốt liệu móng nền đường giao thông cấp cao", 1.60, 220000, 165000, 3000, 14200},
-			{"SP-DA-0X4-BASE", "Đá 0x4 Cấp Phối Dăm Loại 1 (Base)", "Đá cấp phối", "m³", "Bãi Cấp Phối Base Cổng 1", "TCVN 8859:2011", "Đang kinh doanh", "Lớp móng trên cho mặt đường cao tốc & quốc lộ", 1.65, 210000, 150000, 8000, 36000},
-			{"SP-DA-0X4-SUB", "Đá 0x4 Subbase Cấp Phối Loại 2", "Đá cấp phối", "m³", "Bãi Subbase Cổng 2", "TCVN 8859:2011", "Đang kinh doanh", "Lớp móng dưới tiêu chuẩn cao tốc Bắc - Nam", 1.62, 195000, 140000, 6000, 29400},
-			{"SP-CAT-NGHIEN", "Cát Nghiền Nhân Tạo Hạt Mịn TCVN", "Cát nghiền", "m³", "Silo Cát Nghiền Trạm 2", "TCVN 9205:2012", "Đang kinh doanh", "Thay thế cát tự nhiên đổ bê tông và vữa xây trát", 1.45, 260000, 195000, 6000, 19800},
-			{"SP-DA-HOC", "Đá Hộc Khai Thác Kè Moong Mỏ", "Đá thô nổ mìn", "m³", "Bãi Đá Hộc Moong 3", "TCVN 4447:2012", "Đang kinh doanh", "Đá xây móng kè chắn đất và đê kè sông suối", 1.70, 180000, 130000, 2000, 12500},
-			{"SP-DA-MI-BUI", "Đá Mi Bụi Đắp Nền K98", "Đá mạt - phụ phẩm", "m³", "Bãi Đá Mi Bụi", "TCVN 8859:2011", "Đang kinh doanh", "Làm lớp đệm móng và cấp phối gạch không nung", 1.40, 150000, 110000, 3000, 16700},
-			{"SP-DA-MI-SANG", "Đá Mi Sàng Lọc Bê Tông Nhựa (3-8mm)", "Đá thành phẩm", "m³", "Bãi Mi Sàng Trạm 1", "TCVN 7570:2006", "Đang kinh doanh", "Phụ gia bê tông nhựa nóng Asphalt và gạch Terrazzo", 1.48, 175000, 125000, 2500, 11300},
-			{"SP-DAU-DO", "Dầu DO 0.05S-II Cấp Máy Xúc & Cơ Giới", "Nhiên liệu & Vật tư", "lít", "Kho Bồn Nhiên Liệu Số 1", "QCVN 01:2015/BCT", "Đang kinh doanh", "Dầu Diesel tiêu chuẩn Euro 4 cấp cho cơ giới mỏ", 0.84, 23500, 21000, 10000, 45000},
+			{"SP-DA-1X2", "Đá 1x2 Xanh Đồng Nai", "Đá thành phẩm", "m³", "Bãi Đá 1x2 Lô A", "TCVN 7570:2006", "Đang kinh doanh", "Đá xây dựng cấp phối bê tông mác 250 - 400", 1.55, 285000, 210000, 5000, 24800, 10},
+			{"SP-DA-2X4", "Đá 2x4 Đổ Bê Tông Khối Lớn", "Đá thành phẩm", "m³", "Bãi Đá 2x4 Lô B", "TCVN 7570:2006", "Đang kinh doanh", "Dùng cho móng công trình, cọc khoan nhồi, trụ cầu", 1.58, 235000, 175000, 4000, 18500, 10},
+			{"SP-DA-4X6", "Đá 4x6 Cầu Đường & Kè Đập", "Đá thành phẩm", "m³", "Bãi Đá 4x6 Lô C", "TCVN 7570:2006", "Đang kinh doanh", "Cốt liệu móng nền đường giao thông cấp cao", 1.60, 220000, 165000, 3000, 14200, 10},
+			{"SP-DA-0X4-BASE", "Đá 0x4 Cấp Phối Dăm Loại 1 (Base)", "Đá cấp phối", "m³", "Bãi Cấp Phối Base Cổng 1", "TCVN 8859:2011", "Đang kinh doanh", "Lớp móng trên cho mặt đường cao tốc & quốc lộ", 1.65, 210000, 150000, 8000, 36000, 10},
+			{"SP-DA-0X4-SUB", "Đá 0x4 Subbase Cấp Phối Loại 2", "Đá cấp phối", "m³", "Bãi Subbase Cổng 2", "TCVN 8859:2011", "Đang kinh doanh", "Lớp móng dưới tiêu chuẩn cao tốc Bắc - Nam", 1.62, 195000, 140000, 6000, 29400, 8},
+			{"SP-CAT-NGHIEN", "Cát Nghiền Nhân Tạo Hạt Mịn TCVN", "Cát nghiền", "m³", "Silo Cát Nghiền Trạm 2", "TCVN 9205:2012", "Đang kinh doanh", "Thay thế cát tự nhiên đổ bê tông và vữa xây trát", 1.45, 260000, 195000, 6000, 19800, 8},
+			{"SP-DA-HOC", "Đá Hộc Khai Thác Kè Moong Mỏ", "Đá thô nổ mìn", "m³", "Bãi Đá Hộc Moong 3", "TCVN 4447:2012", "Đang kinh doanh", "Đá xây móng kè chắn đất và đê kè sông suối", 1.70, 180000, 130000, 2000, 12500, 10},
+			{"SP-DA-MI-BUI", "Đá Mi Bụi Đắp Nền K98", "Đá mạt - phụ phẩm", "m³", "Bãi Đá Mi Bụi", "TCVN 8859:2011", "Đang kinh doanh", "Làm lớp đệm móng và cấp phối gạch không nung", 1.40, 150000, 110000, 3000, 16700, 8},
+			{"SP-DA-MI-SANG", "Đá Mi Sàng Lọc Bê Tông Nhựa (3-8mm)", "Đá thành phẩm", "m³", "Bãi Mi Sàng Trạm 1", "TCVN 7570:2006", "Đang kinh doanh", "Phụ gia bê tông nhựa nóng Asphalt và gạch Terrazzo", 1.48, 175000, 125000, 2500, 11300, 10},
+			{"SP-DAU-DO", "Dầu DO 0.05S-II Cấp Máy Xúc & Cơ Giới", "Nhiên liệu & Vật tư", "lít", "Kho Bồn Nhiên Liệu Số 1", "QCVN 01:2015/BCT", "Đang kinh doanh", "Dầu Diesel tiêu chuẩn Euro 4 cấp cho cơ giới mỏ", 0.84, 23500, 21000, 10000, 45000, 10},
 		}
 		for _, p := range products {
 			Pool.Exec(ctx, `
-				INSERT INTO inventory_products (code, name, category, unit, density, sale_price, purchase_price, storage_loc, standard, min_stock, current_stock, status, notes)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-				ON CONFLICT (code) DO NOTHING
-			`, p.Code, p.Name, p.Category, p.Unit, p.Density, p.SalePrice, p.PurchasePrice, p.StorageLoc, p.Standard, p.MinStock, p.CurrentStock, p.Status, p.Notes)
+				INSERT INTO inventory_products (code, name, category, unit, density, sale_price, purchase_price, storage_loc, standard, min_stock, current_stock, status, notes, vat_rate)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+				ON CONFLICT (code) DO UPDATE
+				SET sale_price = EXCLUDED.sale_price, purchase_price = EXCLUDED.purchase_price, vat_rate = EXCLUDED.vat_rate, density = EXCLUDED.density, standard = EXCLUDED.standard
+			`, p.Code, p.Name, p.Category, p.Unit, p.Density, p.SalePrice, p.PurchasePrice, p.StorageLoc, p.Standard, p.MinStock, p.CurrentStock, p.Status, p.Notes, p.VatRate)
 		}
 	}
 
@@ -2036,44 +2365,44 @@ func seedTradeAndWarehouse(ctx context.Context) {
 		fmt.Println("🌱 Seeding Commercial Sales Contracts & Prepaid Accounts...")
 		contracts := []struct {
 			Code, CustCode, CustName, Project, Start, End, Terms, Status, Notes, By string
-			Committed, Delivered, Rate, Credit                                     float64
-			Items                                                                  string
-			Plates                                                                 string
+			Committed, Delivered, Rate, Credit                                      float64
+			Items                                                                   string
+			Plates                                                                  string
 		}{
 			{
 				Code: "HDBH-2026-DEOCA", CustCode: "CUST-DEOCA", CustName: "Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)",
 				Project: "Gói thầu XL-08 Đường cao tốc Bắc - Nam đoạn Mai Sơn - QL45",
-				Start: "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
+				Start:   "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
 				Committed: 350000, Delivered: 218500, Rate: 62.4, Credit: 1500000000,
 				Notes: "Cam kết ưu tiên cấp đá 1x2 bê tông mác 350 và cấp phối đá dăm Base K98", By: "Phạm Minh Hoàng",
-				Items: `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":200000,"deliveredTons":134000,"unitPrice":285000,"discountPct":5},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":150000,"deliveredTons":84500,"unitPrice":180000,"discountPct":3}]`,
+				Items:  `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":200000,"deliveredTons":134000,"unitPrice":285000,"discountPct":5},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":150000,"deliveredTons":84500,"unitPrice":180000,"discountPct":3}]`,
 				Plates: `["19H-056.22","19C-128.45","29H-882.19","88C-091.22"]`,
 			},
 			{
 				Code: "HDBH-2026-BQP319", CustCode: "CUST-BQP319", CustName: "Tổng Công ty 319 - Bộ Quốc Phòng",
 				Project: "Dự án Nâng cấp Sân bay Quân sự & Đường cơ động",
-				Start: "2026-03-15", End: "2026-11-30", Terms: "deferred_7d", Status: "active",
+				Start:   "2026-03-15", End: "2026-11-30", Terms: "deferred_7d", Status: "active",
 				Committed: 180000, Delivered: 142000, Rate: 78.9, Credit: 800000000,
 				Notes: "Đá 4x6 kè móng và Base loại 1 chuẩn quốc phòng", By: "Hoàng Minh Đức",
-				Items: `[{"productCode":"SP-DA-4X6","productName":"Đá 4x6 Kè Móng","committedTons":80000,"deliveredTons":65000,"unitPrice":220000,"discountPct":2},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":100000,"deliveredTons":77000,"unitPrice":180000,"discountPct":3}]`,
+				Items:  `[{"productCode":"SP-DA-4X6","productName":"Đá 4x6 Kè Móng","committedTons":80000,"deliveredTons":65000,"unitPrice":220000,"discountPct":2},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":100000,"deliveredTons":77000,"unitPrice":180000,"discountPct":3}]`,
 				Plates: `["88H-042.27","88C-114.56","19C-205.88"]`,
 			},
 			{
 				Code: "HDBH-2026-BTVT", CustCode: "CUST-BTVT", CustName: "Công ty TNHH Bê Tông Việt Trì",
 				Project: "Cung ứng trạm trộn bê tông tươi KCN Thụy Vân",
-				Start: "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
+				Start:   "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
 				Committed: 120000, Delivered: 98400, Rate: 82.0, Credit: 500000000,
 				Notes: "Bao tiêu đá 1x2 và cát nhân tạo rửa sạch giao hằng ngày", By: "Nguyễn Văn Dũng",
-				Items: `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":80000,"deliveredTons":66000,"unitPrice":285000,"discountPct":4},{"productCode":"SP-CAT-NT","productName":"Cát Nghiền Nhân Tạo","committedTons":40000,"deliveredTons":32400,"unitPrice":230000,"discountPct":2}]`,
+				Items:  `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":80000,"deliveredTons":66000,"unitPrice":285000,"discountPct":4},{"productCode":"SP-CAT-NT","productName":"Cát Nghiền Nhân Tạo","committedTons":40000,"deliveredTons":32400,"unitPrice":230000,"discountPct":2}]`,
 				Plates: `["19C-088.99","19H-002.31","19C-155.67"]`,
 			},
 			{
 				Code: "HDBH-2026-VICEM", CustCode: "CUST-VICEM", CustName: "Công ty CP Xi Măng Vicem Sông Thao",
 				Project: "Nguyên liệu phụ gia sản xuất xi măng PCB40",
-				Start: "2026-02-01", End: "2026-10-31", Terms: "bank_guarantee", Status: "near_expiry",
+				Start:   "2026-02-01", End: "2026-10-31", Terms: "bank_guarantee", Status: "near_expiry",
 				Committed: 90000, Delivered: 86500, Rate: 96.1, Credit: 1200000000,
 				Notes: "Đá mi sàng 0-5mm và cao lanh M2, hợp đồng sắp hoàn thành", By: "Phạm Minh Hoàng",
-				Items: `[{"productCode":"SP-DA-MI","productName":"Đá Mi Bụi Sàng Khô","committedTons":90000,"deliveredTons":86500,"unitPrice":115000,"discountPct":5}]`,
+				Items:  `[{"productCode":"SP-DA-MI","productName":"Đá Mi Bụi Sàng Khô","committedTons":90000,"deliveredTons":86500,"unitPrice":115000,"discountPct":5}]`,
 				Plates: `["29H-771.20","29C-663.15"]`,
 			},
 		}
@@ -2127,8 +2456,8 @@ func seedTradeAndWarehouse(ctx context.Context) {
 		fmt.Println("🌱 Seeding Vehicle Shift Assignments & Driver Attendance...")
 		assignments := []struct {
 			Code, Date, ShiftID, ShiftName, VehID, Plate, VehType, OwnerType, DrvID, DrvName, Phone, License, Route, InTime, OutTime, Status, Notes, Officer string
-			StartOdo, EndOdo, StartFuel, EndFuel, Tons                                                                                                          float64
-			Trips                                                                                                                                              int
+			StartOdo, EndOdo, StartFuel, EndFuel, Tons                                                                                                       float64
+			Trips                                                                                                                                            int
 		}{
 			{
 				Code: "DISPATCH-20261028-01", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
@@ -2212,4 +2541,3 @@ func seedTradeAndWarehouse(ctx context.Context) {
 	// Seed comprehensive monthly quarry tickets, trips, vouchers, costs, fuel, attendances & alerts
 	SeedMonthlyQuarryData()
 }
-

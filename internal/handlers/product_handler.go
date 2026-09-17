@@ -26,7 +26,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(purchase_price, 0) as purchase_price, COALESCE(storage_loc, '') as storage_loc,
 		       COALESCE(standard, '') as standard, COALESCE(min_stock, 0) as min_stock,
 		       COALESCE(current_stock, 0) as current_stock, COALESCE(status, 'active') as status,
-		       COALESCE(notes, '') as notes, created_at, updated_at
+		       COALESCE(notes, '') as notes, COALESCE(vat_rate, 10) as vat_rate, created_at, updated_at
 		FROM inventory_products
 		WHERE 1=1
 	`
@@ -56,7 +56,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	var list []models.InventoryProduct
 	for rows.Next() {
 		var p models.InventoryProduct
-		if err := rows.Scan(&p.ID, &p.Code, &p.Name, &p.Category, &p.Unit, &p.Density, &p.SalePrice, &p.PurchasePrice, &p.StorageLoc, &p.Standard, &p.MinStock, &p.CurrentStock, &p.Status, &p.Notes, &p.CreatedAt, &p.UpdatedAt); err == nil {
+		if err := rows.Scan(&p.ID, &p.Code, &p.Name, &p.Category, &p.Unit, &p.Density, &p.SalePrice, &p.PurchasePrice, &p.StorageLoc, &p.Standard, &p.MinStock, &p.CurrentStock, &p.Status, &p.Notes, &p.VatRate, &p.CreatedAt, &p.UpdatedAt); err == nil {
 			list = append(list, p)
 		}
 	}
@@ -84,20 +84,20 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 			       COALESCE(density, 1.5), COALESCE(sale_price, 0), COALESCE(purchase_price, 0),
 			       COALESCE(storage_loc, ''), COALESCE(standard, ''), COALESCE(min_stock, 0),
 			       COALESCE(current_stock, 0), COALESCE(status, 'active'), COALESCE(notes, ''),
-			       created_at, updated_at
+			       COALESCE(vat_rate, 10), created_at, updated_at
 			FROM inventory_products
 			WHERE id = $1 OR code = $2
-		`, numID, idOrCode).Scan(&p.ID, &p.Code, &p.Name, &p.Category, &p.Unit, &p.Density, &p.SalePrice, &p.PurchasePrice, &p.StorageLoc, &p.Standard, &p.MinStock, &p.CurrentStock, &p.Status, &p.Notes, &p.CreatedAt, &p.UpdatedAt)
+		`, numID, idOrCode).Scan(&p.ID, &p.Code, &p.Name, &p.Category, &p.Unit, &p.Density, &p.SalePrice, &p.PurchasePrice, &p.StorageLoc, &p.Standard, &p.MinStock, &p.CurrentStock, &p.Status, &p.Notes, &p.VatRate, &p.CreatedAt, &p.UpdatedAt)
 	} else {
 		err = database.Pool.QueryRow(ctx, `
 			SELECT id, code, name, COALESCE(category, ''), COALESCE(unit, 'm³'),
 			       COALESCE(density, 1.5), COALESCE(sale_price, 0), COALESCE(purchase_price, 0),
 			       COALESCE(storage_loc, ''), COALESCE(standard, ''), COALESCE(min_stock, 0),
 			       COALESCE(current_stock, 0), COALESCE(status, 'active'), COALESCE(notes, ''),
-			       created_at, updated_at
+			       COALESCE(vat_rate, 10), created_at, updated_at
 			FROM inventory_products
 			WHERE code = $1
-		`, idOrCode).Scan(&p.ID, &p.Code, &p.Name, &p.Category, &p.Unit, &p.Density, &p.SalePrice, &p.PurchasePrice, &p.StorageLoc, &p.Standard, &p.MinStock, &p.CurrentStock, &p.Status, &p.Notes, &p.CreatedAt, &p.UpdatedAt)
+		`, idOrCode).Scan(&p.ID, &p.Code, &p.Name, &p.Category, &p.Unit, &p.Density, &p.SalePrice, &p.PurchasePrice, &p.StorageLoc, &p.Standard, &p.MinStock, &p.CurrentStock, &p.Status, &p.Notes, &p.VatRate, &p.CreatedAt, &p.UpdatedAt)
 	}
 
 	if err != nil {
@@ -118,12 +118,15 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	if p.Code == "" {
 		p.Code = "SP-" + time.Now().Format("0601021504")
 	}
+	if p.VatRate == 0 {
+		p.VatRate = 10
+	}
 
 	err := database.Pool.QueryRow(ctx, `
-		INSERT INTO inventory_products (code, name, category, unit, density, sale_price, purchase_price, storage_loc, standard, min_stock, current_stock, status, notes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		INSERT INTO inventory_products (code, name, category, unit, density, sale_price, purchase_price, storage_loc, standard, min_stock, current_stock, status, notes, vat_rate)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at, updated_at
-	`, p.Code, p.Name, p.Category, p.Unit, p.Density, p.SalePrice, p.PurchasePrice, p.StorageLoc, p.Standard, p.MinStock, p.CurrentStock, p.Status, p.Notes).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt)
+	`, p.Code, p.Name, p.Category, p.Unit, p.Density, p.SalePrice, p.PurchasePrice, p.StorageLoc, p.Standard, p.MinStock, p.CurrentStock, p.Status, p.Notes, p.VatRate).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt)
 
 	if err != nil {
 		JSONError(w, http.StatusInternalServerError, "Không thể tạo sản phẩm: "+err.Error())
@@ -140,14 +143,17 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		JSONError(w, http.StatusBadRequest, "Dữ liệu không hợp lệ: "+err.Error())
 		return
 	}
+	if p.VatRate == 0 {
+		p.VatRate = 10
+	}
 
 	res, err := database.Pool.Exec(ctx, `
 		UPDATE inventory_products
 		SET name = $1, category = $2, unit = $3, density = $4, sale_price = $5,
 		    purchase_price = $6, storage_loc = $7, standard = $8, min_stock = $9,
-		    current_stock = $10, status = $11, notes = $12, updated_at = NOW()
-		WHERE code = $13 OR id = $14
-	`, p.Name, p.Category, p.Unit, p.Density, p.SalePrice, p.PurchasePrice, p.StorageLoc, p.Standard, p.MinStock, p.CurrentStock, p.Status, p.Notes, idOrCode, p.ID)
+		    current_stock = $10, status = $11, notes = $12, vat_rate = $13, updated_at = NOW()
+		WHERE code = $14 OR id = $15
+	`, p.Name, p.Category, p.Unit, p.Density, p.SalePrice, p.PurchasePrice, p.StorageLoc, p.Standard, p.MinStock, p.CurrentStock, p.Status, p.Notes, p.VatRate, idOrCode, p.ID)
 
 	if err != nil {
 		JSONError(w, http.StatusInternalServerError, "Không thể cập nhật sản phẩm: "+err.Error())
