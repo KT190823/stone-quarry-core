@@ -35,8 +35,8 @@ func (h *SalesContractHandler) ListContracts(w http.ResponseWriter, r *http.Requ
 func (h *SalesContractHandler) GetContract(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	result, err := h.contractSvc.GetByID(id)
-	if err != nil {
-		http.Error(w, "not found", 404)
+	if err != nil || result == nil {
+		JSON(w, false)
 		return
 	}
 	JSON(w, result)

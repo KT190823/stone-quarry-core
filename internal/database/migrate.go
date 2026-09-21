@@ -2038,6 +2038,10 @@ func Migrate() {
 	_, _ = Pool.Exec(syncCtx, `ALTER TABLE purchase_voucher_items ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
 	_, _ = Pool.Exec(syncCtx, `ALTER TABLE return_voucher_items ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
 
+	// Ensure quarry_code column exists for sales_contracts
+	_, _ = Pool.Exec(syncCtx, `ALTER TABLE sales_contracts ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01';`)
+	_, _ = Pool.Exec(syncCtx, `UPDATE sales_contracts SET quarry_code = 'MO-PT-01' WHERE quarry_code IS NULL OR quarry_code = '';`)
+
 	// Set dynamic VAT rates per product specification (e.g. 8% vs 10%)
 	_, _ = Pool.Exec(syncCtx, `UPDATE inventory_products SET vat_rate = 8 WHERE code IN ('SP-DA-0X4-SUB', 'SP-CAT-NGHIEN', 'SP-DA-MI-BUI', 'SP-CAT-VSI');`)
 	_, _ = Pool.Exec(syncCtx, `UPDATE inventory_products SET vat_rate = 10 WHERE vat_rate IS NULL OR vat_rate = 0;`)

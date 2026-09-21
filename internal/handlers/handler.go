@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	"mo-da-backend/internal/services"
@@ -10,6 +11,60 @@ import (
 
 func JSON(w http.ResponseWriter, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
+	if v == nil {
+		json.NewEncoder(w).Encode(false)
+		return
+	}
+
+	val := reflect.ValueOf(v)
+	// Unwrap pointers and interfaces
+	for val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
+		if val.IsNil() {
+			json.NewEncoder(w).Encode(false)
+			return
+		}
+		val = val.Elem()
+	}
+
+	// If top-level value is a slice
+	if val.Kind() == reflect.Slice {
+		if val.IsNil() {
+			json.NewEncoder(w).Encode([]interface{}{})
+			return
+		}
+	}
+
+	// If map contains "data" field
+	if m, ok := v.(map[string]interface{}); ok {
+		if dataVal, exists := m["data"]; exists {
+			if dataVal == nil {
+				// If response has "total", it's a paginated list -> return []
+				if _, hasTotal := m["total"]; hasTotal {
+					m["data"] = []interface{}{}
+				} else {
+					m["data"] = false
+				}
+			} else {
+				dVal := reflect.ValueOf(dataVal)
+				for dVal.Kind() == reflect.Ptr || dVal.Kind() == reflect.Interface {
+					if dVal.IsNil() {
+						break
+					}
+					dVal = dVal.Elem()
+				}
+				if !dVal.IsValid() || ((dVal.Kind() == reflect.Ptr || dVal.Kind() == reflect.Interface) && dVal.IsNil()) {
+					if _, hasTotal := m["total"]; hasTotal {
+						m["data"] = []interface{}{}
+					} else {
+						m["data"] = false
+					}
+				} else if dVal.Kind() == reflect.Slice && dVal.IsNil() {
+					m["data"] = []interface{}{}
+				}
+			}
+		}
+	}
+
 	json.NewEncoder(w).Encode(v)
 }
 

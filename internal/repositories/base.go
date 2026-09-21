@@ -155,7 +155,7 @@ func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error
 	}
 	defer rows.Close()
 
-	var results []map[string]interface{}
+	results := []map[string]interface{}{}
 	for rows.Next() {
 		var data []byte
 		if err := rows.Scan(&data); err != nil {
@@ -166,6 +166,10 @@ func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error
 			continue
 		}
 		results = append(results, item)
+	}
+
+	if results == nil {
+		results = []map[string]interface{}{}
 	}
 
 	return results, total, nil
