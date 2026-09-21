@@ -200,6 +200,19 @@ func main() {
 	mux.HandleFunc("PUT /api/payment-vouchers/{id}", pvH.UpdatePaymentVoucher)
 	mux.HandleFunc("DELETE /api/payment-vouchers/{id}", pvH.DeletePaymentVoucher)
 
+	// Payments aliases for receipts and vouchers
+	mux.HandleFunc("GET /api/payments/receipts", pvH.ListReceipts)
+	mux.HandleFunc("GET /api/payments/receipts/{id}", pvH.GetReceipt)
+	mux.HandleFunc("POST /api/payments/receipts", pvH.CreateReceipt)
+	mux.HandleFunc("PUT /api/payments/receipts/{id}", pvH.UpdateReceipt)
+	mux.HandleFunc("DELETE /api/payments/receipts/{id}", pvH.DeleteReceipt)
+	mux.HandleFunc("GET /api/payments/vouchers", pvH.ListPaymentVouchers)
+	mux.HandleFunc("GET /api/payments/vouchers/{id}", pvH.GetPaymentVoucher)
+	mux.HandleFunc("POST /api/payments/vouchers", pvH.CreatePaymentVoucher)
+	mux.HandleFunc("PUT /api/payments/vouchers/{id}", pvH.UpdatePaymentVoucher)
+	mux.HandleFunc("DELETE /api/payments/vouchers/{id}", pvH.DeletePaymentVoucher)
+	mux.HandleFunc("GET /api/payments/payment-vouchers", pvH.ListPaymentVouchers)
+
 	mux.HandleFunc("GET /api/payments/invoices", paymentH.ListInvoices)
 	mux.HandleFunc("GET /api/payments/debt", paymentH.ListDebt)
 	mux.HandleFunc("GET /api/payments/reconcile", paymentH.ListReconcile)

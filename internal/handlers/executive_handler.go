@@ -206,9 +206,11 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	}
 	quarryID := resolveQuarryCode(ctx, rawQuarry)
 	period := normalizeExecutivePeriod(r.URL.Query().Get("period"))
+	startDateStr := strings.TrimSpace(r.URL.Query().Get("start_date"))
+	endDateStr := strings.TrimSpace(r.URL.Query().Get("end_date"))
 
 	// Check 60s in-memory cache for instant responses (<1ms)
-	cacheKey := fmt.Sprintf("%s:%s", quarryID, period)
+	cacheKey := fmt.Sprintf("%s:%s:%s:%s", quarryID, period, startDateStr, endDateStr)
 	execOverviewCacheMutex.RLock()
 	if cached, ok := execOverviewCache[cacheKey]; ok && time.Now().Before(cached.expiresAt) {
 		execOverviewCacheMutex.RUnlock()
@@ -219,6 +221,18 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now().In(time.FixedZone("ICT", 7*60*60))
 	currentStart, currentEnd, previousStart, currentLabel, previousLabel := executivePeriodBounds(now, period)
+	if (period == "custom" || startDateStr != "") && startDateStr != "" && endDateStr != "" {
+		if s, err := time.ParseInLocation("2006-01-02", startDateStr, now.Location()); err == nil {
+			if e, err2 := time.ParseInLocation("2006-01-02", endDateStr, now.Location()); err2 == nil {
+				currentStart = s
+				currentEnd = e.AddDate(0, 0, 1)
+				dur := currentEnd.Sub(currentStart)
+				previousStart = currentStart.Add(-dur)
+				currentLabel = fmt.Sprintf("%s - %s", s.Format("02/01"), e.Format("02/01"))
+				previousLabel = "Kỳ trước"
+			}
+		}
+	}
 	comparisonEnd := now
 	if comparisonEnd.After(currentEnd) {
 		comparisonEnd = currentEnd
@@ -449,7 +463,7 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 
 func normalizeExecutivePeriod(period string) string {
 	switch strings.ToLower(strings.TrimSpace(period)) {
-	case "day", "week", "month", "quarter", "year":
+	case "day", "week", "month", "quarter", "year", "custom":
 		return strings.ToLower(strings.TrimSpace(period))
 	default:
 		return "month"

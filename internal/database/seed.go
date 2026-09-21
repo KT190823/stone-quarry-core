@@ -916,7 +916,25 @@ func Seed() {
 		('triett', 'Trương Trọng Triết', 'Trương Trọng Triết', 'Kỹ Sư Trắc Địa 3D', 'Phòng Kỹ Thuật Trắc Địa', 'triett@ttcgroup.vn', '0967.112.299', '0967.112.299', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:40', 'Hoạt động', 'TTC-BP-007', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-SURV-BP07', '2023-07-01', 15, 'MO-BP-04'),
 		('vuongdq', 'Đỗ Quang Vương', 'Đỗ Quang Vương', 'Thợ Khoan & An Toàn Mỏ', 'Tổ Khoan Nổ Mìn & VLNCN', 'vuongdq@ttcgroup.vn', '0962.334.477', '0962.334.477', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 07:15', 'Hoạt động', 'TTC-BP-008', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-SAFE-BP08', '2022-10-20', 16, 'MO-BP-04'),
 		('hieudt', 'Đoàn Trung Hiếu', 'Đoàn Trung Hiếu', 'Thủ kho bãi khoáng sản (Stock Keeper)', 'Đội Kho Vận & Bãi Đá', 'hieudt@ttcgroup.vn', '0945.667.788', '0945.667.788', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 08:35', 'Hoạt động', 'TTC-BP-009', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-STK-BP09', '2023-02-28', 19, 'MO-BP-04'),
-		('tramtt', 'Tạ Thị Bích Trâm', 'Tạ Thị Bích Trâm', 'Kế toán công nợ & Hóa đơn (Accountant)', 'Phòng Kế Toán & Vật Tư', 'tramtt@ttcgroup.vn', '0934.556.677', '0934.556.677', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:15', 'Hoạt động', 'TTC-BP-010', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-ACC-BP10', '2023-10-05', 18, 'MO-BP-04')
+		('tramtt', 'Tạ Thị Bích Trâm', 'Tạ Thị Bích Trâm', 'Kế toán công nợ & Hóa đơn (Accountant)', 'Phòng Kế Toán & Vật Tư', 'tramtt@ttcgroup.vn', '0934.556.677', '0934.556.677', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', '28/10/2026 09:15', 'Hoạt động', 'TTC-BP-010', 'Mỏ Đá Bình Phước (Chơn Thành)', 'RFID-ACC-BP10', '2023-10-05', 18, 'MO-BP-04'),
+
+		-- ══════════════════════════════════════════════════════════════════════════
+		-- 🎯 BỘ TÀI KHOẢN ĐĂNG NHẬP THEO TỪNG VAI TRÒ (MẬT KHẨU MẶC ĐỊNH: admin)
+		-- ══════════════════════════════════════════════════════════════════════════
+		('lanhdao', 'Trần Anh Tuấn', 'Trần Anh Tuấn', 'Ban Lãnh Đạo', 'Ban Lãnh Đạo Tập Đoàn (C-Level / HĐQT)', 'lanhdao@ttcgroup.vn', '0901.000.001', '0901.000.001', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-HQ-001', 'Tập Đoàn TTC (Hà Nội)', 'RFID-EXEC-01', '2019-01-01', 30, 'TTC-ALL'),
+		('giamdoc', 'Nguyễn Đức Trường', 'Nguyễn Đức Trường', 'Ban Giám Đốc', 'Ban Giám Đốc Mỏ', 'giamdoc@ttcgroup.vn', '0912.345.678', '0912.345.678', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-001', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-MGR-01', '2020-03-15', 24, 'MO-PT-01'),
+		('kythuat', 'Phạm Tuấn Minh', 'Phạm Tuấn Minh', 'Phó Giám Đốc Kỹ Thuật', 'Phòng Kỹ Thuật Khai Thác', 'kythuat@ttcgroup.vn', '0913.224.556', '0913.224.556', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-005', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-ENG-01', '2021-08-20', 22, 'MO-PT-01'),
+		('tramcan', 'Nguyễn Văn Dũng', 'Nguyễn Văn Dũng', 'Trưởng Trạm Cân', 'Tổ Vận Hành Trạm Cân', 'tramcan@ttcgroup.vn', '0984.556.789', '0984.556.789', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-002', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-OP-01', '2022-06-10', 18, 'MO-PT-01'),
+		('vancan', 'Trần Văn Cường', 'Trần Văn Cường', 'Nhân viên vận hành bàn cân', 'Tổ Vận Hành Trạm Cân', 'vancan@ttcgroup.vn', '0982.113.445', '0982.113.445', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-006', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-OP-02', '2023-03-01', 19, 'MO-PT-01'),
+		('tracdia', 'Lê Minh Hoàng', 'Lê Minh Hoàng', 'Kỹ Sư Trắc Địa 3D', 'Phòng Kỹ Thuật Trắc Địa', 'tracdia@ttcgroup.vn', '0973.123.456', '0973.123.456', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-003', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-SURV-01', '2022-04-05', 12, 'MO-PT-01'),
+		('nomin', 'Đặng Anh Hùng', 'Đặng Anh Hùng', 'Chỉ Huy Nổ Mìn', 'Tổ Khoan Nổ Mìn & VLNCN', 'nomin@ttcgroup.vn', '0974.556.889', '0974.556.889', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-007', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-BLAST-01', '2022-11-15', 16, 'MO-PT-01'),
+		('antoan', 'Vũ Bá Nam', 'Vũ Bá Nam', 'Thợ Khoan & An Toàn Mỏ', 'Tổ Khoan Nổ Mìn & VLNCN', 'antoan@ttcgroup.vn', '0965.443.221', '0965.443.221', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-008', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-SAFE-01', '2023-05-10', 14, 'MO-PT-01'),
+		('ketoan', 'Nguyễn Thị Thủy', 'Nguyễn Thị Thủy', 'Kế Toán Trưởng', 'Phòng Kế Toán & Tài Chính', 'ketoan@ttcgroup.vn', '0915.678.901', '0915.678.901', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-004', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-ACC-01', '2023-01-12', 20, 'MO-PT-01'),
+		('congno', 'Ngô Thùy Linh', 'Ngô Thùy Linh', 'Kế toán công nợ & Hóa đơn', 'Phòng Kế Toán & Tài Chính', 'congno@ttcgroup.vn', '0932.665.443', '0932.665.443', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-010', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-ACC-02', '2023-08-15', 17, 'MO-PT-01'),
+		('thukho', 'Nguyễn Văn Hiếu', 'Nguyễn Văn Hiếu', 'Thủ kho bãi khoáng sản', 'Đội Kho Vận & Bãi Đá', 'thukho@ttcgroup.vn', '0943.887.665', '0943.887.665', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-PT-009', 'Mỏ Đá Phú Thọ (Khu 1)', 'RFID-STK-01', '2022-09-01', 21, 'MO-PT-01'),
+		('kinhdoanh', 'Trần Đình Trọng', 'Trần Đình Trọng', 'Trưởng Phòng Kinh Doanh', 'Phòng Kinh Doanh & Hợp Đồng', 'kinhdoanh@ttcgroup.vn', '0912.456.789', '0912.456.789', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-KD-001', 'Toàn Tập Đoàn', 'RFID-CRM-01', '2021-04-10', 25, 'TTC-ALL'),
+		('dieuphoi', 'Lê Hữu Thắng', 'Lê Hữu Thắng', 'Điều Phối Vận Tải & Giám Sát GPS', 'Đội Xe & Vận Tải Mỏ', 'dieuphoi@ttcgroup.vn', '0983.234.567', '0983.234.567', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-LOG-001', 'Mỏ Đá Phú Thọ', 'RFID-FLEET-01', '2022-05-12', 26, 'MO-PT-01'),
+		('phaply', 'Đỗ Xuân Bách', 'Đỗ Xuân Bách', 'Cán Bộ Pháp Lý Mỏ & BVMT', 'Ban Pháp Chế & Môi Trường', 'phaply@ttcgroup.vn', '0916.888.777', '0916.888.777', 'f078d229547fc3001dba693baa1b39552b0a66677e1dcf08e8da9d0d2dedeb35', 'Hôm nay', 'Hoạt động', 'TTC-LEG-001', 'Toàn Tập Đoàn', 'RFID-LEGAL-01', '2021-07-01', 20, 'TTC-ALL')
 		ON CONFLICT (username) DO UPDATE SET
 			name = EXCLUDED.name,
 			ten = EXCLUDED.ten,
@@ -925,6 +943,7 @@ func Seed() {
 			email = EXCLUDED.email,
 			phone = EXCLUDED.phone,
 			sdt = EXCLUDED.sdt,
+			password_hash = EXCLUDED.password_hash,
 			last_login = EXCLUDED.last_login,
 			status = EXCLUDED.status,
 			code = EXCLUDED.code,
@@ -935,24 +954,25 @@ func Seed() {
 			quarry_code = EXCLUDED.quarry_code;
 	`)
 
-	// Ensure user roles and logs are seeded
-	var roleCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM user_roles").Scan(&roleCount)
-	if roleCount == 0 {
-		Pool.Exec(ctx, `
-			INSERT INTO user_roles (role, "desc", description, users, level, permission, status) VALUES
-			('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', '4', 'Cấp 1', 'Toàn quyền hệ thống', 'Hoạt động'),
-			('Phó Giám Đốc Kỹ Thuật', 'Quản lý kỹ thuật mỏ, lập kế hoạch khai thác và giám sát an toàn', 'Kỹ thuật mỏ', '4', 'Cấp 2', 'Quản lý kế hoạch & thiết bị', 'Hoạt động'),
-			('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI ANPR OCR', 'Vận hành cân', '4', 'Cấp 2', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
-			('Nhân viên vận hành bàn cân', 'Cân xe 2 lượt (tổng bì & bì rỗng), in phiếu cân điện tử', 'Vận hành ca', '8', 'Cấp 2', 'Cân xe & in vé xuất mỏ', 'Hoạt động'),
-			('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', '4', 'Cấp 2', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
-			('Thợ Khoan & An Toàn Mỏ', 'Khoan tạo lỗ mìn, kiểm định an toàn moong tầng khai thác', 'An toàn lao động', '4', 'Cấp 2', 'Giám sát an toàn mỏ', 'Hoạt động'),
-			('Kỹ Sư Trắc Địa 3D', 'Bay quét UAV LiDAR, tính toán thể tích moong đào và bãi tồn', 'Trắc địa mỏ', '4', 'Cấp 2', 'Khảo sát 3D & mô hình hóa', 'Hoạt động'),
-			('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', '4', 'Cấp 2', 'Quản lý tài chính kế toán', 'Hoạt động'),
-			('Kế toán công nợ & Hóa đơn', 'Đối soát công nợ khách hàng, xuất hóa đơn điện tử', 'Công nợ mỏ', '4', 'Cấp 3', 'Đối soát & thanh toán', 'Hoạt động'),
-			('Thủ kho bãi khoáng sản', 'Quản lý tồn bãi đá thành phẩm, xuất nhập vật tư và nhiên liệu DO', 'Kho bãi mỏ', '4', 'Cấp 3', 'Quản lý bãi đá & cấp phát dầu', 'Hoạt động');
-		`)
-	}
+	// 11.2 Seed user_roles - Luôn đồng bộ 14 vai trò chuẩn
+	Pool.Exec(ctx, `
+		DELETE FROM user_roles;
+		INSERT INTO user_roles (role, "desc", description, users, level, permission, status) VALUES
+		('Ban Lãnh Đạo', 'Toàn quyền truy cập Cổng Điều Hành Doanh Nghiệp (/dieu-hanh/*), giám sát liên phòng ban và phê duyệt chỉ đạo', 'Điều hành DN', 'lanhdao', 'Cấp 1', 'Toàn quyền Executive Portal', 'Hoạt động'),
+		('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', 'admin, giamdoc', 'Cấp 1', 'Toàn quyền hệ thống mỏ', 'Hoạt động'),
+		('Phó Giám Đốc Kỹ Thuật', 'Quản lý kỹ thuật mỏ, lập kế hoạch khai thác và giám sát an toàn', 'Kỹ thuật mỏ', 'kythuat', 'Cấp 2', 'Quản lý kế hoạch & thiết bị', 'Hoạt động'),
+		('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI ANPR OCR', 'Vận hành cân', 'tramcan', 'Cấp 2', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
+		('Nhân viên vận hành bàn cân', 'Cân xe 2 lượt (tổng bì & bì rỗng), in phiếu cân điện tử', 'Vận hành ca', 'vancan', 'Cấp 2', 'Cân xe & in vé xuất mỏ', 'Hoạt động'),
+		('Kỹ Sư Trắc Địa 3D', 'Bay quét UAV LiDAR, tính toán thể tích moong đào và bãi tồn', 'Trắc địa mỏ', 'tracdia', 'Cấp 2', 'Khảo sát 3D & mô hình hóa', 'Hoạt động'),
+		('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', 'nomin', 'Cấp 2', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
+		('Thợ Khoan & An Toàn Mỏ', 'Khoan tạo lỗ mìn, kiểm định an toàn moong tầng khai thác', 'An toàn lao động', 'antoan', 'Cấp 2', 'Giám sát an toàn mỏ', 'Hoạt động'),
+		('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', 'ketoan', 'Cấp 2', 'Quản lý tài chính kế toán', 'Hoạt động'),
+		('Kế toán công nợ & Hóa đơn', 'Đối soát công nợ khách hàng, xuất hóa đơn điện tử', 'Công nợ mỏ', 'congno', 'Cấp 3', 'Đối soát & thanh toán', 'Hoạt động'),
+		('Thủ kho bãi khoáng sản', 'Quản lý tồn bãi đá thành phẩm, xuất nhập vật tư và nhiên liệu DO', 'Kho bãi mỏ', 'thukho', 'Cấp 3', 'Quản lý bãi đá & cấp phát dầu', 'Hoạt động'),
+		('Trưởng Phòng Kinh Doanh', 'Hợp đồng thương mại, bảng báo giá đá và quản lý đối tác khách hàng', 'Kinh doanh CRM', 'kinhdoanh', 'Cấp 2', 'Quản lý kinh doanh & bán hàng', 'Hoạt động'),
+		('Điều Phối Vận Tải & Giám Sát GPS', 'Điều phối đoàn xe ben cơ giới, định vị GPS, đối soát sụt dầu và định mức ODO', 'Điều phối xe', 'dieuphoi', 'Cấp 2', 'Giám sát hành trình GPS & xe ben', 'Hoạt động'),
+		('Cán Bộ Pháp Lý Mỏ & BVMT', 'Giấy phép khai thác mỏ, hồ sơ môi trường, quan trắc định kỳ và báo cáo Sở TN&MT', 'Pháp lý mỏ', 'phaply', 'Cấp 2', 'Quản lý pháp lý & giấy phép mỏ', 'Hoạt động');
+	`)
 
 	// Unconditional Seed for Reports (All 4 Quarries & TTC-ALL)
 	Pool.Exec(ctx, `
@@ -2452,13 +2472,14 @@ func seedTradeAndWarehouse(ctx context.Context) {
 	// 8. Seed Vehicle Assignments & Driver Shift Attendance
 	var vaCount int
 	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM vehicle_assignments").Scan(&vaCount)
-	if vaCount == 0 {
-		fmt.Println("🌱 Seeding Vehicle Shift Assignments & Driver Attendance...")
+	if vaCount < 8 {
+		fmt.Println("🌱 Seeding Vehicle Shift Assignments & Driver Attendance for All Quarries...")
 		assignments := []struct {
-			Code, Date, ShiftID, ShiftName, VehID, Plate, VehType, OwnerType, DrvID, DrvName, Phone, License, Route, InTime, OutTime, Status, Notes, Officer string
-			StartOdo, EndOdo, StartFuel, EndFuel, Tons                                                                                                       float64
-			Trips                                                                                                                                            int
+			Code, Date, ShiftID, ShiftName, VehID, Plate, VehType, OwnerType, DrvID, DrvName, Phone, License, Route, InTime, OutTime, Status, Notes, Officer, QuarryCode string
+			StartOdo, EndOdo, StartFuel, EndFuel, Tons                                                                                                                   float64
+			Trips                                                                                                                                                        int
 		}{
+			// Phú Thọ (MO-PT-01)
 			{
 				Code: "DISPATCH-20261028-01", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
 				VehID: "EQ-TRK-01", Plate: "19H-056.22", VehType: "Xe ben Howo 371HP (8x4)", OwnerType: "company",
@@ -2466,6 +2487,7 @@ func seedTradeAndWarehouse(ctx context.Context) {
 				Route: "Tuyến Moong Tầng 3 ➔ Hộc Nạp Liệu Trạm Nghiền 01", InTime: "06:00 28/10/2026", OutTime: "",
 				StartOdo: 5210.0, EndOdo: 5294.0, StartFuel: 380, EndFuel: 284, Trips: 14, Tons: 420.0,
 				Status: "checked_in", Notes: "Đã kiểm tra xe đầu ca: Lốp tốt, ben hoạt động bình thường", Officer: "Phạm Quốc Tuấn (Đội trưởng Cơ giới)",
+				QuarryCode: "MO-PT-01",
 			},
 			{
 				Code: "DISPATCH-20261028-02", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
@@ -2474,6 +2496,7 @@ func seedTradeAndWarehouse(ctx context.Context) {
 				Route: "Tuyến Bãi Đá 1x2 ➔ Giao trạm trộn bê tông KCN Thụy Vân", InTime: "06:15 28/10/2026", OutTime: "",
 				StartOdo: 4980.0, EndOdo: 5045.0, StartFuel: 360, EndFuel: 275, Trips: 8, Tons: 240.0,
 				Status: "in_progress", Notes: "Xe công ty chở hàng hợp đồng Tập đoàn Đèo Cả", Officer: "Phạm Quốc Tuấn (Đội trưởng Cơ giới)",
+				QuarryCode: "MO-PT-01",
 			},
 			{
 				Code: "DISPATCH-20261028-03", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
@@ -2482,6 +2505,7 @@ func seedTradeAndWarehouse(ctx context.Context) {
 				Route: "Tuyến Moong Khai Thác ➔ Bãi Thải Đất Đá Bóc Phủ", InTime: "06:00 28/10/2026", OutTime: "",
 				StartOdo: 6120.0, EndOdo: 6185.0, StartFuel: 400, EndFuel: 310, Trips: 11, Tons: 330.0,
 				Status: "checked_in", Notes: "Vận chuyển đất đá bóc tầng phủ ca 1", Officer: "Nguyễn Văn Bình (Cán bộ Đội xe)",
+				QuarryCode: "MO-PT-01",
 			},
 			{
 				Code: "DISPATCH-20261028-04", Date: "2026-10-28", ShiftID: "SHIFT-02", ShiftName: "Ca 2 (14:00 - 22:00)",
@@ -2490,6 +2514,67 @@ func seedTradeAndWarehouse(ctx context.Context) {
 				Route: "Tuyến Moong Tầng 3 ➔ Hộc Nạp Liệu Trạm Nghiền 01", InTime: "", OutTime: "",
 				StartOdo: 5294.0, EndOdo: 0, StartFuel: 0, EndFuel: 0, Trips: 0, Tons: 0,
 				Status: "assigned", Notes: "Phân công nhận ca 2 thay tài xế Nguyễn Văn Toàn", Officer: "Phạm Quốc Tuấn (Đội trưởng Cơ giới)",
+				QuarryCode: "MO-PT-01",
+			},
+
+			// Tân Uyên (MO-TU-02)
+			{
+				Code: "DISPATCH-20261028-05", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-TU-01", Plate: "61C-452.18", VehType: "Xe ben Hyundai HD270 15T (6x4)", OwnerType: "company",
+				DrvID: "EMP-DRV-05", DrvName: "Trương Văn Nam", Phone: "0987 112 334", License: "GPLX Hạng C - 61014421",
+				Route: "Tuyến Moong Khai Thác ➔ Trạm Nghiền Tân Uyên 01", InTime: "06:30 28/10/2026", OutTime: "",
+				StartOdo: 4120.0, EndOdo: 4180.0, StartFuel: 280, EndFuel: 220, Trips: 10, Tons: 150.0,
+				Status: "checked_in", Notes: "Xe Tân Uyên vận hành ca 1 bình thường", Officer: "Lê Anh Tuấn (Giám Đốc Mỏ)",
+				QuarryCode: "MO-TU-02",
+			},
+			{
+				Code: "DISPATCH-20261028-06", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-TU-02", Plate: "60C-312.78", VehType: "Xe đầu kéo mooc ben Chenglong 420HP", OwnerType: "company",
+				DrvID: "EMP-DRV-06", DrvName: "Trần Minh Quân", Phone: "0908 554 321", License: "GPLX Hạng FC - 60028819",
+				Route: "Tuyến Bãi Đá 1x2 ➔ Giao Bê Tông Nam Tân Uyên", InTime: "06:45 28/10/2026", OutTime: "",
+				StartOdo: 6890.0, EndOdo: 6975.0, StartFuel: 420, EndFuel: 335, Trips: 7, Tons: 245.0,
+				Status: "in_progress", Notes: "Vận chuyển thành phẩm giao công trình", Officer: "Lê Anh Tuấn (Giám Đốc Mỏ)",
+				QuarryCode: "MO-TU-02",
+			},
+
+			// Hà Nam (MO-HN-03)
+			{
+				Code: "DISPATCH-20261028-07", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-HN-01", Plate: "90C-054.67", VehType: "Xe ben 3 chân Howo 371HP (6x4)", OwnerType: "company",
+				DrvID: "EMP-DRV-07", DrvName: "Bùi Văn Long", Phone: "0915 223 344", License: "GPLX Hạng C - 90017722",
+				Route: "Tuyến Moong Kiện Khê ➔ Hộc Nạp Trạm Nghiền Hà Nam", InTime: "06:00 28/10/2026", OutTime: "",
+				StartOdo: 3780.0, EndOdo: 3845.0, StartFuel: 300, EndFuel: 235, Trips: 12, Tons: 180.0,
+				Status: "checked_in", Notes: "Vận chuyển đá hộc về trạm nghiền sàng Kiện Khê", Officer: "Hoàng Đình Hải (Giám Đốc Mỏ)",
+				QuarryCode: "MO-HN-03",
+			},
+			{
+				Code: "DISPATCH-20261028-08", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-HN-02", Plate: "88H-042.27", VehType: "Xe ben HOWO 4 chân 371HP (8x4)", OwnerType: "company",
+				DrvID: "EMP-DRV-08", DrvName: "Trần Đình Trọng", Phone: "0976 889 001", License: "GPLX Hạng FC - 88029933",
+				Route: "Tuyến Cảng Kiện Khê ➔ Nhà Máy Xi Măng Vicem Bút Sơn", InTime: "06:15 28/10/2026", OutTime: "",
+				StartOdo: 5120.0, EndOdo: 5210.0, StartFuel: 380, EndFuel: 290, Trips: 9, Tons: 270.0,
+				Status: "in_progress", Notes: "Giao đá base và đá 4x6 cho Vicem", Officer: "Hoàng Đình Hải (Giám Đốc Mỏ)",
+				QuarryCode: "MO-HN-03",
+			},
+
+			// Bình Phước (MO-BP-04)
+			{
+				Code: "DISPATCH-20261028-09", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-BP-01", Plate: "93C-114.52", VehType: "Xe tải ben Dongfeng 4 chân 375HP", OwnerType: "company",
+				DrvID: "EMP-DRV-09", DrvName: "Phạm Minh Tuấn", Phone: "0968 112 556", License: "GPLX Hạng FC - 93018844",
+				Route: "Tuyến Moong Chơn Thành ➔ Cụm Trạm Nghiền Bình Phước", InTime: "06:30 28/10/2026", OutTime: "",
+				StartOdo: 4620.0, EndOdo: 4695.0, StartFuel: 370, EndFuel: 285, Trips: 11, Tons: 330.0,
+				Status: "checked_in", Notes: "Vận hành khai thác tầng 2 mỏ Chơn Thành", Officer: "Đặng Văn Nghĩa (Giám Đốc Mỏ)",
+				QuarryCode: "MO-BP-04",
+			},
+			{
+				Code: "DISPATCH-20261028-10", Date: "2026-10-28", ShiftID: "SHIFT-01", ShiftName: "Ca 1 (06:00 - 14:00)",
+				VehID: "EQ-BP-02", Plate: "93H-067.89", VehType: "Xe ben Howo Sinotruk 371HP (8x4)", OwnerType: "company",
+				DrvID: "EMP-DRV-10", DrvName: "Lâm Quốc Bảo", Phone: "0944 556 778", License: "GPLX Hạng FC - 93027755",
+				Route: "Tuyến Bãi Thành Phẩm ➔ Tuyến Cao Tốc Gia Nghĩa - Chơn Thành", InTime: "06:45 28/10/2026", OutTime: "",
+				StartOdo: 5410.0, EndOdo: 5490.0, StartFuel: 390, EndFuel: 305, Trips: 8, Tons: 240.0,
+				Status: "in_progress", Notes: "Vận chuyển vật liệu dự án trọng điểm", Officer: "Đặng Văn Nghĩa (Giám Đốc Mỏ)",
+				QuarryCode: "MO-BP-04",
 			},
 		}
 
@@ -2498,20 +2583,31 @@ func seedTradeAndWarehouse(ctx context.Context) {
 				INSERT INTO vehicle_assignments (
 					code, date, shift_id, shift_name, vehicle_id, license_plate, vehicle_type, ownership_type,
 					driver_id, driver_name, driver_phone, driver_license_no, route_assigned, checkin_time, checkout_time,
-					start_odo, end_odo, start_fuel_liters, end_fuel_liters, trips_completed, tons_hauled, status, notes, handover_officer
-				) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
-				ON CONFLICT (code) DO NOTHING
+					start_odo, end_odo, start_fuel_liters, end_fuel_liters, trips_completed, tons_hauled, status, notes, handover_officer, quarry_code
+				) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+				ON CONFLICT (code) DO UPDATE SET
+					status = EXCLUDED.status,
+					quarry_code = EXCLUDED.quarry_code,
+					handover_officer = EXCLUDED.handover_officer,
+					route_assigned = EXCLUDED.route_assigned,
+					driver_id = EXCLUDED.driver_id,
+					driver_name = EXCLUDED.driver_name
 			`, a.Code, a.Date, a.ShiftID, a.ShiftName, a.VehID, a.Plate, a.VehType, a.OwnerType,
 				a.DrvID, a.DrvName, a.Phone, a.License, a.Route, a.InTime, a.OutTime,
-				a.StartOdo, a.EndOdo, a.StartFuel, a.EndFuel, a.Trips, a.Tons, a.Status, a.Notes, a.Officer)
+				a.StartOdo, a.EndOdo, a.StartFuel, a.EndFuel, a.Trips, a.Tons, a.Status, a.Notes, a.Officer, a.QuarryCode)
 		}
 
-		// Update vehicles table with company ownership and current assigned drivers
+		// Update specific active company driver assignments on vehicles table
 		Pool.Exec(ctx, `
 			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-01', current_driver_name = 'Nguyễn Văn Toàn', current_shift_id = 'SHIFT-01' WHERE bs = '19H-056.22';
 			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-02', current_driver_name = 'Lê Hữu Thắng', current_shift_id = 'SHIFT-01' WHERE bs = '19C-128.45';
 			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-03', current_driver_name = 'Hoàng Minh Đức', current_shift_id = 'SHIFT-01' WHERE bs = '29H-882.19';
-			UPDATE vehicles SET ownership_type = 'customer', current_driver_name = 'Lái xe khách hàng' WHERE bs NOT IN ('19H-056.22', '19C-128.45', '29H-882.19');
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-05', current_driver_name = 'Trương Văn Nam', current_shift_id = 'SHIFT-01' WHERE bs = '61C-452.18';
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-06', current_driver_name = 'Trần Minh Quân', current_shift_id = 'SHIFT-01' WHERE bs = '60C-312.78';
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-07', current_driver_name = 'Bùi Văn Long', current_shift_id = 'SHIFT-01' WHERE bs = '90C-054.67';
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-08', current_driver_name = 'Trần Đình Trọng', current_shift_id = 'SHIFT-01' WHERE bs = '88H-042.27';
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-09', current_driver_name = 'Phạm Minh Tuấn', current_shift_id = 'SHIFT-01' WHERE bs = '93C-114.52';
+			UPDATE vehicles SET ownership_type = 'company', current_driver_id = 'EMP-DRV-10', current_driver_name = 'Lâm Quốc Bảo', current_shift_id = 'SHIFT-01' WHERE bs = '93H-067.89';
 		`)
 
 		// Update tickets with separate driver and vehicle ownership

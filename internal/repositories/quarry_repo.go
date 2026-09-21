@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"mo-da-backend/internal/database"
@@ -59,15 +60,32 @@ func (r *QuarryRepo) GetQuarryByID(id string) (*models.Quarry, error) {
 		return nil, fmt.Errorf("database pool is nil")
 	}
 	ctx := context.Background()
+
+	raw := strings.TrimSpace(id)
+	if raw == "all" || strings.EqualFold(raw, "TTC-ALL") || raw == "" {
+		return &models.Quarry{
+			ID:          "all",
+			Code:        "TTC-ALL",
+			Name:        "Toàn Hệ Thống - Tập Đoàn Mỏ Đá TTC",
+			Address:     "Toàn quốc (4 Mỏ đá khai thác)",
+			Longitude:   105.8,
+			Latitude:    21.0,
+			TotalArea:   1760000,
+			Status:      "active",
+		}, nil
+	}
+
+	canonicalCode, locName := NormalizeQuarryFilter(raw)
+
 	query := `
 		SELECT q.id, q.code, q.name, COALESCE(q.address, ''), COALESCE(q.longitude, 0), COALESCE(q.latitude, 0),
 		       COALESCE(q.total_area, 0), COALESCE(q.boundary, ''), q.status, q.created_at, q.updated_at
 		FROM quarries q
-		WHERE q.id::text = $1 OR q.code = $1
+		WHERE q.id::text = $1 OR q.code = $1 OR q.code = $2 OR q.name ILIKE '%' || $3 || '%' OR q.address ILIKE '%' || $3 || '%'
 		LIMIT 1
 	`
 	var q models.Quarry
-	err := database.Pool.QueryRow(ctx, query, id).Scan(
+	err := database.Pool.QueryRow(ctx, query, raw, canonicalCode, locName).Scan(
 		&q.ID, &q.Code, &q.Name, &q.Address, &q.Longitude, &q.Latitude,
 		&q.TotalArea, &q.BoundaryGeo, &q.Status, &q.CreatedAt, &q.UpdatedAt,
 	)
@@ -928,24 +946,51 @@ func (r *QuarryRepo) GetQuarryOverview(identifier string) (map[string]interface{
 		return nil, err
 	}
 
+	raw := strings.TrimSpace(identifier)
+	isAll := raw == "all" || strings.EqualFold(raw, "TTC-ALL") || strings.EqualFold(quarry.Code, "TTC-ALL")
+	canonicalCode, locName := NormalizeQuarryFilter(quarry.Code)
+	if canonicalCode == "" {
+		canonicalCode, locName = NormalizeQuarryFilter(raw)
+	}
+
 	overview := map[string]interface{}{
 		"quarry": quarry,
 	}
 
 	// 1. Quarry Areas
-	areas, _ := r.ListQuarryAreas(quarry.ID)
+	var areas []models.QuarryArea
+	if isAll {
+		areas, _ = r.ListQuarryAreas("")
+	} else {
+		areas, _ = r.ListQuarryAreas(quarry.ID)
+		if len(areas) == 0 && canonicalCode != "" {
+			var realID string
+			_ = database.Pool.QueryRow(ctx, "SELECT id::text FROM quarries WHERE code = $1 LIMIT 1", canonicalCode).Scan(&realID)
+			if realID != "" {
+				areas, _ = r.ListQuarryAreas(realID)
+			}
+		}
+	}
 	overview["areas"] = areas
 
 	// 2. Crusher Plants
 	var crusherPlants []map[string]interface{}
-	plantRows, err := database.Pool.Query(ctx, "SELECT row_to_json(p) FROM crusher_plants p WHERE p.quarry_code = $1 ORDER BY p.plant_code ASC", quarry.Code)
+	var plantQuery string
+	var plantArgs []interface{}
+	if isAll {
+		plantQuery = "SELECT row_to_json(p) FROM crusher_plants p ORDER BY p.quarry_code ASC, p.plant_code ASC"
+	} else {
+		plantQuery = "SELECT row_to_json(p) FROM crusher_plants p WHERE p.quarry_code = $1 OR p.quarry_code = $2 ORDER BY p.plant_code ASC"
+		plantArgs = []interface{}{quarry.Code, canonicalCode}
+	}
+	plantRows, err := database.Pool.Query(ctx, plantQuery, plantArgs...)
 	if err == nil {
 		defer plantRows.Close()
 		for plantRows.Next() {
-			var raw []byte
-			if err := plantRows.Scan(&raw); err == nil {
+			var rawBytes []byte
+			if err := plantRows.Scan(&rawBytes); err == nil {
 				var p map[string]interface{}
-				if json.Unmarshal(raw, &p) == nil {
+				if json.Unmarshal(rawBytes, &p) == nil {
 					crusherPlants = append(crusherPlants, p)
 				}
 			}
@@ -956,18 +1001,34 @@ func (r *QuarryRepo) GetQuarryOverview(identifier string) (map[string]interface{
 	// 3. Tickets Summary
 	var totalTickets int
 	var totalTons float64
-	_ = database.Pool.QueryRow(ctx, "SELECT COUNT(*), COALESCE(SUM(CAST(NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '') AS NUMERIC)), 0) FROM tickets WHERE quarry_code = $1", quarry.Code).Scan(&totalTickets, &totalTons)
-
 	var recentTickets []map[string]interface{}
-	ticketRows, err := database.Pool.Query(ctx, "SELECT row_to_json(t) FROM (SELECT * FROM tickets WHERE quarry_code = $1 ORDER BY date DESC, time1 DESC LIMIT 10) t", quarry.Code)
-	if err == nil {
-		defer ticketRows.Close()
-		for ticketRows.Next() {
-			var raw []byte
-			if err := ticketRows.Scan(&raw); err == nil {
-				var t map[string]interface{}
-				if json.Unmarshal(raw, &t) == nil {
-					recentTickets = append(recentTickets, t)
+	if isAll {
+		_ = database.Pool.QueryRow(ctx, "SELECT COUNT(*), COALESCE(SUM(CAST(NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '') AS NUMERIC)), 0) FROM tickets").Scan(&totalTickets, &totalTons)
+		ticketRows, err := database.Pool.Query(ctx, "SELECT row_to_json(t) FROM (SELECT * FROM tickets ORDER BY date DESC, time1 DESC LIMIT 15) t")
+		if err == nil {
+			defer ticketRows.Close()
+			for ticketRows.Next() {
+				var rawBytes []byte
+				if err := ticketRows.Scan(&rawBytes); err == nil {
+					var t map[string]interface{}
+					if json.Unmarshal(rawBytes, &t) == nil {
+						recentTickets = append(recentTickets, t)
+					}
+				}
+			}
+		}
+	} else {
+		_ = database.Pool.QueryRow(ctx, "SELECT COUNT(*), COALESCE(SUM(CAST(NULLIF(regexp_replace(kl_hang, '[^0-9.]', '', 'g'), '') AS NUMERIC)), 0) FROM tickets WHERE quarry_code = $1 OR quarry_code = $2", quarry.Code, canonicalCode).Scan(&totalTickets, &totalTons)
+		ticketRows, err := database.Pool.Query(ctx, "SELECT row_to_json(t) FROM (SELECT * FROM tickets WHERE quarry_code = $1 OR quarry_code = $2 ORDER BY date DESC, time1 DESC LIMIT 10) t", quarry.Code, canonicalCode)
+		if err == nil {
+			defer ticketRows.Close()
+			for ticketRows.Next() {
+				var rawBytes []byte
+				if err := ticketRows.Scan(&rawBytes); err == nil {
+					var t map[string]interface{}
+					if json.Unmarshal(rawBytes, &t) == nil {
+						recentTickets = append(recentTickets, t)
+					}
 				}
 			}
 		}
@@ -980,14 +1041,22 @@ func (r *QuarryRepo) GetQuarryOverview(identifier string) (map[string]interface{
 
 	// 4. Equipment Fuel Logs
 	var equipmentFuel []map[string]interface{}
-	fuelRows, err := database.Pool.Query(ctx, "SELECT row_to_json(f) FROM equipment_fuel_logs f WHERE quarry_code = $1 OR location ILIKE '%' || $2 || '%' LIMIT 10", quarry.Code, quarry.Name)
+	var fuelQuery string
+	var fuelArgs []interface{}
+	if isAll {
+		fuelQuery = "SELECT row_to_json(f) FROM equipment_fuel_logs f ORDER BY created_at DESC LIMIT 15"
+	} else {
+		fuelQuery = "SELECT row_to_json(f) FROM equipment_fuel_logs f WHERE quarry_code = $1 OR quarry_code = $2 OR location ILIKE '%' || $3 || '%' ORDER BY created_at DESC LIMIT 10"
+		fuelArgs = []interface{}{quarry.Code, canonicalCode, locName}
+	}
+	fuelRows, err := database.Pool.Query(ctx, fuelQuery, fuelArgs...)
 	if err == nil {
 		defer fuelRows.Close()
 		for fuelRows.Next() {
-			var raw []byte
-			if err := fuelRows.Scan(&raw); err == nil {
+			var rawBytes []byte
+			if err := fuelRows.Scan(&rawBytes); err == nil {
 				var f map[string]interface{}
-				if json.Unmarshal(raw, &f) == nil {
+				if json.Unmarshal(rawBytes, &f) == nil {
 					equipmentFuel = append(equipmentFuel, f)
 				}
 			}
@@ -995,52 +1064,54 @@ func (r *QuarryRepo) GetQuarryOverview(identifier string) (map[string]interface{
 	}
 	overview["equipment_fuel"] = equipmentFuel
 
-	// 5. Vehicles Operating at Quarry
+	// 5. Vehicles Operating at Quarry (Distinct & Relational to Quarry Fleet)
 	var vehicles []map[string]interface{}
-	vehRows, err := database.Pool.Query(ctx, `
-		SELECT row_to_json(v) FROM (
-			SELECT DISTINCT ON (coalesce(t.bien_so, v.bs)) 
-				coalesce(t.bien_so, v.bs) as plate,
-				coalesce(v.loai, t.loai_xe, 'Xe ben tải nặng 4 chân') as vehicle_type,
-				coalesce(t.lai_xe, v.current_driver_name, 'Tài xế phân ca') as driver_name,
-				coalesce(v.tai_trong, 28) as capacity_tons,
-				coalesce(v.status, 'Hoạt động') as status,
-				coalesce(v.rfid, 'RFID-' || coalesce(t.bien_so, v.bs)) as rfid,
-				(SELECT COUNT(*) FROM tickets WHERE tickets.bien_so = coalesce(t.bien_so, v.bs) AND (tickets.quarry_code = $1 OR tickets.quarry_code = $2)) as trips_count
-			FROM tickets t
-			FULL OUTER JOIN vehicles v ON (v.bs = t.bien_so)
-			WHERE t.quarry_code = $1 OR v.bs ILIKE '%' || $1 || '%' OR v.chu_xe ILIKE '%' || $2 || '%'
-			LIMIT 12
-		) v
-	`, quarry.Code, quarry.Name)
+	var vehQuery string
+	var vehArgs []interface{}
+	if isAll {
+		vehQuery = `
+			SELECT row_to_json(v) FROM (
+				SELECT 
+					v.bs as plate,
+					v.loai as vehicle_type,
+					COALESCE(v.current_driver_name, 'Tài xế vận hành theo ca') as driver_name,
+					COALESCE(v.tai_trong, 20) as capacity_tons,
+					COALESCE(v.status, 'Hoạt động') as status,
+					COALESCE(v.rfid, 'RFID-' || v.bs) as rfid,
+					COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.bien_so = v.bs), v.count, 0) as trips_count,
+					v.quarry_code
+				FROM vehicles v
+				ORDER BY v.quarry_code ASC, v.bs ASC
+			) v
+		`
+	} else {
+		vehQuery = `
+			SELECT row_to_json(v) FROM (
+				SELECT 
+					v.bs as plate,
+					v.loai as vehicle_type,
+					COALESCE(v.current_driver_name, 'Tài xế vận hành theo ca') as driver_name,
+					COALESCE(v.tai_trong, 20) as capacity_tons,
+					COALESCE(v.status, 'Hoạt động') as status,
+					COALESCE(v.rfid, 'RFID-' || v.bs) as rfid,
+					COALESCE((SELECT COUNT(*) FROM tickets t WHERE t.bien_so = v.bs AND (t.quarry_code = $1 OR t.quarry_code = $2)), v.count, 0) as trips_count,
+					v.quarry_code
+				FROM vehicles v
+				WHERE v.quarry_code = $1 OR v.quarry_code = $2 OR v.chu_xe ILIKE '%' || $3 || '%'
+				ORDER BY v.bs ASC
+			) v
+		`
+		vehArgs = []interface{}{quarry.Code, canonicalCode, locName}
+	}
+	vehRows, err := database.Pool.Query(ctx, vehQuery, vehArgs...)
 	if err == nil {
 		defer vehRows.Close()
 		for vehRows.Next() {
-			var raw []byte
-			if err := vehRows.Scan(&raw); err == nil {
+			var rawBytes []byte
+			if err := vehRows.Scan(&rawBytes); err == nil {
 				var v map[string]interface{}
-				if json.Unmarshal(raw, &v) == nil {
+				if json.Unmarshal(rawBytes, &v) == nil {
 					vehicles = append(vehicles, v)
-				}
-			}
-		}
-	}
-	if len(vehicles) == 0 {
-		vehRows2, _ := database.Pool.Query(ctx, `
-			SELECT row_to_json(v) FROM (
-				SELECT bs as plate, loai as vehicle_type, current_driver_name as driver_name, tai_trong as capacity_tons, status, rfid, 18 as trips_count 
-				FROM vehicles LIMIT 6
-			) v
-		`)
-		if vehRows2 != nil {
-			defer vehRows2.Close()
-			for vehRows2.Next() {
-				var raw []byte
-				if err := vehRows2.Scan(&raw); err == nil {
-					var v map[string]interface{}
-					if json.Unmarshal(raw, &v) == nil {
-						vehicles = append(vehicles, v)
-					}
 				}
 			}
 		}
@@ -1049,44 +1120,36 @@ func (r *QuarryRepo) GetQuarryOverview(identifier string) (map[string]interface{
 
 	// 6. HR Personnel / Employees at Quarry
 	var employees []map[string]interface{}
-	empRows, err := database.Pool.Query(ctx, `
-		SELECT row_to_json(e) FROM (
-			SELECT id, code, name, department, job_position, phone, email, work_location, status, contracted_hours, base_salary
-			FROM hr_employees
-			WHERE work_location ILIKE '%' || $1 || '%' OR work_location ILIKE '%' || $2 || '%' OR address ILIKE '%' || $2 || '%'
-			ORDER BY code ASC
-			LIMIT 15
-		) e
-	`, quarry.Code, quarry.Name)
+	var empQuery string
+	var empArgs []interface{}
+	if isAll {
+		empQuery = `
+			SELECT row_to_json(e) FROM (
+				SELECT id, code, name, dept as department, role as job_position, phone, email, mine_location as work_location, status, 24 as contracted_hours, quarry_code
+				FROM users
+				ORDER BY quarry_code ASC, code ASC
+			) e
+		`
+	} else {
+		empQuery = `
+			SELECT row_to_json(e) FROM (
+				SELECT id, code, name, dept as department, role as job_position, phone, email, mine_location as work_location, status, 24 as contracted_hours, quarry_code
+				FROM users
+				WHERE quarry_code = $1 OR quarry_code = $2 OR mine_location ILIKE '%' || $3 || '%'
+				ORDER BY code ASC
+			) e
+		`
+		empArgs = []interface{}{quarry.Code, canonicalCode, locName}
+	}
+	empRows, err := database.Pool.Query(ctx, empQuery, empArgs...)
 	if err == nil {
 		defer empRows.Close()
 		for empRows.Next() {
-			var raw []byte
-			if err := empRows.Scan(&raw); err == nil {
+			var rawBytes []byte
+			if err := empRows.Scan(&rawBytes); err == nil {
 				var e map[string]interface{}
-				if json.Unmarshal(raw, &e) == nil {
+				if json.Unmarshal(rawBytes, &e) == nil {
 					employees = append(employees, e)
-				}
-			}
-		}
-	}
-	if len(employees) == 0 {
-		empRows2, _ := database.Pool.Query(ctx, `
-			SELECT row_to_json(e) FROM (
-				SELECT id, code, name, department, job_position, phone, email, work_location, status, contracted_hours, base_salary
-				FROM hr_employees
-				LIMIT 6
-			) e
-		`)
-		if empRows2 != nil {
-			defer empRows2.Close()
-			for empRows2.Next() {
-				var raw []byte
-				if err := empRows2.Scan(&raw); err == nil {
-					var e map[string]interface{}
-					if json.Unmarshal(raw, &e) == nil {
-						employees = append(employees, e)
-					}
 				}
 			}
 		}
@@ -1095,36 +1158,36 @@ func (r *QuarryRepo) GetQuarryOverview(identifier string) (map[string]interface{
 
 	// 7. Mining Permits & Legal Documents
 	var permitsList []map[string]interface{}
-	permitRows, err := database.Pool.Query(ctx, `
-		SELECT row_to_json(p) FROM (
-			SELECT * FROM mining_permits 
-			WHERE mine_name ILIKE '%' || $1 || '%' OR mine_name ILIKE '%' || $2 || '%' OR notes ILIKE '%' || $1 || '%' OR title ILIKE '%' || $2 || '%'
-			ORDER BY issue_date DESC
-		) p
-	`, quarry.Code, quarry.Name)
+	var permitQuery string
+	var permitArgs []interface{}
+	if isAll {
+		permitQuery = `
+			SELECT row_to_json(p) FROM (
+				SELECT id, code, title, category, category_label, issuer, license_number, capacity, expiry_date, status_label, quarry_code
+				FROM mining_permits
+				ORDER BY quarry_code ASC, code ASC
+			) p
+		`
+	} else {
+		permitQuery = `
+			SELECT row_to_json(p) FROM (
+				SELECT id, code, title, category, category_label, issuer, license_number, capacity, expiry_date, status_label, quarry_code
+				FROM mining_permits
+				WHERE quarry_code = $1 OR quarry_code = $2 OR title ILIKE '%' || $3 || '%' OR mine_name ILIKE '%' || $3 || '%'
+				ORDER BY code ASC
+			) p
+		`
+		permitArgs = []interface{}{quarry.Code, canonicalCode, locName}
+	}
+	permitRows, err := database.Pool.Query(ctx, permitQuery, permitArgs...)
 	if err == nil {
 		defer permitRows.Close()
 		for permitRows.Next() {
-			var raw []byte
-			if err := permitRows.Scan(&raw); err == nil {
+			var rawBytes []byte
+			if err := permitRows.Scan(&rawBytes); err == nil {
 				var p map[string]interface{}
-				if json.Unmarshal(raw, &p) == nil {
+				if json.Unmarshal(rawBytes, &p) == nil {
 					permitsList = append(permitsList, p)
-				}
-			}
-		}
-	}
-	if len(permitsList) == 0 {
-		pRows2, _ := database.Pool.Query(ctx, "SELECT row_to_json(p) FROM mining_permits p LIMIT 8")
-		if pRows2 != nil {
-			defer pRows2.Close()
-			for pRows2.Next() {
-				var raw []byte
-				if err := pRows2.Scan(&raw); err == nil {
-					var p map[string]interface{}
-					if json.Unmarshal(raw, &p) == nil {
-						permitsList = append(permitsList, p)
-					}
 				}
 			}
 		}
@@ -1135,7 +1198,19 @@ func (r *QuarryRepo) GetQuarryOverview(identifier string) (map[string]interface{
 	}
 
 	// 8. 3D Survey Cycles
-	cycles, _ := r.ListSurveyCycles(quarry.ID)
+	var cycles []models.SurveyCycle
+	if isAll {
+		cycles, _ = r.ListSurveyCycles("")
+	} else {
+		cycles, _ = r.ListSurveyCycles(quarry.ID)
+		if len(cycles) == 0 && canonicalCode != "" {
+			var realID string
+			_ = database.Pool.QueryRow(ctx, "SELECT id::text FROM quarries WHERE code = $1 LIMIT 1", canonicalCode).Scan(&realID)
+			if realID != "" {
+				cycles, _ = r.ListSurveyCycles(realID)
+			}
+		}
+	}
 	overview["survey_cycles"] = cycles
 
 	return overview, nil
