@@ -53,7 +53,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	s, err := services.GetSession(bearerToken(r))
 	if err != nil {
-		JSON(w, map[string]interface{}{"error": err.Error()})
+		JSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 	menu, _ := services.MenuForSession(r.Context(), s)
@@ -66,7 +66,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Menu(w http.ResponseWriter, r *http.Request) {
 	s, err := services.GetSession(bearerToken(r))
 	if err != nil {
-		JSON(w, map[string]interface{}{"error": err.Error(), "sections": []interface{}{}})
+		JSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 	menu, err := services.MenuForSession(r.Context(), s)

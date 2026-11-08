@@ -83,7 +83,7 @@ var menuModuleSeeds = []menuModuleSeed{
 			{Label: "Tổng quan", Route: "/nhan-su/tong-quan"},
 			{Label: "Hồ sơ nhân viên", Route: "/nhan-su/nhan-vien"},
 			{Label: "Chấm công & Ca trực", Route: "/nhan-su/cham-cong"},
-			{Label: "Đơn từ & Nghỉ phép", Route: "/nhan-su/don-tu", Badge: "1"},
+			{Label: "Đơn từ & Nghỉ phép", Route: "/nhan-su/don-tu"},
 			{Label: "Bảng chấm công", Route: "/nhan-su/bang-cham-cong"},
 			{Label: "Bảng tính lương", Route: "/nhan-su/bang-luong"},
 			{Label: "Tuyển dụng nhân sự", Route: "/nhan-su/tuyen-dung"},
@@ -180,7 +180,7 @@ var menuModuleSeeds = []menuModuleSeed{
 			{Label: "GPS Giám sát Live", Route: "/quan-ly-xe/gps-live"},
 			{Label: "Chấm công ca", Route: "/quan-ly-xe/check-in-out"},
 			{Label: "Phân công xe", Route: "/quan-ly-xe/phan-cong-xe"},
-			{Label: "Đối soát dầu", Route: "/quan-ly-xe/doi-soat-nhien-lieu", Badge: "1"},
+			{Label: "Đối soát dầu", Route: "/quan-ly-xe/doi-soat-nhien-lieu"},
 			{Label: "Định mức tiêu hao xe", Route: "/quan-ly-xe/dinh-muc-xe"},
 			{Label: "Hồ sơ xe & Thẻ RFID", Route: "/quan-ly-xe/danh-sach"},
 		},
@@ -374,4 +374,18 @@ func SeedMenuConfig(ctx context.Context) {
 			}
 		}
 	}
+
+	// Strip legacy static badges from menu children. Badge counts must come from
+	// live data, never from a hard-coded seed value.
+	_, _ = Pool.Exec(ctx, `
+		UPDATE app_modules
+		SET children = COALESCE((
+			SELECT jsonb_agg(elem - 'badge' ORDER BY ord)
+			FROM jsonb_array_elements(children) WITH ORDINALITY AS t(elem, ord)
+		), '[]'::jsonb)
+		WHERE jsonb_typeof(children) = 'array'
+		  AND EXISTS (
+			SELECT 1 FROM jsonb_array_elements(children) AS e WHERE e ? 'badge'
+		  )
+	`)
 }

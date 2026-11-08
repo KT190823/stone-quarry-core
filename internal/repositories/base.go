@@ -195,7 +195,7 @@ func (r *BaseRepo) GetByID(id string) (map[string]interface{}, error) {
 		}
 	} else {
 		if hasCode {
-			query = fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE code = $1) t", r.Table)
+			query = fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE %s = $1 OR code = $1) t", r.Table, r.IDColumn)
 			args = []interface{}{id}
 		} else {
 			query = fmt.Sprintf("SELECT row_to_json(t) FROM (SELECT * FROM %s WHERE %s = $1) t", r.Table, r.IDColumn)
