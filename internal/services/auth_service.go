@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ type session struct {
 	Role      string
 	Dept      string
 	Email     string
+	ClientID  string
 	ExpiresAt time.Time
 }
 
@@ -60,15 +62,15 @@ func Authenticate(ctx context.Context, username, password string) (session, erro
 	}
 
 	var s session
-	var hash, status, role, dept, email, name string
+	var hash, status, role, dept, email, name, clientID string
 	err := database.Pool.QueryRow(ctx,
-		`SELECT username, name, role, dept, email, status, COALESCE(password_hash,'') FROM users WHERE username = $1`,
+		`SELECT username, name, role, dept, email, status, COALESCE(password_hash,''), COALESCE(client_id,'TTC') FROM users WHERE username = $1`,
 		username,
-	).Scan(&s.Username, &name, &role, &dept, &email, &status, &hash)
+	).Scan(&s.Username, &name, &role, &dept, &email, &status, &hash, &clientID)
 	if err != nil {
 		return session{}, errors.New("Tài khoản không tồn tại")
 	}
-	if status == "Khóa" || status == "Inactive" || status == "Bị khóa" {
+	if IsLockedStatus(status) {
 		return session{}, errors.New("Tài khoản đã bị khóa")
 	}
 	if !matchesPassword(password, hash) {
@@ -79,6 +81,7 @@ func Authenticate(ctx context.Context, username, password string) (session, erro
 	s.Role = role
 	s.Dept = dept
 	s.Email = email
+	s.ClientID = normalizeClientID(clientID)
 	s.ExpiresAt = time.Now().Add(sessionTTL)
 
 	// Update last login.
@@ -117,6 +120,31 @@ func GetSession(token string) (session, error) {
 	return s, nil
 }
 
+// IsLockedStatus reports whether an account status means the user may not log in.
+func IsLockedStatus(status string) bool {
+	statusNorm := strings.ToLower(strings.TrimSpace(status))
+	switch statusNorm {
+	case "khóa", "khoa", "tạm khóa", "tam khoa", "bị khóa", "bi khoa",
+		"inactive", "ngừng hoạt động", "ngung hoat dong", "locked":
+		return true
+	}
+	return false
+}
+
+// RevokeSessionsForUser invalidates every active session belonging to a username.
+func RevokeSessionsForUser(username string) {
+	if username == "" {
+		return
+	}
+	sessionStore.Lock()
+	for token, s := range sessionStore.m {
+		if s.Username == username {
+			delete(sessionStore.m, token)
+		}
+	}
+	sessionStore.Unlock()
+}
+
 // DeleteSession invalidates a token.
 func DeleteSession(token string) {
 	sessionStore.Lock()
@@ -132,5 +160,11 @@ func SessionToMap(s session) map[string]interface{} {
 		"role":     s.Role,
 		"dept":     s.Dept,
 		"email":    s.Email,
+		"clientId": s.ClientID,
 	}
+}
+
+// MenuForSession returns the permission-filtered navigation for a session.
+func MenuForSession(ctx context.Context, s session) (MenuPayload, error) {
+	return GetMenuForRole(ctx, s.Role, s.ClientID)
 }

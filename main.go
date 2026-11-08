@@ -25,21 +25,27 @@ func main() {
 		*withSeed = true
 	}
 
-	database.Connect()
+	created := database.Connect()
 	defer database.Close()
 
 	database.Migrate()
 
-	if *seedOnly {
-		log.Println("🌱 Bắt đầu nạp dữ liệu mẫu (Database Seed)...")
+	// Tự động seed khi database vừa được tạo mới, hoặc khi có cờ -seed / -with-seed.
+	if database.Pool != nil && (created || *seedOnly || *withSeed) {
+		if created {
+			log.Println("🌱 Database mới được tạo — tự động nạp dữ liệu mẫu (Database Seed)...")
+		} else {
+			log.Println("🌱 Bắt đầu nạp dữ liệu mẫu (Database Seed)...")
+		}
 		database.Seed()
-		log.Println("✅ Hoàn tất nạp dữ liệu mẫu thành công!")
-		return
 	}
 
-	if *withSeed {
-		log.Println("🌱 Nạp dữ liệu mẫu trước khi khởi động máy chủ...")
-		database.Seed()
+	if *seedOnly {
+		if database.Pool == nil {
+			log.Fatal("⚠️ Không thể seed vì chưa kết nối được database.")
+		}
+		log.Println("✅ Hoàn tất nạp dữ liệu mẫu thành công!")
+		return
 	}
 
 	mux := http.NewServeMux()
@@ -106,6 +112,7 @@ func main() {
 	mux.HandleFunc("POST /api/auth/login", authH.Login)
 	mux.HandleFunc("POST /api/auth/logout", authH.Logout)
 	mux.HandleFunc("GET /api/auth/me", authH.Me)
+	mux.HandleFunc("GET /api/auth/menu", authH.Menu)
 
 	mux.HandleFunc("GET /api/dashboard", handlers.DashboardHandler)
 

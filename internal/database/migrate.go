@@ -356,6 +356,7 @@ func Migrate() {
 			completion_rate DOUBLE PRECISION DEFAULT 0,
 			status TEXT,
 			status_label TEXT,
+			quarry_code TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
@@ -665,6 +666,41 @@ func Migrate() {
 			status TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
+		// Menu / module registry (single table, DB source of truth for navigation).
+		`CREATE TABLE IF NOT EXISTS app_modules (
+			id SERIAL PRIMARY KEY,
+			client_id TEXT NOT NULL DEFAULT 'TTC',
+			section_key TEXT NOT NULL,
+			section_title TEXT NOT NULL,
+			section_order INTEGER NOT NULL DEFAULT 0,
+			module_key TEXT NOT NULL,
+			title TEXT NOT NULL,
+			short TEXT,
+			subtitle TEXT,
+			icon TEXT,
+			tone TEXT,
+			route TEXT NOT NULL,
+			dashboard_route TEXT NOT NULL,
+			module_order INTEGER NOT NULL DEFAULT 0,
+			children JSONB NOT NULL DEFAULT '[]',
+			status TEXT NOT NULL DEFAULT 'active',
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW(),
+			UNIQUE (client_id, module_key)
+		)`,
+
+		// Role -> module access matrix (RBAC, DB driven).
+		`CREATE TABLE IF NOT EXISTS role_menu_permissions (
+			id SERIAL PRIMARY KEY,
+			client_id TEXT NOT NULL DEFAULT 'TTC',
+			role TEXT NOT NULL,
+			module_key TEXT NOT NULL,
+			can_view BOOLEAN NOT NULL DEFAULT TRUE,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW(),
+			UNIQUE (client_id, role, module_key)
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS reports (
@@ -1290,6 +1326,8 @@ func Migrate() {
 	alters := []string{
 		`ALTER TABLE hr_attendance_logs ADD COLUMN IF NOT EXISTS overtime_hours DOUBLE PRECISION DEFAULT 0`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id TEXT DEFAULT 'TTC'`,
+		`ALTER TABLE user_roles ADD COLUMN IF NOT EXISTS client_id TEXT DEFAULT 'TTC'`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS code TEXT`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS mine_location TEXT`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS rfid_card TEXT`,
@@ -1308,6 +1346,7 @@ func Migrate() {
 		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS tax_price_per_unit NUMERIC DEFAULT 0`,
 		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS resource_tax_amount NUMERIC DEFAULT 0`,
 		`ALTER TABLE resource_taxes ADD COLUMN IF NOT EXISTS total_payable NUMERIC DEFAULT 0`,
+		`ALTER TABLE mining_plans ADD COLUMN IF NOT EXISTS quarry_code TEXT`,
 		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS stage_number INTEGER DEFAULT 0`,
 		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS stage_name TEXT`,
 		`ALTER TABLE production_stages ADD COLUMN IF NOT EXISTS icon TEXT`,
@@ -2055,6 +2094,8 @@ func Migrate() {
 
 	MigrateQuarryModule()
 
+	// Navigation / RBAC configuration is DB-driven; keep it provisioned.
+	SeedMenuConfig(ctx)
+
 	fmt.Println("Database migration completed successfully!")
 }
-

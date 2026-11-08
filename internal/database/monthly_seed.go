@@ -187,7 +187,7 @@ func SeedMonthlyQuarryData() {
 		`,
 			ticketID, seq, q.Name, cust.Name, flt.Plate, flt.Truck, flt.Driver, flt.Phone, "RFID-"+flt.Plate,
 			"Cân bán hàng", "confirmed", "Đã chốt số", tareWeight, fmt.Sprintf("%.2f", tareWeight),
-			grossWeight, fmt.Sprintf("%.2f", grossWeight), fmt.Sprintf("%.2f", netWeight), 0.0,
+			fmt.Sprintf("%.2f", grossWeight), fmt.Sprintf("%.2f", grossWeight), fmt.Sprintf("%.2f", netWeight), 0.0,
 			fmt.Sprintf("%.2f", netWeight), unitPrice, formattedPrice, time1Str, time2Str, dateStr,
 			"Nguyễn Văn Dũng", "Lê Văn Cân 02",
 			mat.Name, mat.Standard, doCode, q.Scale, q.Gate, "Xuất mỏ đủ tải", "HD-2026-"+ticketID,
@@ -456,7 +456,7 @@ func SeedMonthlyQuarryData() {
 	// 4. Seed Alerts throughout August and September
 	alertTemplates := []struct {
 		Title, Plate, Severity, Cam, Note string
-		Diff                               float64
+		Diff                              float64
 	}{
 		{"Phát hiện xe tải lệch bì kiểm định", "19H-056.22", "critical", "Cam 01 ANPR", "Cân bì lệch +380kg so với đăng kiểm", 380},
 		{"Lệch chuẩn định mức nhiên liệu cơ giới", "MX-PC450", "warning", "Cảm biến dầu IoT", "Mức tiêu hao vượt 12% định mức ca sáng", 24},

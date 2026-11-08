@@ -7,11 +7,11 @@ import (
 )
 
 type UserHandler struct {
-	userSvc     *services.UserService
-	roleSvc     *services.UserRoleService
-	logSvc      *services.UserLogService
-	reportSvc   *services.ReportService
-	settingSvc  *services.SettingService
+	userSvc    *services.UserService
+	roleSvc    *services.UserRoleService
+	logSvc     *services.UserLogService
+	reportSvc  *services.ReportService
+	settingSvc *services.SettingService
 }
 
 func NewUserHandler() *UserHandler {
@@ -70,6 +70,11 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
+	}
+	if status, ok := data["status"].(string); ok && services.IsLockedStatus(status) {
+		if username, ok := result["username"].(string); ok {
+			services.RevokeSessionsForUser(username)
+		}
 	}
 	JSON(w, result)
 }

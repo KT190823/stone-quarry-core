@@ -1,7 +1,17 @@
-.PHONY: all run seed run-seed build test clean help
+.PHONY: all run seed run-seed build test clean db-up db-down help
 
 # Default target
 all: run
+
+## Khởi động PostgreSQL local (Docker) cho môi trường phát triển
+db-up:
+	@echo "🐘 Khởi động PostgreSQL local (PostGIS)..."
+	docker compose up -d postgres
+
+## Dừng PostgreSQL local
+db-down:
+	@echo "🛑 Dừng PostgreSQL local..."
+	docker compose down
 
 ## Chạy API server (không nạp lại seed, khởi động nhanh)
 run:
@@ -40,6 +50,8 @@ help:
 	@echo "=========================================================="
 	@echo "  MO_DA BACKEND MAKEFILE WORKFLOW"
 	@echo "=========================================================="
+	@echo "  make db-up      : Khởi động PostgreSQL local (Docker) cho dev"
+	@echo "  make db-down    : Dừng PostgreSQL local"
 	@echo "  make run        : Khởi động API server ngay (MẶC ĐỊNH, không seed)"
 	@echo "  make seed       : Chỉ chạy nạp dữ liệu mẫu (Seed Database) rồi thoát"
 	@echo "  make run-seed   : Chạy seed dữ liệu trước rồi khởi động API server"

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: mo_da_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mo_da
+    ports:
+      - "5432:5432"
+    volumes:
+      - mo_da_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mo_da"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mo_da_pgdata:

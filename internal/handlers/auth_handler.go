@@ -35,10 +35,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	menu, _ := services.MenuForSession(r.Context(), s)
+
 	JSON(w, map[string]interface{}{
 		"token":   token,
 		"user":    services.SessionToMap(s),
 		"expires": s.ExpiresAt,
+		"menu":    menu,
 	})
 }
 
@@ -53,7 +56,25 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		JSON(w, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	JSON(w, services.SessionToMap(s))
+	menu, _ := services.MenuForSession(r.Context(), s)
+	JSON(w, map[string]interface{}{
+		"user": services.SessionToMap(s),
+		"menu": menu,
+	})
+}
+
+func (h *AuthHandler) Menu(w http.ResponseWriter, r *http.Request) {
+	s, err := services.GetSession(bearerToken(r))
+	if err != nil {
+		JSON(w, map[string]interface{}{"error": err.Error(), "sections": []interface{}{}})
+		return
+	}
+	menu, err := services.MenuForSession(r.Context(), s)
+	if err != nil {
+		JSON(w, map[string]interface{}{"error": err.Error(), "sections": []interface{}{}})
+		return
+	}
+	JSON(w, menu)
 }
 
 func bearerToken(r *http.Request) string {
