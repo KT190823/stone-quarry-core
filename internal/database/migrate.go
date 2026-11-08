@@ -129,6 +129,7 @@ func Migrate() {
 			status TEXT,
 			rating TEXT,
 			date TEXT,
+			quarry_code TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
@@ -148,6 +149,7 @@ func Migrate() {
 			han_muc TEXT,
 			status TEXT,
 			date TEXT,
+			quarry_code TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
@@ -1324,6 +1326,8 @@ func Migrate() {
 
 	// Add optional columns that may be missing on pre-existing tables
 	alters := []string{
+		`CREATE INDEX IF NOT EXISTS idx_entity_comments_entity ON entity_comments (client_id, entity_type, entity_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_entity_activities_entity ON entity_activities (client_id, entity_type, entity_id)`,
 		`ALTER TABLE hr_attendance_logs ADD COLUMN IF NOT EXISTS overtime_hours DOUBLE PRECISION DEFAULT 0`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id TEXT DEFAULT 'TTC'`,
@@ -1911,6 +1915,34 @@ func Migrate() {
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
 
+		// Per-detail collaboration: comments and activity history keyed by entity.
+		`CREATE TABLE IF NOT EXISTS entity_comments (
+			id SERIAL PRIMARY KEY,
+			client_id TEXT NOT NULL DEFAULT 'TTC',
+			entity_type TEXT NOT NULL,
+			entity_id TEXT NOT NULL,
+			username TEXT NOT NULL,
+			full_name TEXT,
+			content TEXT NOT NULL,
+			parent_id INT,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ
+		)`,
+		`ALTER TABLE entity_comments ADD COLUMN IF NOT EXISTS parent_id INT`,
+		`ALTER TABLE entity_comments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ`,
+		`CREATE TABLE IF NOT EXISTS entity_activities (
+			id SERIAL PRIMARY KEY,
+			client_id TEXT NOT NULL DEFAULT 'TTC',
+			entity_type TEXT NOT NULL,
+			entity_id TEXT NOT NULL,
+			username TEXT NOT NULL,
+			full_name TEXT,
+			action TEXT NOT NULL,
+			action_type TEXT NOT NULL DEFAULT 'update',
+			detail TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+
 		// Blasting Passports extended columns (QCVN 01:2019/BCT)
 		`ALTER TABLE blasting_passports ADD COLUMN IF NOT EXISTS bench_level TEXT`,
 		`ALTER TABLE blasting_passports ADD COLUMN IF NOT EXISTS hole_diameter_mm DOUBLE PRECISION DEFAULT 105`,
@@ -1978,6 +2010,8 @@ func Migrate() {
 
 		// Multi-Quarry Context Support
 		`ALTER TABLE crusher_plants ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
+		`ALTER TABLE customers ADD COLUMN IF NOT EXISTS quarry_code TEXT`,
+		`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS quarry_code TEXT`,
 		`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE equipment_fuel_logs ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
 		`ALTER TABLE inventory_inbound ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01'`,
@@ -2077,9 +2111,9 @@ func Migrate() {
 	_, _ = Pool.Exec(syncCtx, `ALTER TABLE purchase_voucher_items ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
 	_, _ = Pool.Exec(syncCtx, `ALTER TABLE return_voucher_items ADD COLUMN IF NOT EXISTS vat_rate DOUBLE PRECISION DEFAULT 10;`)
 
-	// Ensure quarry_code column exists for sales_contracts
-	_, _ = Pool.Exec(syncCtx, `ALTER TABLE sales_contracts ADD COLUMN IF NOT EXISTS quarry_code TEXT DEFAULT 'MO-PT-01';`)
-	_, _ = Pool.Exec(syncCtx, `UPDATE sales_contracts SET quarry_code = 'MO-PT-01' WHERE quarry_code IS NULL OR quarry_code = '';`)
+	// Ensure quarry_code column exists for sales_contracts (giá trị mỏ do Seed gán, không mặc định về Phú Thọ)
+	_, _ = Pool.Exec(syncCtx, `ALTER TABLE sales_contracts ADD COLUMN IF NOT EXISTS quarry_code TEXT;`)
+	_, _ = Pool.Exec(syncCtx, `ALTER TABLE sales_contracts ALTER COLUMN quarry_code DROP DEFAULT;`)
 
 	// Set dynamic VAT rates per product specification (e.g. 8% vs 10%)
 	_, _ = Pool.Exec(syncCtx, `UPDATE inventory_products SET vat_rate = 8 WHERE code IN ('SP-DA-0X4-SUB', 'SP-CAT-NGHIEN', 'SP-DA-MI-BUI', 'SP-CAT-VSI');`)

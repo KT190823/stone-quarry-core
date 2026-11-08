@@ -388,26 +388,71 @@ func Seed() {
 		`, m.Code, m.Name, m.DVT, m.Unit, m.Density, m.DinhMuc, m.Price, m.Kho, m.Standard, m.Status, m.Date)
 	}
 
-	// 5. Seed Customers & Suppliers
-	var custCount int
-	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM customers").Scan(&custCount)
-	if custCount == 0 {
-		fmt.Println("🌱 Seeding Customers & Partners...")
-		Pool.Exec(ctx, `
-			INSERT INTO customers (name, ten, tax_code, mst, contact, phone, sdt, group_name, doanh_so, cong_no, han_muc, status, date)
-			VALUES 
-			('Công ty CP Đầu Tư Xây Dựng 319', 'Công ty CP Đầu Tư Xây Dựng 319', '0100109988', '0100109988', 'Nguyễn Đức Hưng', '0913.224.556', '0913.224.556', 'Khách hàng VIP Doanh nghiệp', '4.850.000.000 đ', '320.000.000 đ', '1.000.000.000 đ', 'Hoạt động', '28/10/2026'),
-			('Tổng Công Ty XD Trường Sơn', 'Tổng Công Ty XD Trường Sơn', '0100108877', '0100108877', 'Phạm Văn Thành', '0982.667.889', '0982.667.889', 'Nhà thầu Quốc gia', '8.200.000.000 đ', '540.000.000 đ', '2.000.000.000 đ', 'Hoạt động', '28/10/2026'),
-			('Công ty Bê Tông Việt Trì', 'Công ty Bê Tông Việt Trì', '2600456789', '2600456789', 'Lê Hữu Đạt', '0915.889.001', '0915.889.001', 'Trạm trộn bê tông thương phẩm', '3.100.000.000 đ', '180.000.000 đ', '800.000.000 đ', 'Hoạt động', '28/10/2026')
-			ON CONFLICT DO NOTHING;
+	// 5. Seed Customers & Suppliers (liên kết mỏ qua quarry_code — idempotent)
+	fmt.Println("🌱 Seeding Customers & Partners per quarry...")
+	customers := []struct {
+		Name, Tax, Contact, Phone, Group, DoanhSo, CongNo, HanMuc, Status, Date, Quarry string
+	}{
+		// MO-PT-01 — Phú Thọ
+		{"Công ty Bê Tông Việt Trì", "2600456789", "Lê Hữu Đạt", "0915.889.001", "Trạm trộn bê tông thương phẩm", "3.100.000.000 đ", "180.000.000 đ", "800.000.000 đ", "Hoạt động", "28/10/2026", "MO-PT-01"},
+		{"Công ty CP Xi Măng Vicem Sông Thao", "2600345678", "Nguyễn Văn Hải", "0210.381.445", "Xi măng PCB40", "6.400.000.000 đ", "410.000.000 đ", "1.500.000.000 đ", "Hoạt động", "28/10/2026", "MO-PT-01"},
+		{"Công ty CP Bê tông & Xây dựng Phù Ninh", "2600987654", "Trần Văn Nam", "0912.774.336", "Trạm trộn & xây dựng dân dụng", "2.750.000.000 đ", "95.000.000 đ", "700.000.000 đ", "Hoạt động", "28/10/2026", "MO-PT-01"},
 
-			INSERT INTO suppliers (name, ten, tax_code, mst, phone, sdt, items, hang, no, rating, status, date)
-			VALUES
-			('Tổng Công Ty Kinh Tế Kỹ Thuật CNQP (GAET)', 'Tổng Công Ty GAET', '0100109911', '0100109911', '0243.856.789', '0243.856.789', 'Thuốc nổ Anfo, Kíp nổ vi sai & Dịch vụ nổ mìn', 'Thuốc nổ & Kíp nổ', '450.000.000 đ', '5 sao (Đối tác chiến lược)', 'Hoạt động', '28/10/2026'),
-			('Công Ty Xăng Dầu Phú Thọ (Petrolimex)', 'Petrolimex Phú Thọ', '2600108822', '2600108822', '0210.384.666', '0210.384.666', 'Dầu Diesel DO 0.05S-II cho xe máy mỏ', 'Dầu DO 0.05S', '280.000.000 đ', '5 sao', 'Hoạt động', '28/10/2026'),
-			('Công Ty TNHH Thiết Bị Nặng Marubeni (Komatsu)', 'Komatsu Việt Nam', '0101567890', '0101567890', '0243.765.432', '0243.765.432', 'Phụ tùng máy xúc PC450, gầu đào, răng gầu mỏ', 'Phụ tùng máy xúc', '120.000.000 đ', '5 sao', 'Hoạt động', '28/10/2026')
-			ON CONFLICT DO NOTHING;
-		`)
+		// MO-TU-02 — Tân Uyên
+		{"Tổng Công Ty XD Trường Sơn", "0100108877", "Phạm Văn Thành", "0982.667.889", "Nhà thầu Quốc gia", "8.200.000.000 đ", "540.000.000 đ", "2.000.000.000 đ", "Hoạt động", "28/10/2026", "MO-TU-02"},
+		{"Công ty CP Bê tông thương phẩm Tân Uyên", "3701234567", "Lý Gia Huy", "0983.115.227", "Trạm trộn bê tông thương phẩm", "3.950.000.000 đ", "260.000.000 đ", "900.000.000 đ", "Hoạt động", "28/10/2026", "MO-TU-02"},
+		{"Công ty CP Vật liệu Xây dựng Đại Nam", "3701889900", "Ngô Thanh Tùng", "0987.445.112", "Cấp phối & vật liệu xây dựng", "2.100.000.000 đ", "70.000.000 đ", "600.000.000 đ", "Hoạt động", "28/10/2026", "MO-TU-02"},
+		{"Tổng Công ty 319 - Bộ Quốc Phòng", "0100109977", "Đỗ Minh Tuấn", "0913.556.778", "Nhà thầu quân đội", "5.600.000.000 đ", "350.000.000 đ", "1.200.000.000 đ", "Hoạt động", "28/10/2026", "MO-TU-02"},
+
+		// MO-HN-03 — Hà Nam
+		{"Công ty CP Đầu Tư Xây Dựng 319", "0100109988", "Nguyễn Đức Hưng", "0913.224.556", "Khách hàng VIP Doanh nghiệp", "4.850.000.000 đ", "320.000.000 đ", "1.000.000.000 đ", "Hoạt động", "28/10/2026", "MO-HN-03"},
+		{"Nhà máy Xi măng Xuân Thành Hà Nam", "1300765432", "Phạm Quốc Anh", "0226.389.447", "Xi măng PCB40 & clinker", "9.300.000.000 đ", "680.000.000 đ", "2.500.000.000 đ", "Hoạt động", "28/10/2026", "MO-HN-03"},
+		{"Công ty CP Bê tông công nghiệp Hà Nam", "1301122334", "Bùi Thị Hòa", "0912.335.887", "Bê tông tươi & đúc sẵn", "3.400.000.000 đ", "210.000.000 đ", "850.000.000 đ", "Hoạt động", "28/10/2026", "MO-HN-03"},
+		{"Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)", "5600456789", "Hoàng Việt Cường", "0914.882.100", "Nhà thầu cao tốc", "7.750.000.000 đ", "490.000.000 đ", "1.800.000.000 đ", "Hoạt động", "28/10/2026", "MO-HN-03"},
+
+		// MO-BP-04 — Bình Phước
+		{"Công ty CP Xây dựng Chơn Thành", "3800991122", "Võ Trọng Nghĩa", "0985.224.663", "Xây dựng công nghiệp", "2.650.000.000 đ", "130.000.000 đ", "750.000.000 đ", "Hoạt động", "28/10/2026", "MO-BP-04"},
+		{"Công ty TNHH Vật liệu xây dựng Bình Phước", "3801556677", "Trương Mỹ Linh", "0988.776.554", "Cấp phối & đá xây dựng", "1.980.000.000 đ", "65.000.000 đ", "550.000.000 đ", "Hoạt động", "28/10/2026", "MO-BP-04"},
+		{"Công ty CP Phát triển hạ tầng Becamex", "3701443322", "Lê Thanh Sơn", "0976.331.229", "Hạ tầng khu công nghiệp", "6.900.000.000 đ", "450.000.000 đ", "1.600.000.000 đ", "Hoạt động", "28/10/2026", "MO-BP-04"},
+	}
+	for _, c := range customers {
+		Pool.Exec(ctx, `
+			INSERT INTO customers (name, ten, tax_code, mst, contact, phone, sdt, group_name, doanh_so, cong_no, han_muc, status, date, quarry_code)
+			SELECT $1, $1, $2, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11
+			WHERE NOT EXISTS (SELECT 1 FROM customers WHERE name = $1)
+		`, c.Name, c.Tax, c.Contact, c.Phone, c.Group, c.DoanhSo, c.CongNo, c.HanMuc, c.Status, c.Date, c.Quarry)
+		Pool.Exec(ctx, `UPDATE customers SET quarry_code = $2 WHERE name = $1 AND (quarry_code IS NULL OR quarry_code = '')`, c.Name, c.Quarry)
+	}
+
+	suppliers := []struct {
+		Name, Tax, Phone, Items, Hang, No, Rating, Status, Date, Quarry string
+	}{
+		// MO-PT-01 — Phú Thọ
+		{"Tổng Công Ty Kinh Tế Kỹ Thuật CNQP (GAET)", "0100109911", "0243.856.789", "Thuốc nổ Anfo, Kíp nổ vi sai & Dịch vụ nổ mìn", "Thuốc nổ & Kíp nổ", "450.000.000 đ", "5 sao (Đối tác chiến lược)", "Hoạt động", "28/10/2026", "MO-PT-01"},
+		{"Công Ty Xăng Dầu Phú Thọ (Petrolimex)", "2600108822", "0210.384.666", "Dầu Diesel DO 0.05S-II cho xe máy mỏ", "Dầu DO 0.05S", "280.000.000 đ", "5 sao", "Hoạt động", "28/10/2026", "MO-PT-01"},
+		{"Công ty CP Vật tư Thiết bị Vinamac", "0101554433", "0243.668.901", "Phụ tùng xe ben Howo, lốp & bàn thắng", "Phụ tùng xe tải", "165.000.000 đ", "4 sao", "Hoạt động", "28/10/2026", "MO-PT-01"},
+		{"Hợp Tác Xã Khai Thác Khoáng Sản Đoan Hùng", "2600778899", "0210.376.554", "Đá 0x4 Base & dịch vụ bốc xúc", "Đá xây dựng", "95.000.000 đ", "4 sao", "Hoạt động", "28/10/2026", "MO-PT-01"},
+
+		// MO-TU-02 — Tân Uyên
+		{"Công Ty TNHH Thiết Bị Nặng Marubeni (Komatsu)", "0101567890", "0243.765.432", "Phụ tùng máy xúc PC450, gầu đào, răng gầu mỏ", "Phụ tùng máy xúc", "120.000.000 đ", "5 sao", "Hoạt động", "28/10/2026", "MO-TU-02"},
+		{"Công ty CP Xăng dầu Bình Dương (Petrolimex Bình Dương)", "3701009988", "0274.382.117", "Dầu Diesel DO 0.05S-II & nhớt máy mỏ", "Dầu DO 0.05S", "310.000.000 đ", "5 sao", "Hoạt động", "28/10/2026", "MO-TU-02"},
+		{"Công ty CP Phụ tùng máy xây dựng Tân Uyên", "3701778899", "0274.399.045", "Xích sắt, bánh xe & basin máy đào", "Phụ tùng máy xây dựng", "85.000.000 đ", "4 sao", "Hoạt động", "28/10/2026", "MO-TU-02"},
+
+		// MO-HN-03 — Hà Nam
+		{"Công ty CP Vật tư Công nghiệp Hà Nam", "1300667788", "0226.375.220", "Vật tư điện, băng tải & linh kiện nghiền sàng", "Vật tư công nghiệp", "140.000.000 đ", "4 sao", "Hoạt động", "28/10/2026", "MO-HN-03"},
+		{"Trạm xăng dầu Kiện Khê Hà Nam", "1300998877", "0226.365.909", "Dầu Diesel DO 0.05S-II phục vụ xe mỏ", "Dầu DO 0.05S", "225.000.000 đ", "5 sao", "Hoạt động", "28/10/2026", "MO-HN-03"},
+
+		// MO-BP-04 — Bình Phước
+		{"Công ty CP Vật tư Bình Phước", "3801223344", "0274.381.556", "Vật tư nổ mìn, kíp nổ & nón mìn", "Thuốc nổ & Kíp nổ", "175.000.000 đ", "4 sao", "Hoạt động", "28/10/2026", "MO-BP-04"},
+		{"Công ty CP Cấp phối Chơn Thành", "3801334455", "0274.374.882", "Cấp phối đá base & đá dăm 1x2", "Cấp phối đá", "110.000.000 đ", "4 sao", "Hoạt động", "28/10/2026", "MO-BP-04"},
+	}
+	for _, s := range suppliers {
+		Pool.Exec(ctx, `
+			INSERT INTO suppliers (name, ten, tax_code, mst, phone, sdt, items, hang, no, rating, status, date, quarry_code)
+			SELECT $1, $1, $2, $2, $3, $3, $4, $5, $6, $7, $8, $9, $10
+			WHERE NOT EXISTS (SELECT 1 FROM suppliers WHERE name = $1)
+		`, s.Name, s.Tax, s.Phone, s.Items, s.Hang, s.No, s.Rating, s.Status, s.Date, s.Quarry)
+		Pool.Exec(ctx, `UPDATE suppliers SET quarry_code = $2 WHERE name = $1 AND (quarry_code IS NULL OR quarry_code = '')`, s.Name, s.Quarry)
 	}
 
 	// 6. Seed Weigh Bridges & Cameras
@@ -2451,62 +2496,110 @@ func seedTradeAndWarehouse(ctx context.Context) {
 		}
 	}
 
-	// 7. Seed Sales Contracts & Prepaid Accounts
+	// 7. Seed Sales Contracts (gắn mỏ qua quarry_code) & Prepaid Accounts
 	var scCount int
 	Pool.QueryRow(ctx, "SELECT COUNT(*) FROM sales_contracts").Scan(&scCount)
-	if scCount == 0 {
-		fmt.Println("🌱 Seeding Commercial Sales Contracts & Prepaid Accounts...")
-		contracts := []struct {
-			Code, CustCode, CustName, Project, Start, End, Terms, Status, Notes, By string
-			Committed, Delivered, Rate, Credit                                      float64
-			Items                                                                   string
-			Plates                                                                  string
-		}{
-			{
-				Code: "HDBH-2026-DEOCA", CustCode: "CUST-DEOCA", CustName: "Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)",
-				Project: "Gói thầu XL-08 Đường cao tốc Bắc - Nam đoạn Mai Sơn - QL45",
-				Start:   "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
-				Committed: 350000, Delivered: 218500, Rate: 62.4, Credit: 1500000000,
-				Notes: "Cam kết ưu tiên cấp đá 1x2 bê tông mác 350 và cấp phối đá dăm Base K98", By: "Phạm Minh Hoàng",
-				Items:  `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":200000,"deliveredTons":134000,"unitPrice":285000,"discountPct":5},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":150000,"deliveredTons":84500,"unitPrice":180000,"discountPct":3}]`,
-				Plates: `["19H-056.22","19C-128.45","29H-882.19","88C-091.22"]`,
-			},
-			{
-				Code: "HDBH-2026-BQP319", CustCode: "CUST-BQP319", CustName: "Tổng Công ty 319 - Bộ Quốc Phòng",
-				Project: "Dự án Nâng cấp Sân bay Quân sự & Đường cơ động",
-				Start:   "2026-03-15", End: "2026-11-30", Terms: "deferred_7d", Status: "active",
-				Committed: 180000, Delivered: 142000, Rate: 78.9, Credit: 800000000,
-				Notes: "Đá 4x6 kè móng và Base loại 1 chuẩn quốc phòng", By: "Hoàng Minh Đức",
-				Items:  `[{"productCode":"SP-DA-4X6","productName":"Đá 4x6 Kè Móng","committedTons":80000,"deliveredTons":65000,"unitPrice":220000,"discountPct":2},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":100000,"deliveredTons":77000,"unitPrice":180000,"discountPct":3}]`,
-				Plates: `["88H-042.27","88C-114.56","19C-205.88"]`,
-			},
-			{
-				Code: "HDBH-2026-BTVT", CustCode: "CUST-BTVT", CustName: "Công ty TNHH Bê Tông Việt Trì",
-				Project: "Cung ứng trạm trộn bê tông tươi KCN Thụy Vân",
-				Start:   "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
-				Committed: 120000, Delivered: 98400, Rate: 82.0, Credit: 500000000,
-				Notes: "Bao tiêu đá 1x2 và cát nhân tạo rửa sạch giao hằng ngày", By: "Nguyễn Văn Dũng",
-				Items:  `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":80000,"deliveredTons":66000,"unitPrice":285000,"discountPct":4},{"productCode":"SP-CAT-NT","productName":"Cát Nghiền Nhân Tạo","committedTons":40000,"deliveredTons":32400,"unitPrice":230000,"discountPct":2}]`,
-				Plates: `["19C-088.99","19H-002.31","19C-155.67"]`,
-			},
-			{
-				Code: "HDBH-2026-VICEM", CustCode: "CUST-VICEM", CustName: "Công ty CP Xi Măng Vicem Sông Thao",
-				Project: "Nguyên liệu phụ gia sản xuất xi măng PCB40",
-				Start:   "2026-02-01", End: "2026-10-31", Terms: "bank_guarantee", Status: "near_expiry",
-				Committed: 90000, Delivered: 86500, Rate: 96.1, Credit: 1200000000,
-				Notes: "Đá mi sàng 0-5mm và cao lanh M2, hợp đồng sắp hoàn thành", By: "Phạm Minh Hoàng",
-				Items:  `[{"productCode":"SP-DA-MI","productName":"Đá Mi Bụi Sàng Khô","committedTons":90000,"deliveredTons":86500,"unitPrice":115000,"discountPct":5}]`,
-				Plates: `["29H-771.20","29C-663.15"]`,
-			},
-		}
 
-		for _, c := range contracts {
-			Pool.Exec(ctx, `
-				INSERT INTO sales_contracts (code, customer_code, customer_name, project_name, start_date, end_date, total_committed_tons, total_delivered_tons, completion_rate, credit_limit, payment_terms, status, notes, created_by, items, whitelisted_plates)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16::jsonb)
-				ON CONFLICT (code) DO NOTHING
-			`, c.Code, c.CustCode, c.CustName, c.Project, c.Start, c.End, c.Committed, c.Delivered, c.Rate, c.Credit, c.Terms, c.Status, c.Notes, c.By, c.Items, c.Plates)
-		}
+	fmt.Println("🌱 Seeding Commercial Sales Contracts per quarry...")
+	contracts := []struct {
+		Code, CustCode, CustName, Project, Start, End, Terms, Status, Notes, By string
+		Committed, Delivered, Rate, Credit                                      float64
+		Items                                                                   string
+		Plates                                                                  string
+		Quarry                                                                  string
+	}{
+		{
+			Code: "HDBH-2026-DEOCA", CustCode: "CUST-DEOCA", CustName: "Tập đoàn Đèo Cả (Dự án Cao tốc Bắc - Nam)",
+			Project: "Gói thầu XL-08 Đường cao tốc Bắc - Nam đoạn Mai Sơn - QL45",
+			Start:   "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
+			Committed: 350000, Delivered: 218500, Rate: 62.4, Credit: 1500000000,
+			Notes: "Cam kết ưu tiên cấp đá 1x2 bê tông mác 350 và cấp phối đá dăm Base K98", By: "Phạm Minh Hoàng",
+			Items:  `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":200000,"deliveredTons":134000,"unitPrice":285000,"discountPct":5},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":150000,"deliveredTons":84500,"unitPrice":180000,"discountPct":3}]`,
+			Plates: `["29C-781.90","90C-054.67","90C-123.45","88H-042.27"]`,
+			Quarry: "MO-HN-03",
+		},
+		{
+			Code: "HDBH-2026-BQP319", CustCode: "CUST-BQP319", CustName: "Tổng Công ty 319 - Bộ Quốc Phòng",
+			Project: "Dự án Nâng cấp Sân bay Quân sự & Đường cơ động",
+			Start:   "2026-03-15", End: "2026-11-30", Terms: "deferred_7d", Status: "active",
+			Committed: 180000, Delivered: 142000, Rate: 78.9, Credit: 800000000,
+			Notes: "Đá 4x6 kè móng và Base loại 1 chuẩn quốc phòng", By: "Hoàng Minh Đức",
+			Items:  `[{"productCode":"SP-DA-4X6","productName":"Đá 4x6 Kè Móng","committedTons":80000,"deliveredTons":65000,"unitPrice":220000,"discountPct":2},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":100000,"deliveredTons":77000,"unitPrice":180000,"discountPct":3}]`,
+			Plates: `["61C-452.18","60C-312.78","60H-033.72"]`,
+			Quarry: "MO-TU-02",
+		},
+		{
+			Code: "HDBH-2026-BTVT", CustCode: "CUST-BTVT", CustName: "Công ty TNHH Bê Tông Việt Trì",
+			Project: "Cung ứng trạm trộn bê tông tươi KCN Thụy Vân",
+			Start:   "2026-01-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
+			Committed: 120000, Delivered: 98400, Rate: 82.0, Credit: 500000000,
+			Notes: "Bao tiêu đá 1x2 và cát nhân tạo rửa sạch giao hằng ngày", By: "Nguyễn Văn Dũng",
+			Items:  `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":80000,"deliveredTons":66000,"unitPrice":285000,"discountPct":4},{"productCode":"SP-CAT-NT","productName":"Cát Nghiền Nhân Tạo","committedTons":40000,"deliveredTons":32400,"unitPrice":230000,"discountPct":2}]`,
+			Plates: `["19C-128.45","19H-056.22","19C-089.12"]`,
+			Quarry: "MO-PT-01",
+		},
+		{
+			Code: "HDBH-2026-VICEM", CustCode: "CUST-VICEM", CustName: "Công ty CP Xi Măng Vicem Sông Thao",
+			Project: "Nguyên liệu phụ gia sản xuất xi măng PCB40",
+			Start:   "2026-02-01", End: "2026-10-31", Terms: "bank_guarantee", Status: "near_expiry",
+			Committed: 90000, Delivered: 86500, Rate: 96.1, Credit: 1200000000,
+			Notes: "Đá mi sàng 0-5mm và cao lanh M2, hợp đồng sắp hoàn thành", By: "Phạm Minh Hoàng",
+			Items:  `[{"productCode":"SP-DA-MI","productName":"Đá Mi Bụi Sàng Khô","committedTons":90000,"deliveredTons":86500,"unitPrice":115000,"discountPct":5}]`,
+			Plates: `["29H-882.19","29C-345.67"]`,
+			Quarry: "MO-PT-01",
+		},
+		{
+			Code: "HDBH-2026-VANDAI3", CustCode: "CUST-TUYEN", CustName: "Công ty CP Bê tông thương phẩm Tân Uyên",
+			Project: "Cung ứng đá cấp phối Dự án Đường Vành Đai 3 TP.HCM",
+			Start:   "2026-03-01", End: "2026-12-31", Terms: "deferred_7d", Status: "active",
+			Committed: 220000, Delivered: 96000, Rate: 43.6, Credit: 700000000,
+			Notes: "Cấp phối Base K98 và đá 1x2 cho gói thầu tuyến Vành Đai 3", By: "Hoàng Minh Đức",
+			Items:  `[{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":120000,"deliveredTons":54000,"unitPrice":180000,"discountPct":3},{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":100000,"deliveredTons":42000,"unitPrice":285000,"discountPct":4}]`,
+			Plates: `["61C-452.18","60C-312.78"]`,
+			Quarry: "MO-TU-02",
+		},
+		{
+			Code: "HDBH-2026-XUANTHANH", CustCode: "CUST-XUANTHANH", CustName: "Nhà máy Xi măng Xuân Thành Hà Nam",
+			Project: "Cung ứng đá vôi nghiền cho lò nung xi măng PCB40",
+			Start:   "2026-02-01", End: "2026-12-31", Terms: "prepaid_wallet", Status: "active",
+			Committed: 260000, Delivered: 118000, Rate: 45.4, Credit: 1500000000,
+			Notes: "Đá vôi nguyên khai 10-40mm cấp thẳng vào silo nhà máy", By: "Nguyễn Văn Dũng",
+			Items:  `[{"productCode":"SP-DA-VOI","productName":"Đá Vôi Nguyên Khai 10-40mm","committedTons":260000,"deliveredTons":118000,"unitPrice":165000,"discountPct":2}]`,
+			Plates: `["88H-042.27","29C-781.90"]`,
+			Quarry: "MO-HN-03",
+		},
+		{
+			Code: "HDBH-2026-CHONTHANH", CustCode: "CUST-CTH", CustName: "Công ty CP Xây dựng Chơn Thành",
+			Project: "Gói thầu san nền & hạ tầng Khu công nghiệp Becamex Chơn Thành",
+			Start:   "2026-04-01", End: "2026-12-31", Terms: "deferred_7d", Status: "active",
+			Committed: 150000, Delivered: 62000, Rate: 41.3, Credit: 600000000,
+			Notes: "Đá 1x2 Granite Chơn Thành và cấp phối nền móng công nghiệp", By: "Phạm Minh Hoàng",
+			Items:  `[{"productCode":"SP-DA-1X2","productName":"Đá 1x2 Xanh Bê Tông","committedTons":90000,"deliveredTons":38000,"unitPrice":275000,"discountPct":3},{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":60000,"deliveredTons":24000,"unitPrice":175000,"discountPct":2}]`,
+			Plates: `["93C-114.52","93H-067.89"]`,
+			Quarry: "MO-BP-04",
+		},
+		{
+			Code: "HDBH-2026-BECAMEX", CustCode: "CUST-BECAMEX", CustName: "Công ty CP Phát triển hạ tầng Becamex",
+			Project: "Cấp phối đá & bê tông KCN Becamex VSIP Bình Phước",
+			Start:   "2026-05-01", End: "2027-01-31", Terms: "deferred_7d", Status: "active",
+			Committed: 180000, Delivered: 54000, Rate: 30.0, Credit: 650000000,
+			Notes: "Cấp phối đá dăm và bê tông thương phẩm phục vụ hạ tầng KCN", By: "Hoàng Minh Đức",
+			Items:  `[{"productCode":"SP-DA-BASE","productName":"Đá Cấp Phối Base Loại 1","committedTons":110000,"deliveredTons":33000,"unitPrice":175000,"discountPct":2},{"productCode":"SP-DA-4X6","productName":"Đá 4x6 Kè Móng","committedTons":70000,"deliveredTons":21000,"unitPrice":215000,"discountPct":2}]`,
+			Plates: `["93C-225.10","93H-067.89"]`,
+			Quarry: "MO-BP-04",
+		},
+	}
+
+	for _, c := range contracts {
+		Pool.Exec(ctx, `
+			INSERT INTO sales_contracts (code, customer_code, customer_name, project_name, start_date, end_date, total_committed_tons, total_delivered_tons, completion_rate, credit_limit, payment_terms, status, notes, created_by, items, whitelisted_plates, quarry_code)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16::jsonb, $17)
+			ON CONFLICT (code) DO UPDATE SET quarry_code = EXCLUDED.quarry_code
+		`, c.Code, c.CustCode, c.CustName, c.Project, c.Start, c.End, c.Committed, c.Delivered, c.Rate, c.Credit, c.Terms, c.Status, c.Notes, c.By, c.Items, c.Plates, c.Quarry)
+	}
+
+	if scCount == 0 {
+		fmt.Println("🌱 Seeding Prepaid Accounts & Consolidated Delivery Orders...")
 
 		// Seed prepaid wallets
 		Pool.Exec(ctx, `DELETE FROM payments_prepaid`)

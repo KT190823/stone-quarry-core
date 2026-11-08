@@ -131,6 +131,39 @@ func IsLockedStatus(status string) bool {
 	return false
 }
 
+// ChangePassword verifies the current password and stores a new one for the user.
+func ChangePassword(ctx context.Context, username, currentPassword, newPassword string) error {
+	if strings.TrimSpace(username) == "" {
+		return errors.New("Thiếu tài khoản đăng nhập")
+	}
+	if len(newPassword) < 6 {
+		return errors.New("Mật khẩu mới phải có ít nhất 6 ký tự")
+	}
+	if newPassword == currentPassword {
+		return errors.New("Mật khẩu mới phải khác mật khẩu hiện tại")
+	}
+
+	var hash string
+	err := database.Pool.QueryRow(ctx,
+		`SELECT COALESCE(password_hash,'') FROM users WHERE username = $1`, username,
+	).Scan(&hash)
+	if err != nil {
+		return errors.New("Tài khoản không tồn tại")
+	}
+	if !matchesPassword(currentPassword, hash) {
+		return errors.New("Mật khẩu hiện tại không đúng")
+	}
+
+	newHash := HashPassword(newPassword)
+	if _, err := database.Pool.Exec(ctx,
+		`UPDATE users SET password_hash = $1, updated_at = NOW() WHERE username = $2`,
+		newHash, username,
+	); err != nil {
+		return errors.New("Không cập nhật được mật khẩu")
+	}
+	return nil
+}
+
 // RevokeSessionsForUser invalidates every active session belonging to a username.
 func RevokeSessionsForUser(username string) {
 	if username == "" {

@@ -69,10 +69,14 @@ func main() {
 	pvH := handlers.NewPaymentVoucherHandler()
 	salesH := handlers.NewSalesContractHandler()
 	assignmentH := handlers.NewVehicleAssignmentHandler()
+	collabH := handlers.NewCollaborationHandler()
+	orgH := handlers.NewOrganizationHandler()
 
 	// Register Quarry Core & 3rd-Party Integration Gateway
 	quarryH.Register(mux)
 	integrationH.Register(mux)
+	collabH.Register(mux)
+	orgH.Register(mux)
 
 	// Vehicle Assignments & Driver Shift Attendance (Phân công điều xe & Chấm công lái xe)
 	mux.HandleFunc("GET /api/vehicles/assignments", assignmentH.List)
@@ -113,6 +117,7 @@ func main() {
 	mux.HandleFunc("POST /api/auth/logout", authH.Logout)
 	mux.HandleFunc("GET /api/auth/me", authH.Me)
 	mux.HandleFunc("GET /api/auth/menu", authH.Menu)
+	mux.HandleFunc("POST /api/auth/change-password", authH.ChangePassword)
 
 	mux.HandleFunc("GET /api/dashboard", handlers.DashboardHandler)
 

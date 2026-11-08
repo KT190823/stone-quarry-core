@@ -114,7 +114,11 @@ func (r *BaseRepo) List(params ListParams) ([]map[string]interface{}, int, error
 	qCode := strings.TrimSpace(params.QuarryCode)
 	if qCode != "" && qCode != "TTC-ALL" && qCode != "ALL" && qCode != "all" {
 		cCode, locName := NormalizeQuarryFilter(qCode)
-		if locName != "" {
+		if _, ok := r.columnSet()["quarry_code"]; ok {
+			whereConditions = append(whereConditions, fmt.Sprintf("quarry_code = $%d", argIdx))
+			args = append(args, cCode)
+			argIdx++
+		} else if locName != "" {
 			whereConditions = append(whereConditions, fmt.Sprintf("(CAST(row_to_json(%s) AS TEXT) ILIKE $%d OR CAST(row_to_json(%s) AS TEXT) ILIKE $%d OR CAST(row_to_json(%s) AS TEXT) ILIKE $%d)", r.Table, argIdx, r.Table, argIdx+1, r.Table, argIdx+2))
 			args = append(args, "%"+qCode+"%", "%"+cCode+"%", "%"+locName+"%")
 			argIdx += 3

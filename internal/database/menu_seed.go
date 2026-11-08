@@ -32,7 +32,7 @@ type menuModuleSeed struct {
 // The database is now the single source of truth; frontend only renders the API.
 var menuModuleSeeds = []menuModuleSeed{
 	{
-		SectionKey: "ban-dieu-hanh", SectionTitle: "BAN ĐIỀU HÀNH DOANH NGHIỆP (EXECUTIVE)", SectionOrder: 1,
+		SectionKey: "ban-dieu-hanh", SectionTitle: "BAN ĐIỀU HÀNH DOANH NGHIỆP", SectionOrder: 1,
 		ModuleKey: "dieu-hanh", Title: "Cổng Điều Hành Doanh Nghiệp (Executive Portal)", Short: "Điều hành",
 		Subtitle: "Trung tâm chỉ huy dành cho Ban Giám đốc: Chỉ số sức khỏe doanh nghiệp, phê duyệt chỉ đạo và giám sát liên phòng ban.",
 		Icon:     "dashboard", Tone: "indigo", Route: "/dieu-hanh", Dashboard: "/dieu-hanh/tong-quan", ModuleOrder: 1,
@@ -97,10 +97,10 @@ var menuModuleSeeds = []menuModuleSeed{
 		},
 	},
 	{
-		SectionKey: "phap-ly", SectionTitle: "PHÁP LÝ DOANH NGHIỆP", SectionOrder: 3,
+		SectionKey: "ban-dieu-hanh", SectionTitle: "BAN ĐIỀU HÀNH DOANH NGHIỆP", SectionOrder: 1,
 		ModuleKey: "ho-so-giay-phep", Title: "Pháp lý & Giấy phép Mỏ", Short: "Pháp lý",
 		Subtitle: "Giấy phép khai thác khoáng sản, phê duyệt ĐTM môi trường, trữ lượng mỏ và mốc giới quy hoạch.",
-		Icon:     "building", Tone: "red", Route: "/ho-so-giay-phep", Dashboard: "/ho-so-giay-phep/tong-quan", ModuleOrder: 1,
+		Icon:     "building", Tone: "red", Route: "/ho-so-giay-phep", Dashboard: "/ho-so-giay-phep/tong-quan", ModuleOrder: 2,
 		Children: []menuItemSeed{
 			{Label: "Tổng quan", Route: "/ho-so-giay-phep/tong-quan"},
 			{Label: "Giấy phép khai thác", Route: "/ho-so-giay-phep/giay-phep"},
@@ -148,15 +148,6 @@ var menuModuleSeeds = []menuModuleSeed{
 		},
 	},
 	{
-		SectionKey: "san-xuat-ky-thuat", SectionTitle: "SẢN XUẤT - KỸ THUẬT", SectionOrder: 4,
-		ModuleKey: "mo-da", Title: "Danh mục Mỏ Đá Khai Thác", Short: "Mỏ đá",
-		Subtitle: "Hồ sơ các mỏ đá trực thuộc, vị trí địa lý, trữ lượng thiết kế và công suất cấp phép.",
-		Icon:     "map-pin", Tone: "cyan", Route: "/danh-muc/mo-da", Dashboard: "/danh-muc/mo-da", ModuleOrder: 4,
-		Children: []menuItemSeed{
-			{Label: "Danh sách mỏ đá", Route: "/danh-muc/mo-da"},
-		},
-	},
-	{
 		SectionKey: "kho-van-tai-tram-can", SectionTitle: "KHO - VẬN TẢI - TRẠM CÂN", SectionOrder: 5,
 		ModuleKey: "quan-ly-kho", Title: "Quản lý Kho bãi & Bãi Đá", Short: "Kho bãi",
 		Subtitle: "Theo dõi tồn kho bãi đá thành phẩm, nhập – xuất kho, kiểm kê và điều chuyển giữa các kho bãi.",
@@ -193,48 +184,39 @@ var menuModuleSeeds = []menuModuleSeed{
 		Children: []menuItemSeed{
 			{Label: "Danh sách phiếu cân", Route: "/phieu-can"},
 			{Label: "Tạo phiếu cân mới", Route: "/phieu-can/form"},
+			{Label: "Cảnh báo lệch bì", Route: "/phieu-can/canh-bao-lech-bi"},
 			{Label: "Báo cáo trạm cân", Route: "/bao-cao"},
 		},
 	},
 	{
-		SectionKey: "kho-van-tai-tram-can", SectionTitle: "KHO - VẬN TẢI - TRẠM CÂN", SectionOrder: 5,
-		ModuleKey: "canh-bao-lech-bi", Title: "Giám Sát Cảnh Báo Lệch Bì AI", Short: "Lệch bì",
-		Subtitle: "Hệ thống AI tự động phát hiện xe cơi nới thùng gian lận, sai lệch tự trọng bì xe và sai số bàn cân.",
-		Icon:     "alert-triangle", Tone: "amber", Route: "/canh-bao-lech-bi", Dashboard: "/canh-bao-lech-bi", ModuleOrder: 4,
+		SectionKey: "he-thong-cong-cu", SectionTitle: "DỮ LIỆU - HỆ THỐNG", SectionOrder: 6,
+		ModuleKey: "to-chuc", Title: "Tổ chức Doanh nghiệp", Short: "Tổ chức",
+		Subtitle: "Công ty, mỏ đá trực thuộc, bộ phận và tài khoản người dùng trong toàn hệ thống.",
+		Icon:     "building", Tone: "indigo", Route: "/to-chuc", Dashboard: "/to-chuc/cong-ty", ModuleOrder: 1,
 		Children: []menuItemSeed{
-			{Label: "Danh sách cảnh báo", Route: "/canh-bao-lech-bi"},
+			{Label: "Công ty", Route: "/to-chuc/cong-ty"},
+			{Label: "Mỏ đá", Route: "/to-chuc/mo-da"},
+			{Label: "Bộ phận", Route: "/to-chuc/bo-phan"},
+			{Label: "Người dùng", Route: "/to-chuc/nguoi-dung"},
 		},
 	},
 	{
 		SectionKey: "he-thong-cong-cu", SectionTitle: "DỮ LIỆU - HỆ THỐNG", SectionOrder: 6,
-		ModuleKey: "dich-vu-google", Title: "Dịch vụ Số & Bản đồ GPS", Short: "Google & GPS",
-		Subtitle: "Google Maps lộ trình xe tải mỏ, Drive hồ sơ đám mây, Gmail thông báo và Photos AI trạm cân.",
-		Icon:     "map-pin", Tone: "blue", Route: "/google", Dashboard: "/google/maps", ModuleOrder: 1,
+		ModuleKey: "luu-tru", Title: "Lưu trữ Dữ liệu Số", Short: "Lưu trữ",
+		Subtitle: "Tệp hồ sơ trên Drive, hòm thư Gmail và bộ sưu tập ảnh nghiệp vụ trạm cân.",
+		Icon:     "folder", Tone: "cyan", Route: "/luu-tru", Dashboard: "/luu-tru/file", ModuleOrder: 2,
 		Children: []menuItemSeed{
-			{Label: "Google Maps GPS", Route: "/google/maps"},
-			{Label: "Google Drive hồ sơ", Route: "/google/drive"},
-			{Label: "Hòm thư Gmail tự động", Route: "/google/gmail"},
-			{Label: "Kho ảnh Photos AI", Route: "/google/photos"},
-		},
-	},
-	{
-		SectionKey: "he-thong-cong-cu", SectionTitle: "DỮ LIỆU - HỆ THỐNG", SectionOrder: 6,
-		ModuleKey: "nguoi-dung", Title: "Người dùng & Phân quyền", Short: "Người dùng",
-		Subtitle: "Tài khoản cán bộ nhân viên, nhóm quyền vai trò (RBAC) và nhật ký an ninh hệ thống.",
-		Icon:     "users", Tone: "indigo", Route: "/nguoi-dung", Dashboard: "/nguoi-dung/danh-sach", ModuleOrder: 2,
-		Children: []menuItemSeed{
-			{Label: "Danh sách người dùng", Route: "/nguoi-dung/danh-sach"},
-			{Label: "Nhóm quyền & Vai trò", Route: "/nguoi-dung/nhom-quyen"},
-			{Label: "Nhật ký kiểm toán", Route: "/nguoi-dung/nhat-ky"},
+			{Label: "File", Route: "/luu-tru/file"},
+			{Label: "Gmail", Route: "/luu-tru/gmail"},
+			{Label: "Collection", Route: "/luu-tru/collection"},
 		},
 	},
 	{
 		SectionKey: "he-thong-cong-cu", SectionTitle: "DỮ LIỆU - HỆ THỐNG", SectionOrder: 6,
 		ModuleKey: "danh-muc", Title: "Danh mục Dùng chung", Short: "Danh mục",
 		Subtitle: "Chủng loại đá thương phẩm, loại phiếu cân, danh mục xe cơ giới và thiết bị trạm cân.",
-		Icon:     "folder", Tone: "amber", Route: "/danh-muc", Dashboard: "/danh-muc/mo-da", ModuleOrder: 3,
+		Icon:     "folder", Tone: "amber", Route: "/danh-muc", Dashboard: "/danh-muc/loai-hang-da", ModuleOrder: 3,
 		Children: []menuItemSeed{
-			{Label: "Danh mục mỏ đá", Route: "/danh-muc/mo-da"},
 			{Label: "Chủng loại hàng đá", Route: "/danh-muc/loai-hang-da"},
 			{Label: "Loại chứng từ phiếu cân", Route: "/danh-muc/loai-phieu-can"},
 			{Label: "Chủng loại xe cơ giới", Route: "/danh-muc/loai-xe"},
@@ -272,21 +254,19 @@ const (
 	modPlan      = "ke-hoach-san-luong"
 	modMining    = "khai-thac-co-gioi"
 	modSurvey    = "khao-sat-3d"
-	modQuarry    = "mo-da"
+	modOrg       = "to-chuc"
 	modWarehouse = "quan-ly-kho"
 	modFleet     = "quan-ly-xe-nhien-lieu"
 	modScale     = "phieu-can"
-	modAlerts    = "canh-bao-lech-bi"
-	modGoogle    = "dich-vu-google"
-	modUsers     = "nguoi-dung"
+	modArchive   = "luu-tru"
 	modCatalog   = "danh-muc"
 	modConfig    = "cau-hinh"
 	modPrint     = "mau-in"
 )
 
 var allMenuModules = []string{
-	modExecutive, modCRM, modFinance, modHR, modLegal, modPlan, modMining, modSurvey, modQuarry,
-	modWarehouse, modFleet, modScale, modAlerts, modGoogle, modUsers, modCatalog, modConfig, modPrint,
+	modExecutive, modCRM, modFinance, modHR, modLegal, modPlan, modMining, modSurvey, modOrg,
+	modWarehouse, modFleet, modScale, modArchive, modCatalog, modConfig, modPrint,
 }
 
 // roleModuleSeeds is the default RBAC matrix. Existing rows are never overwritten,
@@ -296,41 +276,41 @@ var roleModuleSeeds = map[string][]string{
 	"Ban Giám Đốc": allMenuModules,
 	"Giám Đốc Mỏ":  allMenuModules,
 	"Phó Giám Đốc Kỹ Thuật": {
-		modExecutive, modLegal, modPlan, modMining, modSurvey, modQuarry,
-		modWarehouse, modFleet, modAlerts, modCatalog, modPrint,
+		modExecutive, modLegal, modPlan, modMining, modSurvey, modOrg,
+		modWarehouse, modFleet, modScale, modCatalog, modPrint,
 	},
 	"Trưởng Trạm Cân": {
-		modWarehouse, modFleet, modScale, modAlerts, modCatalog, modPrint,
+		modWarehouse, modFleet, modScale, modCatalog, modPrint,
 	},
 	"Nhân viên vận hành bàn cân": {
-		modScale, modAlerts, modPrint,
+		modScale, modPrint,
 	},
 	"Kỹ Sư Trắc Địa 3D": {
-		modPlan, modSurvey, modQuarry, modCatalog,
+		modPlan, modSurvey, modOrg, modCatalog,
 	},
 	"Chỉ Huy Nổ Mìn": {
-		modMining, modWarehouse, modAlerts, modCatalog, modPrint,
+		modMining, modWarehouse, modScale, modCatalog, modPrint,
 	},
 	"Thợ Khoan & An Toàn Mỏ": {
-		modMining, modAlerts, modCatalog,
+		modMining, modScale, modCatalog,
 	},
 	"Kế Toán Trưởng": {
-		modCRM, modFinance, modHR, modWarehouse, modAlerts, modCatalog, modPrint,
+		modCRM, modFinance, modHR, modWarehouse, modScale, modCatalog, modPrint,
 	},
 	"Kế toán công nợ & Hóa đơn": {
 		modCRM, modFinance, modPrint,
 	},
 	"Thủ kho bãi khoáng sản": {
-		modWarehouse, modScale, modAlerts, modCatalog, modPrint,
+		modWarehouse, modScale, modCatalog, modPrint,
 	},
 	"Trưởng Phòng Kinh Doanh": {
-		modCRM, modFinance, modWarehouse, modScale, modAlerts, modCatalog, modPrint,
+		modCRM, modFinance, modWarehouse, modScale, modCatalog, modPrint,
 	},
 	"Điều Phối Vận Tải & Giám Sát GPS": {
-		modWarehouse, modFleet, modScale, modAlerts, modGoogle, modCatalog,
+		modWarehouse, modFleet, modScale, modArchive, modCatalog,
 	},
 	"Cán Bộ Pháp Lý Mỏ & BVMT": {
-		modLegal, modPlan, modQuarry, modAlerts, modCatalog, modPrint,
+		modLegal, modPlan, modOrg, modScale, modCatalog, modPrint,
 	},
 }
 
@@ -361,6 +341,61 @@ func SeedMenuConfig(ctx context.Context) {
 			log.Printf("menu seed: upsert module %s: %v", m.ModuleKey, err)
 		}
 	}
+
+	// Force-refresh modules touched by the "Tổ chức / Lưu trữ" restructure so
+	// existing databases follow the new menu layout (seed INSERT is DO NOTHING).
+	restructured := map[string]bool{
+		"to-chuc": true,
+		"luu-tru": true,
+		"phieu-can": true,
+		"danh-muc": true,
+	}
+	for _, m := range menuModuleSeeds {
+		if !restructured[m.ModuleKey] {
+			continue
+		}
+		children, err := json.Marshal(m.Children)
+		if err != nil {
+			log.Printf("menu seed: marshal children for %s: %v", m.ModuleKey, err)
+			continue
+		}
+		_, err = Pool.Exec(ctx, `
+			UPDATE app_modules
+			SET section_key = $2, section_title = $3, section_order = $4,
+			    title = $5, short = $6, subtitle = $7, icon = $8, tone = $9,
+			    route = $10, dashboard_route = $11, module_order = $12,
+			    children = $13, status = 'active'
+			WHERE client_id = 'TTC' AND module_key = $1
+		`, m.ModuleKey, m.SectionKey, m.SectionTitle, m.SectionOrder, m.Title, m.Short,
+			m.Subtitle, m.Icon, m.Tone, m.Route, m.Dashboard, m.ModuleOrder, children)
+		if err != nil {
+			log.Printf("menu seed: refresh module %s: %v", m.ModuleKey, err)
+		}
+	}
+
+	// Remove modules superseded by the restructure: Google/GPS, standalone
+	// Users, standalone Quarry catalog and standalone weigh-deviation alerts.
+	obsoleteModules := []string{"dich-vu-google", "nguoi-dung", "mo-da", "canh-bao-lech-bi"}
+	_, _ = Pool.Exec(ctx, `DELETE FROM role_menu_permissions WHERE module_key = ANY($1)`, obsoleteModules)
+	_, _ = Pool.Exec(ctx, `DELETE FROM app_modules WHERE module_key = ANY($1)`, obsoleteModules)
+
+	// Reconcile previously seeded rows: the old "(EXECUTIVE)" section label and
+	// the standalone "PHÁP LÝ DOANH NGHIỆP" group are gone. Legal is now grouped
+	// inside the executive section, so existing databases must be updated too.
+	_, _ = Pool.Exec(ctx, `
+		UPDATE app_modules
+		SET section_title = 'BAN ĐIỀU HÀNH DOANH NGHIỆP'
+		WHERE section_key = 'ban-dieu-hanh'
+		  AND section_title <> 'BAN ĐIỀU HÀNH DOANH NGHIỆP'
+	`)
+	_, _ = Pool.Exec(ctx, `
+		UPDATE app_modules
+		SET section_key = 'ban-dieu-hanh',
+		    section_title = 'BAN ĐIỀU HÀNH DOANH NGHIỆP',
+		    section_order = 1,
+		    module_order = 2
+		WHERE section_key = 'phap-ly' OR module_key = 'ho-so-giay-phep'
+	`)
 
 	for role, moduleKeys := range roleModuleSeeds {
 		for _, key := range moduleKeys {

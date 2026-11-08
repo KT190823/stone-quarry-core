@@ -77,6 +77,30 @@ func (h *AuthHandler) Menu(w http.ResponseWriter, r *http.Request) {
 	JSON(w, menu)
 }
 
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	s, err := services.GetSession(bearerToken(r))
+	if err != nil {
+		JSONError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	var body struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewPassword     string `json:"newPassword"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		JSONError(w, http.StatusBadRequest, "Dữ liệu không hợp lệ")
+		return
+	}
+
+	if err := services.ChangePassword(r.Context(), s.Username, body.CurrentPassword, body.NewPassword); err != nil {
+		JSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	JSON(w, map[string]interface{}{"status": "ok"})
+}
+
 func bearerToken(r *http.Request) string {
 	h := r.Header.Get("Authorization")
 	if strings.HasPrefix(h, "Bearer ") {
