@@ -124,6 +124,12 @@ func main() {
 	// Executive Command Center
 	mux.HandleFunc("GET /api/executive/overview", handlers.ExecutiveOverview)
 	mux.HandleFunc("GET /api/executive/issues", handlers.ExecutiveIssues)
+	mux.HandleFunc("GET /api/executive/tasks", handlers.ExecutiveTasks)
+	mux.HandleFunc("GET /api/executive/alerts", handlers.ExecutiveAlerts)
+	mux.HandleFunc("GET /api/executive/departments", handlers.ExecutiveDepartments)
+	mux.HandleFunc("GET /api/executive/mine-comparison", handlers.ExecutiveMineComparisonHandler)
+	mux.HandleFunc("GET /api/executive/reports", handlers.ExecutiveReports)
+	mux.HandleFunc("GET /api/executive/debt-aging", handlers.ExecutiveDebtAgingHandler)
 	mux.HandleFunc("GET /api/analytics/cost-per-ton", handlers.CostPerTon)
 	mux.HandleFunc("GET /api/analytics/cost-breakdown", handlers.CostBreakdown)
 	mux.HandleFunc("GET /api/analytics/profitability/vehicle", handlers.VehicleProfitabilityHandler)
