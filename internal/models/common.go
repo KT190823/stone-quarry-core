@@ -61,7 +61,6 @@ type RoleRow struct {
 	Role       string `json:"role"`
 	Desc       string `json:"desc"`
 	Users      string `json:"users"`
-	Level      string `json:"level"`
 	Permission string `json:"permission"`
 	Status     string `json:"status"`
 }
