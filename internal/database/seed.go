@@ -1002,21 +1002,21 @@ func Seed() {
 	// 11.2 Seed user_roles - Luôn đồng bộ 14 vai trò chuẩn
 	Pool.Exec(ctx, `
 		DELETE FROM user_roles;
-		INSERT INTO user_roles (role, "desc", description, users, level, permission, status) VALUES
-		('Ban Lãnh Đạo', 'Toàn quyền truy cập Cổng Điều Hành Doanh Nghiệp (/dieu-hanh/*), giám sát liên phòng ban và phê duyệt chỉ đạo', 'Điều hành DN', 'lanhdao', 'Cấp 1', 'Toàn quyền Executive Portal', 'Hoạt động'),
-		('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', 'admin, giamdoc', 'Cấp 1', 'Toàn quyền hệ thống mỏ', 'Hoạt động'),
-		('Phó Giám Đốc Kỹ Thuật', 'Quản lý kỹ thuật mỏ, lập kế hoạch khai thác và giám sát an toàn', 'Kỹ thuật mỏ', 'kythuat', 'Cấp 2', 'Quản lý kế hoạch & thiết bị', 'Hoạt động'),
-		('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI ANPR OCR', 'Vận hành cân', 'tramcan', 'Cấp 2', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
-		('Nhân viên vận hành bàn cân', 'Cân xe 2 lượt (tổng bì & bì rỗng), in phiếu cân điện tử', 'Vận hành ca', 'vancan', 'Cấp 2', 'Cân xe & in vé xuất mỏ', 'Hoạt động'),
-		('Kỹ Sư Trắc Địa 3D', 'Bay quét UAV LiDAR, tính toán thể tích moong đào và bãi tồn', 'Trắc địa mỏ', 'tracdia', 'Cấp 2', 'Khảo sát 3D & mô hình hóa', 'Hoạt động'),
-		('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', 'nomin', 'Cấp 2', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
-		('Thợ Khoan & An Toàn Mỏ', 'Khoan tạo lỗ mìn, kiểm định an toàn moong tầng khai thác', 'An toàn lao động', 'antoan', 'Cấp 2', 'Giám sát an toàn mỏ', 'Hoạt động'),
-		('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', 'ketoan', 'Cấp 2', 'Quản lý tài chính kế toán', 'Hoạt động'),
-		('Kế toán công nợ & Hóa đơn', 'Đối soát công nợ khách hàng, xuất hóa đơn điện tử', 'Công nợ mỏ', 'congno', 'Cấp 3', 'Đối soát & thanh toán', 'Hoạt động'),
-		('Thủ kho bãi khoáng sản', 'Quản lý tồn bãi đá thành phẩm, xuất nhập vật tư và nhiên liệu DO', 'Kho bãi mỏ', 'thukho', 'Cấp 3', 'Quản lý bãi đá & cấp phát dầu', 'Hoạt động'),
-		('Trưởng Phòng Kinh Doanh', 'Hợp đồng thương mại, bảng báo giá đá và quản lý đối tác khách hàng', 'Kinh doanh CRM', 'kinhdoanh', 'Cấp 2', 'Quản lý kinh doanh & bán hàng', 'Hoạt động'),
-		('Điều Phối Vận Tải & Giám Sát GPS', 'Điều phối đoàn xe ben cơ giới, định vị GPS, đối soát sụt dầu và định mức ODO', 'Điều phối xe', 'dieuphoi', 'Cấp 2', 'Giám sát hành trình GPS & xe ben', 'Hoạt động'),
-		('Cán Bộ Pháp Lý Mỏ & BVMT', 'Giấy phép khai thác mỏ, hồ sơ môi trường, quan trắc định kỳ và báo cáo Sở TN&MT', 'Pháp lý mỏ', 'phaply', 'Cấp 2', 'Quản lý pháp lý & giấy phép mỏ', 'Hoạt động');
+		INSERT INTO user_roles (role, "desc", description, users, permission, status) VALUES
+		('Ban Lãnh Đạo', 'Toàn quyền truy cập Cổng Điều Hành Doanh Nghiệp (/dieu-hanh/*), giám sát liên phòng ban và phê duyệt chỉ đạo', 'Điều hành DN', 'lanhdao', 'Toàn quyền Executive Portal', 'Hoạt động'),
+		('Ban Giám Đốc', 'Toàn quyền điều hành và phê duyệt mỏ', 'Toàn quyền', 'admin, giamdoc', 'Toàn quyền hệ thống mỏ', 'Hoạt động'),
+		('Phó Giám Đốc Kỹ Thuật', 'Quản lý kỹ thuật mỏ, lập kế hoạch khai thác và giám sát an toàn', 'Kỹ thuật mỏ', 'kythuat', 'Quản lý kế hoạch & thiết bị', 'Hoạt động'),
+		('Trưởng Trạm Cân', 'Vận hành cân, chốt phiếu cân, AI ANPR OCR', 'Vận hành cân', 'tramcan', 'Quản lý cân & vé xuất bãi', 'Hoạt động'),
+		('Nhân viên vận hành bàn cân', 'Cân xe 2 lượt (tổng bì & bì rỗng), in phiếu cân điện tử', 'Vận hành ca', 'vancan', 'Cân xe & in vé xuất mỏ', 'Hoạt động'),
+		('Kỹ Sư Trắc Địa 3D', 'Bay quét UAV LiDAR, tính toán thể tích moong đào và bãi tồn', 'Trắc địa mỏ', 'tracdia', 'Khảo sát 3D & mô hình hóa', 'Hoạt động'),
+		('Chỉ Huy Nổ Mìn', 'Lập hộ chiếu nổ mìn, xuất kho VLNCN', 'Nổ mìn mỏ', 'nomin', 'Quản lý nổ mìn & an toàn', 'Hoạt động'),
+		('Thợ Khoan & An Toàn Mỏ', 'Khoan tạo lỗ mìn, kiểm định an toàn moong tầng khai thác', 'An toàn lao động', 'antoan', 'Giám sát an toàn mỏ', 'Hoạt động'),
+		('Kế Toán Trưởng', 'Kế toán công nợ, đối soát hóa đơn VAT điện tử', 'Kế toán tài chính', 'ketoan', 'Quản lý tài chính kế toán', 'Hoạt động'),
+		('Kế toán công nợ & Hóa đơn', 'Đối soát công nợ khách hàng, xuất hóa đơn điện tử', 'Công nợ mỏ', 'congno', 'Đối soát & thanh toán', 'Hoạt động'),
+		('Thủ kho bãi khoáng sản', 'Quản lý tồn bãi đá thành phẩm, xuất nhập vật tư và nhiên liệu DO', 'Kho bãi mỏ', 'thukho', 'Quản lý bãi đá & cấp phát dầu', 'Hoạt động'),
+		('Trưởng Phòng Kinh Doanh', 'Hợp đồng thương mại, bảng báo giá đá và quản lý đối tác khách hàng', 'Kinh doanh CRM', 'kinhdoanh', 'Quản lý kinh doanh & bán hàng', 'Hoạt động'),
+		('Điều Phối Vận Tải & Giám Sát GPS', 'Điều phối đoàn xe ben cơ giới, định vị GPS, đối soát sụt dầu và định mức ODO', 'Điều phối xe', 'dieuphoi', 'Giám sát hành trình GPS & xe ben', 'Hoạt động'),
+		('Cán Bộ Pháp Lý Mỏ & BVMT', 'Giấy phép khai thác mỏ, hồ sơ môi trường, quan trắc định kỳ và báo cáo Sở TN&MT', 'Pháp lý mỏ', 'phaply', 'Quản lý pháp lý & giấy phép mỏ', 'Hoạt động');
 	`)
 
 	// Unconditional Seed for Reports (All 4 Quarries & TTC-ALL)

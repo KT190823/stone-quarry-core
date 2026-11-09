@@ -649,12 +649,14 @@ func Migrate() {
 			"desc" TEXT,
 			description TEXT,
 			users TEXT,
-			level TEXT,
 			permission TEXT,
 			status TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
+
+		// Drop the legacy "security level" field from existing databases.
+		`ALTER TABLE user_roles DROP COLUMN IF EXISTS level`,
 
 		`CREATE TABLE IF NOT EXISTS user_logs (
 			id SERIAL PRIMARY KEY,
