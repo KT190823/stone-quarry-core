@@ -55,24 +55,29 @@ type BusinessIssue struct {
 }
 
 type ExecutiveOverviewResponse struct {
-	HealthScore     float64                  `json:"health_score"`
-	HealthLabel     string                   `json:"health_label"`
-	RedIssues       []BusinessIssue          `json:"red_issues"`
-	YellowWarnings  []BusinessIssue          `json:"yellow_warnings"`
-	GreenCount      int                      `json:"green_count"`
-	TodayRevenue    float64                  `json:"today_revenue"`
-	TodayCost       float64                  `json:"today_cost"`
-	TodayProfit     float64                  `json:"today_profit"`
-	TodayMargin     float64                  `json:"today_margin"`
-	MonthRevenue    float64                  `json:"month_revenue"`
-	MonthCost       float64                  `json:"month_cost"`
-	MonthProfit     float64                  `json:"month_profit"`
-	MonthMargin     float64                  `json:"month_margin"`
-	PrevMonthProfit float64                  `json:"prev_month_profit"`
-	Period          string                   `json:"period"`
-	CurrentPeriod   string                   `json:"current_period"`
-	PreviousPeriod  string                   `json:"previous_period"`
-	DomainSummaries []ExecutiveDomainSummary `json:"domain_summaries"`
+	HealthScore      float64                    `json:"health_score"`
+	HealthLabel      string                     `json:"health_label"`
+	RedIssues        []BusinessIssue            `json:"red_issues"`
+	YellowWarnings   []BusinessIssue            `json:"yellow_warnings"`
+	GreenCount       int                        `json:"green_count"`
+	TodayRevenue     float64                    `json:"today_revenue"`
+	TodayCost        float64                    `json:"today_cost"`
+	TodayProfit      float64                    `json:"today_profit"`
+	TodayMargin      float64                    `json:"today_margin"`
+	MonthRevenue     float64                    `json:"month_revenue"`
+	MonthCost        float64                    `json:"month_cost"`
+	MonthProfit      float64                    `json:"month_profit"`
+	MonthMargin      float64                    `json:"month_margin"`
+	PrevMonthProfit  float64                    `json:"prev_month_profit"`
+	Period           string                     `json:"period"`
+	CurrentPeriod    string                     `json:"current_period"`
+	PreviousPeriod   string                     `json:"previous_period"`
+	DomainSummaries  []ExecutiveDomainSummary   `json:"domain_summaries"`
+	OverdueDebt      float64                    `json:"overdue_debt"`
+	RevenueGrowthPct float64                    `json:"revenue_growth_pct"`
+	PlanProgressPct  float64                    `json:"plan_progress_pct"`
+	PendingActions   []ExecutiveActionItem      `json:"pending_actions"`
+	MinePerformance  []ExecutiveMinePerformance `json:"mine_performance"`
 }
 
 type MetricHistoryItem struct {
@@ -251,11 +256,24 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 		}()
 	}
 
-	// Month revenue from tickets
+	// Month revenue from tickets. If the current calendar month has no data we
+	// fall back to the latest month that actually has ticket activity.
 	currMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	currMonthEnd := currMonthStart.AddDate(0, 1, 0)
+	currMonthStart, currMonthEnd = executiveDataWindow(ctx, currMonthStart, currMonthEnd)
 	prevMonthStart := currMonthStart.AddDate(0, -1, 0)
 	prevMonthEnd := currMonthStart
+
+	// Latest day with ticket activity (for the "today" KPI card).
+	todayDayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	var latestTicketAt time.Time
+	_ = db.QueryRow(ctx,
+		`SELECT COALESCE(MAX(created_at), TIMESTAMPTZ '1970-01-01') FROM tickets WHERE ($1 = '' OR quarry_code = $1)`,
+		quarryID).Scan(&latestTicketAt)
+	if latestTicketAt.Year() > 1970 {
+		todayDayStart = time.Date(latestTicketAt.Year(), latestTicketAt.Month(), latestTicketAt.Day(), 0, 0, 0, 0, latestTicketAt.Location())
+	}
+	todayDayEnd := todayDayStart.AddDate(0, 0, 1)
 
 	run(func() {
 		var rev float64
@@ -265,29 +283,18 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 			WHERE created_at >= $1 AND created_at < $2
 			  AND ($3 = '' OR quarry_code = $3)
 		`, sqlTicketRevenueExpr), currMonthStart, currMonthEnd, quarryID).Scan(&rev)
-		if rev == 0 {
-			rev = 1450000000
-			if quarryID != "" {
-				rev *= quarryShareRatio(quarryID)
-			}
-		}
 		monthRev = rev
 	})
 
-	// Today revenue (from today tickets)
+	// Today revenue (latest day with ticket activity)
 	run(func() {
 		var rev float64
-		todayDayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		todayDayEnd := todayDayStart.AddDate(0, 0, 1)
 		_ = db.QueryRow(ctx, fmt.Sprintf(`
 			SELECT COALESCE(SUM(%s), 0)
 			FROM tickets
 			WHERE created_at >= $1 AND created_at < $2
 			  AND ($3 = '' OR quarry_code = $3)
 		`, sqlTicketRevenueExpr), todayDayStart, todayDayEnd, quarryID).Scan(&rev)
-		if rev == 0 {
-			rev = monthRev / 26.0
-		}
 		todayRev = rev
 	})
 
@@ -304,12 +311,6 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 			       OR ($3 = 'MO-HN-03' AND (mine_area ILIKE '%Hà Nam%' OR mine_area ILIKE '%Kiện Khê%'))
 			       OR ($3 = 'MO-BP-04' AND mine_area ILIKE '%Bình Phước%'))
 		`, currMonthStart, currMonthEnd, quarryID).Scan(&cost)
-		if cost == 0 {
-			cost = 815000000
-			if quarryID != "" {
-				cost *= quarryShareRatio(quarryID)
-			}
-		}
 		monthCost = cost
 	})
 
@@ -326,19 +327,11 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 			       OR ($3 = 'MO-HN-03' AND (mine_area ILIKE '%Hà Nam%' OR mine_area ILIKE '%Kiện Khê%'))
 			       OR ($3 = 'MO-BP-04' AND mine_area ILIKE '%Bình Phước%'))
 		`, prevMonthStart, prevMonthEnd, quarryID).Scan(&cost)
-		if cost == 0 {
-			cost = 785000000
-			if quarryID != "" {
-				cost *= quarryShareRatio(quarryID)
-			}
-		}
 		prevMonthCost = cost
 	})
 
 	// Today cost from production_costs
 	var actualTodayCost float64
-	todayDayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	todayDayEnd := todayDayStart.AddDate(0, 0, 1)
 	run(func() {
 		_ = db.QueryRow(ctx, `
 			SELECT COALESCE(SUM(actual_value), 0)
@@ -361,16 +354,10 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 		WHERE created_at >= $1 AND created_at < $2
 		  AND ($3 = '' OR quarry_code = $3)
 	`, sqlTicketRevenueExpr), prevMonthStart, prevMonthEnd, quarryID).Scan(&prevMonthRev)
-	if prevMonthRev == 0 {
-		prevMonthRev = monthRev * 0.94
-	}
 	prevMonthProfit := prevMonthRev - prevMonthCost
 
 	// Today metrics
 	todayCost := actualTodayCost
-	if todayCost == 0 {
-		todayCost = monthCost / 26.0
-	}
 	todayProfit := todayRev - todayCost
 	todayMargin := 0.0
 	if todayRev > 0 {
@@ -425,6 +412,8 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 	currSnapshot := loadExecutiveMetricSnapshot(ctx, currentStart, comparisonEnd, quarryID)
 	prevSnapshot := loadExecutiveMetricSnapshot(ctx, previousStart, previousEnd, quarryID)
 
+	workspace := buildExecutiveWorkspace(ctx, period, currentStart, comparisonEnd, quarryID)
+
 	resp := ExecutiveOverviewResponse{
 		HealthScore:     score,
 		HealthLabel:     healthLabel,
@@ -452,6 +441,11 @@ func ExecutiveOverview(w http.ResponseWriter, r *http.Request) {
 			comparisonEnd,
 			quarryID,
 		),
+		OverdueDebt:      workspace.OverdueDebt,
+		RevenueGrowthPct: workspace.RevenueGrowth,
+		PlanProgressPct:  workspace.PlanProgressPct,
+		PendingActions:   workspace.PendingActions,
+		MinePerformance:  workspace.MinePerformance,
 	}
 
 	execOverviewCacheMutex.Lock()
@@ -534,7 +528,7 @@ func loadExecutiveMetricSnapshot(ctx context.Context, start, end time.Time, quar
 				WHERE created_at >= $1 AND created_at < $2
 				  AND ($3 = '' OR quarry_code = $3)
 			), 0)::double precision,
-			COALESCE((`, sqlTicketTonnageExpr, sqlTicketRevenueExpr) + `
+			COALESCE((`, sqlTicketTonnageExpr, sqlTicketRevenueExpr)+`
 				SELECT SUM(actual_value)
 				FROM production_costs
 				WHERE created_at >= $1 AND created_at < $2
