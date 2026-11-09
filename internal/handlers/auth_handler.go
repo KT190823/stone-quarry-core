@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"mo-da-backend/internal/database"
 	"mo-da-backend/internal/services"
 )
 
@@ -20,6 +21,15 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := decodeJSON(r, &body); err != nil {
 		JSON(w, map[string]interface{}{"error": "Dữ liệu không hợp lệ"})
+		return
+	}
+
+	// The API may start while its PostgreSQL container is offline. Without this
+	// guard, Authenticate dereferences a nil pool and the connection closes,
+	// which the frontend proxy presents as a 504 Gateway Timeout.
+	if database.Pool == nil {
+		JSONError(w, http.StatusServiceUnavailable,
+			"Cơ sở dữ liệu chưa sẵn sàng. Vui lòng khởi động PostgreSQL và thử lại.")
 		return
 	}
 
